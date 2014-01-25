@@ -1,8 +1,9 @@
 <?php
 require_once("../../include/props.php");
 ?>
-<html>
+<html lang='en'>
 <head>
+	<meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
 	<title>NWSChat Live</title>
  <!-- Jquery stuff -->
  <script language='javascript' type='text/javascript' src='jquery.1.9.1.min.js'></script>
