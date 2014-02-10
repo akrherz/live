@@ -7,3 +7,8 @@ is hopefully useful for folks looking to create their client or study how
 poorly an application can be constructed.
 
 All blame for this app goes to: daryl.herzmann akrherz@gmail.com 
+
+Requirements
+------------
+
+    Closure Compiler (for building minified source) https://developers.google.com/closure/compiler/
