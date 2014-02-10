@@ -29,6 +29,7 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
 			title : 'All Chats',
 			closable : false,
 			chatType : 'allchats',
+			barejid : '__allchats__@'+ Application.XMPPMUCHOST,
 			id : '__allchats__'
 		}));
 	},
