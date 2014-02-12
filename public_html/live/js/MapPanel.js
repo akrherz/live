@@ -1,22 +1,22 @@
 Ext.ns("Application");
 
   var spcConvStyles = {
-	"CATEGORICAL_GENERAL" : {
+	"General Thunder" : {
 		fillColor : '#c0e8c0',
 		strokeColor : '#3c783c',
 		graphicZIndex : 2
 	},
-	"CATEGORICAL_SLIGHT" : {
+	"Slight Risk" : {
 		fillColor : '#f6f67f',
 		strokeColor : '#ff9600',
 		graphicZIndex : 3
 	},
-	"CATEGORICAL_MODERATE" : {
+	"Moderate Risk" : {
 		fillColor : '#e67f7f',
 		strokeColor : '#cd0000',
 		graphicZIndex : 4
 	},
-	"CATEGORICAL_HIGH" : {
+	"High Risk" : {
 		fillColor : '#ff00ff',
 		strokeColor : '#000000',
 		graphicZIndex : 5
