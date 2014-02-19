@@ -454,9 +454,9 @@ Application.TextWindow = new Ext.Window({
 		});
 
 Application.log = function(text) {
-	Application.msgtpl.insertFirst(Ext.getCmp("sysmsg").body, {
-				msg : text,
-				date : new Date()
-			});
+	Application.msgtpl.append(Ext.getCmp("sysmsg").body, {
+		msg : text,
+		date : new Date()
+	});
 
 };
