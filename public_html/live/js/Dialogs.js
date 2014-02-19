@@ -9,7 +9,7 @@ Application.saveViews = function() {
 			}).c('storage', {
 				xmlns : 'nwschatlive:views'
 			});
-	for (i = 1; i < 6; i++) {
+	for (var i = 1; i < 6; i++) {
 		bnds = Ext.getCmp('mfv' + i).bounds;
 		if (bnds) {
 			stanza.c('view', {
@@ -160,7 +160,7 @@ Application.boundsFavorites = new Ext.Window({
 			buttons : [{
 						text : 'Save Settings',
 						handler : function() {
-							for (i = 1; i < 6; i++) {
+							for (var i = 1; i < 6; i++) {
 								nval = Ext.getCmp("mfv" + i).getValue();
 								if (nval != '') {
 									Ext.getCmp("fm" + i).setText(nval);

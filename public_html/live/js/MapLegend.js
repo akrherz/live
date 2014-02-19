@@ -11,7 +11,7 @@ Application.MapLegend = Ext.extend(Ext.Window, {
 
 	initComponent : function() {
 		var config = {
-		}
+		};
 		Ext.apply(this, Ext.apply(this.initialConfig, config));
 
 		Application.MapLegend.superclass.initComponent.apply(this,

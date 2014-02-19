@@ -178,7 +178,7 @@ function updateMap() {
 		return;
 	}
 	var tokens = lstring.split("||");
-	for (i = 0; i < tokens.length; i++) {
+	for (var i = 0; i < tokens.length; i++) {
 		if (tokens[i] == "") {
 			continue;
 		}
@@ -232,7 +232,7 @@ function setSounds() {
 function parsePrefs(msg) {
 	Application.prefStore.removeAll();
 	var elem = $(msg).find("pref");
-	for (i = 0; i < elem.length; i++) {
+	for (var i = 0; i < elem.length; i++) {
 		key = elem[i].getAttribute("key");
 		value = elem[i].getAttribute("value");
 		Application.setPreference(key, value);
@@ -257,7 +257,7 @@ function parseViews(msg) {
 		return;
 	}
 	elem = $(msg).find("view");
-	for (i = 0; i < elem.length; i++) {
+	for (var i = 0; i < elem.length; i++) {
 		label = elem[i].getAttribute("label");
 		bounds = elem[i].getAttribute("bounds");
 		if (label != "") {
@@ -276,7 +276,7 @@ function parseViews(msg) {
 function parseBookmarks(msg) {
 	elem = $(msg).find("conference");
 	var autoJoinedRooms = 0;
-	for (i = 0; i < elem.length; i++) {
+	for (var i = 0; i < elem.length; i++) {
 		alias = elem[i].getAttribute("name");
 		jid = elem[i].getAttribute("jid");
 		nick = $(elem[i]).find('nick').text();
@@ -338,7 +338,7 @@ function onIQ(msg) {
 function iqParser(msg) {
 	if (msg.getAttribute('id') == 'fetchrooms') {
 		items = msg.firstChild.getElementsByTagName('item');
-		for (i = 0; i < items.length; i++) {
+		for (var i = 0; i < items.length; i++) {
 
 			Ext.getCmp("chatrooms").root.appendChild({
 						text : items[i].getAttribute("name")
@@ -586,7 +586,7 @@ Application.replaceURLWithHTMLLinks = function(text) {
     var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
 	if (text == null) return null;
     return text.replace(exp,"<a href='$1'>$1</a>"); 
-}
+};
 
 function messageParser(msg) {
 	//var to = msg.getAttribute('to');
@@ -627,7 +627,7 @@ function messageParser(msg) {
 		/* Look to see if a product_id is embedded */
 		product_id = null;
 		var x = $(msg).find('x');
-		for (i = 0; i < x.length; i++) {
+		for (var i = 0; i < x.length; i++) {
 			if (x[i].getAttribute("product_id")) {
 				product_id = x[i].getAttribute("product_id");
 			}
@@ -638,7 +638,6 @@ function messageParser(msg) {
                 }
 		sender = Strophe.getResourceFromJid(from);
 		room = Strophe.getBareJidFromJid(from);
-		var body = elems[0];
 		mpc = Ext.getCmp("chatpanel").getMUC(room);
 		if (mpc && sender) {
 			mpc.gp.getStore().addSorted(new Ext.data.Record({
@@ -756,7 +755,7 @@ function geomParser(msg, isDelayed) {
 	if (x.length == 0) {
 		return;
 	}
-	for (i = 0; i < x.length; i++) {
+	for (var i = 0; i < x.length; i++) {
 
 		if (x[i].getAttribute("geometry") == null) {
 			continue;

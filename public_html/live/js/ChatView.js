@@ -490,4 +490,4 @@ Application.buildView = function(cfg) {
 					]
 			});
 	Application.LoginDialog.show();
-}
+};

@@ -46,7 +46,7 @@ Application.syncPreferences = function(){
 										}).up();
 	}, stanza);
 	Application.XMPPConn.sendIQ(stanza.tree());
-}
+};
 
 Application.removePreference = function(key) {
 	idx = Application.prefStore.find('key', key);

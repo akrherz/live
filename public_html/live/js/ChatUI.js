@@ -16,7 +16,7 @@ function grid2html(gridPanel) {
 	var roomname = gridPanel.ownerCt.title;
 	t = "<html><head></head><body>";
 	t += "<table cellpadding='2' cellspacing='0' border='1'><tr><th>Roomname</th><th>Date</th><th>Author</th><th>Message</th></tr>";
-	for (i = 0; i < ds.getCount(); i++) {
+	for (var i = 0; i < ds.getCount(); i++) {
 		row = ds.getAt(i);
 		t += String
 				.format(

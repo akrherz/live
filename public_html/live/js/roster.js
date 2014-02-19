@@ -15,7 +15,6 @@ function onBuddyPresence(msg) {
 	var resource = Strophe.getResourceFromJid(jid);
 	var username = Strophe.getNodeFromJid(jid);
 	var status = 'Available';
-	var iconCls = 'buddy-online';
 	/* IMPORTANT: If we find our own username, then we need to set a global 
 	 * flag to prevent auto-login from working
 	 */
