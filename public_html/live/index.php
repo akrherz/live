@@ -1,5 +1,8 @@
 <?php
 require_once("../../include/props.php");
+
+$xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
+		gmdate("His"));
 ?>
 <html lang='en'>
 <head>
@@ -66,7 +69,7 @@ Strophe.log = function(level, msg){
  Application.ATTEMPTS = 0;
  Application.XMPPHOST = "<?php echo $config["xmpp_domain"]; ?>";
  Application.XMPPMUCHOST = "conference.<?php echo $config["xmpp_domain"]; ?>";
- Application.XMPPBASERESOURCE = "NWSChatLive_<?php echo $_SERVER["REMOTE_ADDR"]; ?>";
+ Application.XMPPRESOURCE = "<?php echo $xmppresource; ?>";
  
  soundManager.url = "swf/";
  soundManager.consoleOnly = true;

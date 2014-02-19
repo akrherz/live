@@ -40,8 +40,6 @@ function UTCStringToDate(dtStr, format) {
  * Called when we wish to login! 
  */
 Application.login = function(username, password) {
-	// Make the JID unique each time we login...
-	Application.XMPPRESOURCE = Application.XMPPBASERESOURCE +"_"+ (new Date()).format('His');
 	jid = username + "@" + Application.XMPPHOST + "/"+ Application.XMPPRESOURCE;
 	// Reset AUTOJOIN to true
 	Application.AUTOJOIN = true;
