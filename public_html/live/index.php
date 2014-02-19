@@ -6,166 +6,12 @@ $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 ?>
 <html lang='en'>
 <head>
-	<meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
-	<title>NWSChat Live</title>
- <!-- Jquery stuff -->
- <script language='javascript' type='text/javascript' src='/js/jquery.1.9.1.min.js'></script>
- <!-- ExtJS Stuff -->
+ <meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
+ <title>NWSChat Live</title>
  <link rel="stylesheet" type="text/css" href="/ext-3.4.1/resources/css/ext-all.css"/>
- <script type="text/javascript" src="/ext-3.4.1/adapter/jquery/ext-jquery-adapter.js"></script>
- <script type="text/javascript" src="/ext-3.4.1/adapter/ext/ext-base.js"></script>
- <script type="text/javascript" src="/ext-3.4.1/ext-all.js"></script>
-<script type="text/javascript">
- Ext.BLANK_IMAGE_URL = '/ext-3.4.1/resources/images/default/s.gif';
- Ext.ns("Application");
- Application.DEBUGMODE = <?php echo (isset($_GET["devel"])) ? 'true': 'false'; ?>;
-</script>
-<?php if (!isset($_REQUEST["nomap"])){ ?>
-  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-  <script type="text/javascript" src="/js/OpenLayers.js"></script>
-  <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
-<?php } ?>
-<script type="text/javascript" src="/js/soundmanager2-jsmin.js"></script>
-
- <!-- Finally, the app -->
-<?php if (isset($_GET["devel"])){ ?>
-<script language='javascript' type='text/javascript' src='js/strophe.js'></script>
-<script language='javascript' type='text/javascript' src='js/disco.js'></script>
-<script type="text/javascript" src="js/overrides.js"></script>
-<script type="text/javascript" src="js/CheckColumn.js"></script>
-<script type="text/javascript" src="js/LiveViewport.js"></script>
-<script type="text/javascript" src="js/MapLegend.js"></script>
-<script type="text/javascript" src="js/MUCChatPanel.js"></script>
-<script type="text/javascript" src="js/ChatPanel.js"></script>
-<script type="text/javascript" src="js/MUCRoomUsers.js"></script>
-<script type="text/javascript" src="js/UserColors.js"></script>
-<script type="text/javascript" src="js/ChatTextEntry.js"></script>
-<script type="text/javascript" src="js/ChatGridPanel.js"></script>
-<script type="text/javascript" src="js/DataTip.js"></script>
-<script type="text/javascript" src="js/roster.js"></script>
-<script type="text/javascript" src="js/DDTabPanel.js"></script>
-<script type="text/javascript" src="js/ChatTabPanel.js"></script>
-<script type="text/javascript" src="js/ChatUI.js"></script>
-<script type="text/javascript" src="js/Dialogs.js"></script>
-<script type="text/javascript" src="js/ChatView.js"></script>
-<script type="text/javascript" src="js/XMPPConn.js"></script>
-<script type="text/javascript" src="js/Events.js"></script>
-<script type="text/javascript" src="js/AllChatMessageWindow.js"></script>
-<script type="text/javascript" src="js/UIBuilder.js"></script>
-<script type="text/javascript">
-Strophe.log = function(level, msg){
-	Application.log( msg );
-};
-</script>
-<?php } else { ?>
-<script type="text/javascript" src="100/<?php echo gmdate('YmdHi'); ?>.js"></script>
-<?php } ?>
-
-<script type="text/javascript">
- Application.ROUTE = "<?php echo $config["punjab_route"]; ?>";
- Application.BOSH = "<?php echo $config["bosh_service"]; ?>";
- Application.RECONNECT = true;
- Application.AUTOJOIN = true;
- Application.ATTEMPTS = 0;
- Application.XMPPHOST = "<?php echo $config["xmpp_domain"]; ?>";
- Application.XMPPMUCHOST = "conference.<?php echo $config["xmpp_domain"]; ?>";
- Application.XMPPRESOURCE = "<?php echo $xmppresource; ?>";
- 
- soundManager.url = "swf/";
- soundManager.consoleOnly = true;
- soundManager.debugMode = false;
- /* Try HTML5 Audio first? */
- soundManager.preferFlash = false;
- soundManager.onload = function() {
- 	Application.log("SoundManager2 Loaded...");	
- };
- 
- Ext.onReady(function(){
-
-	Ext.EventManager.on(window, 'beforeunload', function() {
-		if (typeof Application.XMPPConn != 'undefined'){
-			Application.XMPPConn.flush();
-			Application.XMPPConn.disconnect();
-		}
-	});	 
- 	Ext.QuickTips.init();
- 	var vp = new Application.LiveViewport({
- 		renderTo : Ext.getBody(),
- 		enableMap : <?php echo (isset($_REQUEST["nomap"]) ? 'false' : 'true'); ?>
- 	});
- 	vp.show();
- 	Application.buildView();
-	Ext.TaskMgr.start(Application.ServiceGuard);
- });
-</script>
-<style type="text/css">
-	.x-selectable, .x-selectable * {
-		-moz-user-select: text!important;
-		-khtml-user-select: text!important;
-	}
-	.message-entry-box{
-		
-	}
-.x-grid3-dirty-cell {
-     background-image:none;
-}
-p.mymessage{
-	text-indent: -20px;
-	margin-left: 20px;
-}
-td.x-grid3-td-message {
-    overflow: hidden;
-}
-td.x-grid3-td-message div.x-grid3-cell-inner {
-    white-space: normal;
-}
-.bigger-font {
-	font-size: 30px !important;
-}
-.buddy-online {
-	background-image: url(icons/available.png) !important;
-}
-.buddy-offline {
-	background-image: url(icons/person.png) !important;
-}
-.buddy-away {
-	background-image: url(icons/away.png) !important;
-}
-.chatroom-icon {
-	background-image: url(icons/chat.png) !important;
-}
-.new-tab{
-  background-image:url(icons/new_tab.gif)  !important;
-}
-.typing-tab{
-  background-image:url(icons/typing.png)  !important;
-  color : #FF0000 !important;
-}
-.paused-tab{
-  color : #A99C0D !important;
-}
-.tabno{
-}
-.author-me {
-	font-weight: bold;
-}
-.author-chatpartner {
-	font-weight: bold;
-}
-.author-nws {
-	font-weight: bold;
-}
-.author-default {
-	font-weight: bold;
-}
-.author-nwsbot {
-}
-</style>
+ <link rel="stylesheet" type="text/css" href="live.css"/>
 </head>
 <body>
-<?php if (isset($_REQUEST["jitter"])){
-	echo "<div class=\"x-hide\"></div>";
-} ?>
 <form id="myloginform" method="post" action="pass.php" class="x-hidden">
 <input type="text" id="username" name="username" class="x-hidden" />
 <input type="password" id="password" name="password" class="x-hidden" />
@@ -234,5 +80,97 @@ you use.</p>
 </ul>
 
 </div>
+
+<!-- Jquery stuff -->
+<script language='javascript' type='text/javascript' src='/js/jquery.1.9.1.min.js'></script>
+<!-- ExtJS Stuff -->
+
+<script type="text/javascript" src="/ext-3.4.1/adapter/jquery/ext-jquery-adapter.js"></script>
+<script type="text/javascript" src="/ext-3.4.1/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="/ext-3.4.1/ext-all.js"></script>
+<!--  SoundManager -->
+<script type="text/javascript" src="/js/soundmanager2-jsmin.js"></script>
+<script type="text/javascript">
+ Ext.BLANK_IMAGE_URL = '/ext-3.4.1/resources/images/default/s.gif';
+ Ext.ns("Application");
+ Application.DEBUGMODE = <?php echo (isset($_GET["devel"])) ? 'true': 'false'; ?>;
+</script>
+
+<?php if (!isset($_REQUEST["nomap"])){ ?>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/js/OpenLayers.js"></script>
+<script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
+<?php } ?>
+ <!-- Finally, the app -->
+<?php if (isset($_GET["devel"])){ ?>
+<script type='text/javascript' src='js/strophe.js'></script>
+<script type='text/javascript' src='js/disco.js'></script>
+<script type="text/javascript" src="js/overrides.js"></script>
+<script type="text/javascript" src="js/CheckColumn.js"></script>
+<script type="text/javascript" src="js/LiveViewport.js"></script>
+<script type="text/javascript" src="js/MapLegend.js"></script>
+<script type="text/javascript" src="js/MUCChatPanel.js"></script>
+<script type="text/javascript" src="js/ChatPanel.js"></script>
+<script type="text/javascript" src="js/MUCRoomUsers.js"></script>
+<script type="text/javascript" src="js/UserColors.js"></script>
+<script type="text/javascript" src="js/ChatTextEntry.js"></script>
+<script type="text/javascript" src="js/ChatGridPanel.js"></script>
+<script type="text/javascript" src="js/DataTip.js"></script>
+<script type="text/javascript" src="js/roster.js"></script>
+<script type="text/javascript" src="js/DDTabPanel.js"></script>
+<script type="text/javascript" src="js/ChatTabPanel.js"></script>
+<script type="text/javascript" src="js/ChatUI.js"></script>
+<script type="text/javascript" src="js/Dialogs.js"></script>
+<script type="text/javascript" src="js/ChatView.js"></script>
+<script type="text/javascript" src="js/XMPPConn.js"></script>
+<script type="text/javascript" src="js/Events.js"></script>
+<script type="text/javascript" src="js/AllChatMessageWindow.js"></script>
+<script type="text/javascript" src="js/UIBuilder.js"></script>
+<script type="text/javascript">
+Strophe.log = function(level, msg){
+	Application.log( msg );
+};
+</script>
+<?php } else { ?>
+<script type="text/javascript" src="100/<?php echo gmdate('YmdHi'); ?>.js"></script>
+<?php } ?>
+<script type="text/javascript">
+ Application.ROUTE = "<?php echo $config["punjab_route"]; ?>";
+ Application.BOSH = "<?php echo $config["bosh_service"]; ?>";
+ Application.RECONNECT = true;
+ Application.AUTOJOIN = true;
+ Application.ATTEMPTS = 0;
+ Application.XMPPHOST = "<?php echo $config["xmpp_domain"]; ?>";
+ Application.XMPPMUCHOST = "conference.<?php echo $config["xmpp_domain"]; ?>";
+ Application.XMPPRESOURCE = "<?php echo $xmppresource; ?>";
+ 
+ soundManager.url = "swf/";
+ soundManager.consoleOnly = true;
+ soundManager.debugMode = false;
+ /* Try HTML5 Audio first? */
+ soundManager.preferFlash = false;
+ soundManager.onload = function() {
+ 	Application.log("SoundManager2 Loaded...");	
+ };
+ 
+ Ext.onReady(function(){
+
+	Ext.EventManager.on(window, 'beforeunload', function() {
+		if (typeof Application.XMPPConn != 'undefined'){
+			Application.XMPPConn.flush();
+			Application.XMPPConn.disconnect();
+		}
+	});	 
+ 	Ext.QuickTips.init();
+ 	var vp = new Application.LiveViewport({
+ 		renderTo : Ext.getBody(),
+ 		enableMap : <?php echo (isset($_REQUEST["nomap"]) ? 'false' : 'true'); ?>
+ 	});
+ 	vp.show();
+ 	Application.buildView();
+	Ext.TaskMgr.start(Application.ServiceGuard);
+ });
+</script>
+
 </body>
 </html>
