@@ -98,7 +98,7 @@ you use.</p>
 
 <?php if (!isset($_REQUEST["nomap"])){ ?>
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-<script type="text/javascript" src="/js/OpenLayers.js"></script>
+<script type="text/javascript" src="/js/OpenLayers_GeoExt.js"></script>
 <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>
  <!-- Finally, the app -->
