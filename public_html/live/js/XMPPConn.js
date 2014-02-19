@@ -194,32 +194,36 @@ function updateMap() {
 
 function setSounds() {
 	Application.prefStore.each(function(record) {
-				key = record.get("key");
-				if (key.indexOf("sound::") != 0) {
-					return;
-				}
-				tokens = key.split("::");
-				if (tokens.length != 3) {
-					return;
-				}
-				sidx = tokens[1];
-				opt = tokens[2];
-				store = Ext.getCmp("soundpanel").getStore();
-				idx = store.find('id', sidx);
-				if (idx > -1) {
-					lrecord = store.getAt(idx);
-					val = record.get("value");
-					if (val == "true"){
-						val = true;
-					}
-					if (val == "false"){
-						val = false;
-					}
-					lrecord.set(opt, val);
-					//console.log("Setting sound "+ sidx +"| Opt "+ opt
-					// +"| Value "+ val + "--"+ typeof(val));
-				}
-			});
+		key = record.get("key");
+		if (key == "volume"){
+			Ext.getCmp("volume").setValue(record.get("value"));
+			return;
+		}
+		if (key.indexOf("sound::") != 0) {
+			return;
+		}
+		tokens = key.split("::");
+		if (tokens.length != 3) {
+			return;
+		}
+		sidx = tokens[1];
+		opt = tokens[2];
+		store = Ext.getCmp("soundpanel").getStore();
+		idx = store.find('id', sidx);
+		if (idx > -1) {
+			lrecord = store.getAt(idx);
+			val = record.get("value");
+			if (val == "true"){
+				val = true;
+			}
+			if (val == "false"){
+				val = false;
+			}
+			lrecord.set(opt, val);
+			//console.log("Setting sound "+ sidx +"| Opt "+ opt
+			// +"| Value "+ val + "--"+ typeof(val));
+		}
+	});
 }
 
 /*
@@ -233,8 +237,8 @@ function parsePrefs(msg) {
 		value = elem[i].getAttribute("value");
 		Application.setPreference(key, value);
 	}
-	setSounds();
 	Application.prefStore.locked = true;
+	setSounds();
 	try {
 		var size = parseInt(Application.getPreference('font-size', 14)) + 2;
 		// cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
