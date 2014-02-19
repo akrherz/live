@@ -9,7 +9,7 @@ $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 	<meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
 	<title>NWSChat Live</title>
  <!-- Jquery stuff -->
- <script language='javascript' type='text/javascript' src='jquery.1.9.1.min.js'></script>
+ <script language='javascript' type='text/javascript' src='/js/jquery.1.9.1.min.js'></script>
  <!-- ExtJS Stuff -->
  <link rel="stylesheet" type="text/css" href="/ext-3.4.1/resources/css/ext-all.css"/>
  <script type="text/javascript" src="/ext-3.4.1/adapter/jquery/ext-jquery-adapter.js"></script>
@@ -25,7 +25,7 @@ $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
   <script type="text/javascript" src="../js/OpenLayers.js"></script>
   <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>
-<script type="text/javascript" src="js/soundmanager2-jsmin.js"></script>
+<script type="text/javascript" src="/js/soundmanager2-jsmin.js"></script>
 
  <!-- Finally, the app -->
 <?php if (isset($_GET["devel"])){ ?>
