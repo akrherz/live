@@ -1,30 +1,31 @@
 #!/bin/sh
 
 DEVDIR="public_html/live"
+cd $DEVDIR
 
 # --warning_level VERBOSE
 java -jar ~/lib/compiler.jar \
---js=${DEVDIR}/js/overrides.js \
---js=${DEVDIR}/strophe/strophe.js \
---js=${DEVDIR}/strophe/disco.js \
---js=${DEVDIR}/js/MUCChatPanel.js \
---js=${DEVDIR}/js/MUCRoomUsers.js \
---js=${DEVDIR}/js/UserColors.js \
---js=${DEVDIR}/js/ChatGridPanel.js \
---js=${DEVDIR}/js/ChatTextEntry.js \
---js=${DEVDIR}/js/ChatPanel.js \
---js=${DEVDIR}/js/LiveViewport.js \
---js=${DEVDIR}/js/MapLegend.js \
---js=${DEVDIR}/js/CheckColumn.js \
---js=${DEVDIR}/js/DataTip.js \
---js=${DEVDIR}/js/roster.js \
---js=${DEVDIR}/js/AllChatMessageWindow.js \
---js=${DEVDIR}/js/DDTabPanel.js \
---js=${DEVDIR}/js/ChatTabPanel.js \
---js=${DEVDIR}/js/ChatUI.js \
---js=${DEVDIR}/js/Dialogs.js \
---js=${DEVDIR}/js/ChatView.js \
---js=${DEVDIR}/js/XMPPConn.js \
---js=${DEVDIR}/js/Events.js \
---js=${DEVDIR}/js/UIBuilder.js \
---js_output_file=${DEVDIR}/live.js
+--js=js/overrides.js \
+--js=js/strophe.js \
+--js=js/disco.js \
+--js=js/MUCChatPanel.js \
+--js=js/MUCRoomUsers.js \
+--js=js/UserColors.js \
+--js=js/ChatGridPanel.js \
+--js=js/ChatTextEntry.js \
+--js=js/ChatPanel.js \
+--js=js/LiveViewport.js \
+--js=js/MapLegend.js \
+--js=js/CheckColumn.js \
+--js=js/DataTip.js \
+--js=js/roster.js \
+--js=js/AllChatMessageWindow.js \
+--js=js/DDTabPanel.js \
+--js=js/ChatTabPanel.js \
+--js=js/ChatUI.js \
+--js=js/Dialogs.js \
+--js=js/ChatView.js \
+--js=js/XMPPConn.js \
+--js=js/Events.js \
+--js=js/UIBuilder.js \
+--js_output_file=live.js

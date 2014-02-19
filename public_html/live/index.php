@@ -29,8 +29,8 @@ $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 
  <!-- Finally, the app -->
 <?php if (isset($_GET["devel"])){ ?>
-<script language='javascript' type='text/javascript' src='strophe/strophe.js'></script>
-<script language='javascript' type='text/javascript' src='strophe/disco.js'></script>
+<script language='javascript' type='text/javascript' src='js/strophe.js'></script>
+<script language='javascript' type='text/javascript' src='js/disco.js'></script>
 <script type="text/javascript" src="js/overrides.js"></script>
 <script type="text/javascript" src="js/CheckColumn.js"></script>
 <script type="text/javascript" src="js/LiveViewport.js"></script>
