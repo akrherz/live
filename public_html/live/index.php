@@ -22,7 +22,7 @@ $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 </script>
 <?php if (!isset($_REQUEST["nomap"])){ ?>
   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-  <script type="text/javascript" src="../js/OpenLayers.js"></script>
+  <script type="text/javascript" src="/js/OpenLayers.js"></script>
   <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>
 <script type="text/javascript" src="/js/soundmanager2-jsmin.js"></script>
