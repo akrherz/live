@@ -112,7 +112,7 @@ Application.Control = {
 					xtype : 'menuitem',
 					text : 'Show Debug Window',
 					handler : function() {
-						Application.DebugWindow.show();
+						Ext.getCmp("debug").show();
 						
 					}
 				},{
@@ -365,58 +365,10 @@ Application.buildView = function(cfg) {
 	}
 	
 
-
-
-	Application.DebugWindow = new Ext.Window({
-		width : 600,
-		height : 300,
-		title : 'Debug Window',
-		closeAction : 'hide',
-		hidden : true,
-		autoScroll : true,
-		layout : 'fit',
-		renderTo:Ext.getBody(),
-		tbar : [{
-			text : 'Click to send this log to developer!',
-			icon : 'icons/print.png',
-			handler : function(){
-				Ext.Ajax.request({
-					url: 'bug.php',
-					method : 'POST',
-					success: function(response){
-						alert(response.responseText);
-					},
-					failure: function () {
-					},
-					headers: {
-						'my-header': 'foo'
-					},
-					params: { data: Application.DebugWindow.items.items[0].body.dom.innerHTML,
-						user: Application.USERNAME }
-				});
-			}
-		},{
-			text : 'Clear Log',
-			icon : 'icons/close.png',
-			handler : function(){
-				Ext.getCmp("sysmsg").update("");
-			}
-		}],
-		items : [new Ext.Panel({
-			title : 'Debug Log',
-
-			html : "<p>Browser CodeName: " + navigator.appCodeName + "</p>"
-			+ "<p>Browser Name: " + navigator.appName + "</p>"
-			+ "<p>Browser Version: " + navigator.appVersion + "</p>"
-			+ "<p>Cookies Enabled: " + navigator.cookieEnabled + "</p>"
-			+ "<p>Platform: " + navigator.platform + "</p>"
-			+ "<p>User-agent header: " + navigator.userAgent + "</p>",
-			id : 'sysmsg',
-			autoScroll : true
-		})
-		]
-	});
-
+	(new Application.DebugWindow({
+		id: 'debug',
+		renderTo: Ext.getBody()
+	}));
 
 	(new Application.LoginWindow({id: 'loginwindow'})).show(); 
 };

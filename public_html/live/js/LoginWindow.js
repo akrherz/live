@@ -45,7 +45,7 @@ Application.LoginWindow = Ext.extend(Ext.Window, {
 			buttons : [{
 				text : 'Show Debug',
 				handler : function(){
-					Application.DebugWindow.show();
+					Ext.getCmp("debug").show();
 				}
 			},{
 				text : "Browser Save Login",

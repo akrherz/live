@@ -9,6 +9,7 @@ java -jar ~/lib/compiler.jar \
 --js=js/strophe.js \
 --js=js/disco.js \
 --js=js/LoginWindow.js \
+--js=js/DebugWindow.js \
 --js=js/MUCChatPanel.js \
 --js=js/MUCRoomUsers.js \
 --js=js/UserColors.js \
