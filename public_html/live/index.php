@@ -107,6 +107,7 @@ you use.</p>
 <script type='text/javascript' src='js/disco.js'></script>
 <script type="text/javascript" src="js/overrides.js"></script>
 <script type="text/javascript" src="js/CheckColumn.js"></script>
+<script type="text/javascript" src="js/LoginWindow.js"></script>
 <script type="text/javascript" src="js/LiveViewport.js"></script>
 <script type="text/javascript" src="js/MapLegend.js"></script>
 <script type="text/javascript" src="js/MUCChatPanel.js"></script>

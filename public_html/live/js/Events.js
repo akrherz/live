@@ -185,16 +185,15 @@ Application.MsgBus.on('loggingout', function() {
 	/* Remove chatrooms */
 	Ext.getCmp('chatrooms').root.removeAll();
 
-	//Application.LoginDialog.show();
 });
 
 Application.MsgBus.on('loggedout', function() {
-	Application.LoginDialog.show();
+	Ext.getCmp("loginwindow").show();
 });
 
 Application.MsgBus.on('loggedin', function() {
 
-			Application.LoginDialog.hide();
+			Ext.getCmp("loginwindow").hide();
 
 			Application.XMPPConn.send($iq({
 						type : 'get',

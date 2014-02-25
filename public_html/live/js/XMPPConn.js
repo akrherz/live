@@ -11,7 +11,6 @@ Application.ServiceGuard = {
 			return;
 		}
 		// if (!Application.XMPPConn.authenticated &&
-		// !Application.LoginDialog.isVisible()){
 		// Application.log("Encountered Unaccounted for disconnect!");
 		// Application.MsgBus.fireEvent('loggingout');
 		// }
@@ -73,11 +72,8 @@ function onConnect(status) {
 	} else if (status == Strophe.Status.AUTHFAIL) {
 		Application.log('Strophe.Status.AUTHFAIL...');
 		Application.RECONNECT = false;
-		Application.msgtpl.insertFirst(
-				Application.LoginDialog.items.items[2].body, {
-					msg : 'Authentication failed, please check username and password...',
-					date : new Date()
-				});
+		Ext.getCmp('loginwindow').addMessage(
+			'Authentication failed, please check username and password...');
 		Application.XMPPConn.disconnect();
 	} else if (status == Strophe.Status.CONNFAIL) {
 		Application.log('Strophe.Status.CONNFAIL...');

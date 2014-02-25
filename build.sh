@@ -8,6 +8,7 @@ java -jar ~/lib/compiler.jar \
 --js=js/overrides.js \
 --js=js/strophe.js \
 --js=js/disco.js \
+--js=js/LoginWindow.js \
 --js=js/MUCChatPanel.js \
 --js=js/MUCRoomUsers.js \
 --js=js/UserColors.js \
