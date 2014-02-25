@@ -58,7 +58,7 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
                                         arguments);
 	}, // End of initComponent
 	addMessage : function(msg){
-        Application.msgtpl.insertFirst(
+        Application.msgtpl.append(
                 this.items.items[0].body, {
                         msg : msg,
                         date : new Date()

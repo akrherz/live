@@ -43,15 +43,7 @@ Welcome to NWSChat Live, please log in with your NWSChat account.
 
 <p><h4>Most Recent Changes</h4>
 <ul>
- <li>14 Feb 2013: Plain text messages that contain URLs are now clickable.</li>
- <li>5 Dec 2012: Added Tribal Boundaries as an overlay option.</li>
- <li>1 May 2012: Added NWS Fire Weather Zones as an overlay option.</li>
- <li>12 Mar 2012: The "All Chats" tab introduced an instability by giving the web
- browser too much work to do.  This would cause the browser to report a script
- is busy error or other poor things would happen.  The "All Chats" tab has been
- adjusted to only load <strong>new</strong> messages after you join the room.</li>
- <li>30 Jan 2012: Updated colors used to differentiate chatroom authors to hopefully
- be a bit more distinguishable.</li>
+ <li>25 Feb 2014: Improve stability</li>
 </ul>
 
 <p style="margin-top: 5px;">"NWSChat Live" is a pure web browser instant messaging client 
@@ -164,12 +156,10 @@ Strophe.log = function(level, msg){
 		}
 	});	 
  	Ext.QuickTips.init();
- 	var vp = new Application.LiveViewport({
+ 	(new Application.LiveViewport({
  		renderTo : Ext.getBody(),
  		enableMap : <?php echo (isset($_REQUEST["nomap"]) ? 'false' : 'true'); ?>
- 	});
- 	vp.show();
- 	Application.buildView();
+ 	})).show();
 	Ext.TaskMgr.start(Application.ServiceGuard);
  });
 </script>
