@@ -158,8 +158,11 @@ Strophe.log = function(level, msg){
  Application.AUTOJOIN = true;
  Application.ATTEMPTS = 0;
  Application.XMPPHOST = "<?php echo $config["xmpp_domain"]; ?>";
- Application.XMPPMUCHOST = "conference.<?php echo $config["xmpp_domain"]; ?>";
+ Application.XMPPMUCHOST = "<?php echo $config["xmpp_mucservice"]; ?>";
  Application.XMPPRESOURCE = "<?php echo $xmppresource; ?>";
+ Application.LOGIN_OPT_USER = true;
+ Application.LOGIN_OPT_ANONYMOUS = true;
+ Application.LOGIN_OPT_REGISTER = true;
  
  soundManager.url = "swf/";
  soundManager.consoleOnly = true;

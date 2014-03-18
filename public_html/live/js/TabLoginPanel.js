@@ -16,17 +16,25 @@ Application.TabLoginPanel = Ext.extend(Ext.TabPanel, {
 		this.buildItems();
 	},
 	buildItems : function() {
-		this.add(new Application.LoginPanel({id: 'loginpanel'}));
-		this.add({
-			xtype : 'panel',
-			contentEl: 'anonymous',
-			title : 'Anonymous Login'
-		});
-		this.add({
-			xtype : 'panel',
-			contentEl: 'register',
-			title : 'Register Account'
-		});
+		if (Application.LOGIN_OPT_USER){
+			this.add(new Application.LoginPanel({id: 'loginpanel'}));
+		}
+		if (Application.LOGIN_OPT_ANONYMOUS){
+			this.add({
+				xtype : 'panel',
+				contentEl: 'anonymous',
+				preventBodyReset : true,
+				title : 'Anonymous Login'
+			});
+		}
+		if (Application.LOGIN_OPT_REGISTER){
+			this.add({
+				xtype : 'panel',
+				contentEl: 'register',
+				preventBodyReset : true,
+				title : 'Register Account'
+			});
+		}
 		this.activate(0);
 	} // End of buildItems
 });
