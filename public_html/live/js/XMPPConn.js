@@ -35,6 +35,17 @@ function UTCStringToDate(dtStr, format) {
 	return dt.fromUTC();
 }
 
+function buildXMPP(){
+	Application.log("Initializing XMPPConn Obj");
+	Application.XMPPConn = new Strophe.Connection(Application.BOSH);
+	Application.XMPPConn.disco
+			.addFeature("http://jabber.org/protocol/chatstates");
+	if (Application.DEBUGMODE) {
+		Application.XMPPConn.rawInput = rawInput;
+		Application.XMPPConn.rawOutput = rawOutput;
+	}
+}
+
 /*
  * Called when we wish to login! 
  */
@@ -43,18 +54,55 @@ Application.login = function(username, password) {
 	// Reset AUTOJOIN to true
 	Application.AUTOJOIN = true;
 	if (typeof Application.XMPPConn === 'undefined') {
-		Application.log("Initializing XMPPConn Obj");
-		Application.XMPPConn = new Strophe.Connection(Application.BOSH);
-		Application.XMPPConn.disco
-				.addFeature("http://jabber.org/protocol/chatstates");
-		if (Application.DEBUGMODE) {
-			Application.XMPPConn.rawInput = rawInput;
-			Application.XMPPConn.rawOutput = rawOutput;
-		}
-
+		buildXMPP();
 	}
 	Application.XMPPConn.connect(jid, password, onConnect, 60, 1,
 			Application.ROUTE);
+};
+
+// Anonymous Login!
+Application.doAnonymousLogin = function(){
+	if (typeof Application.XMPPConn === 'undefined') {
+		buildXMPP();
+	}
+	Application.XMPPConn.connect(Application.XMPPHOST, null, onConnect);
+};
+
+// Registration!
+Application.register = function(){
+	if (typeof Application.XMPPConn === 'undefined') {
+		buildXMPP();
+	}
+	var callback = function (status) {
+	    if (status === Strophe.Status.REGISTER) {
+	    	Application.log("Strophe.Status.REGISTER");
+	    	Application.XMPPConn.register.fields.username = Ext.get("reguser").getValue();
+	    	Application.XMPPConn.register.fields.password = Ext.get("regpass").getValue();
+	    	Application.XMPPConn.register.fields.email = Ext.get("regemail").getValue();
+	    	Application.XMPPConn.register.submit();
+	    } else if (status === Strophe.Status.REGISTERED) {
+			Ext.getCmp('loginpanel').addMessage(
+			'Username '+Application.XMPPConn.register.fields.username+' registered with server ...');
+	        Ext.getCmp('loginwindow').items.items[0].activate(0);
+	        Ext.getCmp('username').setValue(Application.XMPPConn.register.fields.username);
+	        Ext.getCmp('password').setValue(Application.XMPPConn.register.fields.password);
+	        Application.XMPPConn.disconnect();
+	        Application.doLogin();
+	    } else if (status === Strophe.Status.CONFLICT) {
+	        Application.log("Contact already existed!");
+	    } else if (status === Strophe.Status.NOTACCEPTABLE) {
+	        Application.log("Registration form not properly filled out.");
+	    } else if (status === Strophe.Status.REGIFAIL) {
+	        Application.log("The Server does not support In-Band Registration");
+	    } else if (status === Strophe.Status.CONNECTED) {
+	    	Application.log('connected?');
+	        // do something after successful authentication
+	    } else {
+	    	Application.log(status);
+	        // Do other stuff
+	    }
+	};
+	Application.XMPPConn.register.connect(Application.XMPPHOST, callback);
 };
 
 /*
@@ -72,7 +120,7 @@ function onConnect(status) {
 	} else if (status == Strophe.Status.AUTHFAIL) {
 		Application.log('Strophe.Status.AUTHFAIL...');
 		Application.RECONNECT = false;
-		Ext.getCmp('loginwindow').addMessage(
+		Ext.getCmp('loginpanel').addMessage(
 			'Authentication failed, please check username and password...');
 		Application.XMPPConn.disconnect();
 	} else if (status == Strophe.Status.CONNFAIL) {

@@ -18,6 +18,7 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
 		this.tbar = [{
 			text : 'Click to send this log to developer!',
 			icon : 'icons/print.png',
+			scope : this,
 			handler : function(){
 				Ext.Ajax.request({
 					url: 'bug.php',
@@ -30,7 +31,7 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
 					headers: {
 						'my-header': 'foo'
 					},
-					params: { data: Application.DebugWindow.items.items[0].body.dom.innerHTML,
+					params: { data: this.items.items[0].body.dom.innerHTML,
 						user: Application.USERNAME }
 				});
 			}

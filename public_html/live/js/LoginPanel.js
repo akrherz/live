@@ -1,6 +1,6 @@
 Ext.ns("Application");
 
-Application.LoginWindow = Ext.extend(Ext.Window, { 
+Application.LoginPanel = Ext.extend(Ext.Panel, { 
 
 	initComponent : function() {
 		
@@ -58,18 +58,14 @@ Application.LoginWindow = Ext.extend(Ext.Window, {
 			}]
 	
 		},{
-					xtype : 'panel',
-					colspan : 2,
-					contentEl : 'loginmessage',
-					preventBodyReset : true
-				}];
+			xtype : 'panel',
+			colspan : 2,
+			contentEl : 'loginmessage',
+			preventBodyReset : true
+		}];
         var config = {
-        		width : 420,
-        		height: 250,
         		autoScroll : true,
-        		modal : true,
-        		closable : false,
-        		title : 'NWSChat Live Login',
+        		title : 'Login with Account',
         		layout : 'table',
         		layoutConfig : {
         			columns : 2
@@ -77,7 +73,7 @@ Application.LoginWindow = Ext.extend(Ext.Window, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, config));
 
-        Application.LoginWindow.superclass.initComponent.apply(this,
+        Application.LoginPanel.superclass.initComponent.apply(this,
                                         						arguments);
 	}, // end of initComponent
 	addMessage : function(msg){

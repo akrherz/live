@@ -65,6 +65,12 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
 			renderTo: Ext.getBody()
 		}));
 
-		(new Application.LoginWindow({id: 'loginwindow'})).show(); 
+		(new Ext.Window({
+			id: 'loginwindow',
+    		modal : true,
+    		closable : false,
+			title : 'NWSChat Live Login Options',
+			items : [new Application.TabLoginPanel()]
+		})).show(); 
 	}
 });

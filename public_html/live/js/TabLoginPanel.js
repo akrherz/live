@@ -5,6 +5,9 @@ Ext.namespace("Application");
 Application.TabLoginPanel = Ext.extend(Ext.TabPanel, {
 	initComponent : function() {
 		var config = {
+    		width : 420,
+    		height: 250,
+    		autoScroll : true
 		};
 		Ext.apply(this, Ext.apply(this.initialConfig, config));
 
@@ -13,12 +16,18 @@ Application.TabLoginPanel = Ext.extend(Ext.TabPanel, {
 		this.buildItems();
 	},
 	buildItems : function() {
+		this.add(new Application.LoginPanel({id: 'loginpanel'}));
 		this.add({
 			xtype : 'panel',
-			title : 'Hello Daryl'
+			contentEl: 'anonymous',
+			title : 'Anonymous Login'
 		});
-		this.add(new Application.LoginPabel({id: 'loginpanel'}));
-		
+		this.add({
+			xtype : 'panel',
+			contentEl: 'register',
+			title : 'Register Account'
+		});
+		this.activate(0);
 	} // End of buildItems
 });
 

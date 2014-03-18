@@ -7,8 +7,10 @@ cd $DEVDIR
 java -jar ~/lib/compiler.jar \
 --js=js/overrides.js \
 --js=js/strophe.js \
+--js=js/strophe.register.js \
 --js=js/disco.js \
---js=js/LoginWindow.js \
+--js=js/LoginPanel.js \
+--js=js/TabLoginPanel.js \
 --js=js/DebugWindow.js \
 --js=js/MUCChatPanel.js \
 --js=js/MUCRoomUsers.js \

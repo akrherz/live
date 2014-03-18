@@ -12,6 +12,27 @@ $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
  <link rel="stylesheet" type="text/css" href="live.css"/>
 </head>
 <body>
+
+<div id="anonymous" class="x-hide-display">
+<p><strong>Anonymous Login:</strong></p>
+<p>You can login to this service without registering, you will not be able to
+chat within the rooms nor save preferences.</p>
+<button type="button" onclick="Application.doAnonymousLogin();">Login Anonymously</button>
+</div>
+
+<div id="register" class="x-hide-display">
+<p><strong>Register for An Account:</strong></p>
+<p>You can create an account on this Jabber server. You can use this account
+to login with this "Live" client or most any other XMPP client like Pidgin.</p>
+
+<p><form id="myregisterform">
+<br />Username: <input type="text" id="reguser" name="reguser" />
+<br />Password: <input type="text" id="regpass" name="regpass" />
+<br />Email: <input type="text" id="regemail" name="regemail" />
+<br /><button type="button" onclick="Application.register();">Register Account</button>
+</form>
+</div>
+
 <form id="myloginform" method="post" action="pass.php" class="x-hidden">
 <input type="text" id="username" name="username" class="x-hidden" />
 <input type="password" id="password" name="password" class="x-hidden" />
@@ -96,10 +117,12 @@ you use.</p>
  <!-- Finally, the app -->
 <?php if (isset($_GET["devel"])){ ?>
 <script type='text/javascript' src='js/strophe.js'></script>
+<script type='text/javascript' src='js/strophe.register.js'></script>
 <script type='text/javascript' src='js/disco.js'></script>
 <script type="text/javascript" src="js/overrides.js"></script>
 <script type="text/javascript" src="js/CheckColumn.js"></script>
-<script type="text/javascript" src="js/LoginWindow.js"></script>
+<script type="text/javascript" src="js/LoginPanel.js"></script>
+<script type="text/javascript" src="js/TabLoginPanel.js"></script>
 <script type="text/javascript" src="js/DebugWindow.js"></script>
 <script type="text/javascript" src="js/LiveViewport.js"></script>
 <script type="text/javascript" src="js/MapLegend.js"></script>
