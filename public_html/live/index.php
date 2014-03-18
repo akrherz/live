@@ -64,6 +64,7 @@ Welcome to NWSChat Live, please log in with your NWSChat account.
 
 <p><h4>Most Recent Changes</h4>
 <ul>
+ <li>18 Mar 2014: Google Map option was removed as per licensing issues</li>
  <li>25 Feb 2014: Improve stability</li>
 </ul>
 
@@ -110,7 +111,6 @@ you use.</p>
 </script>
 
 <?php if (!isset($_REQUEST["nomap"])){ ?>
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="/js/OpenLayers_GeoExt.js"></script>
 <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>

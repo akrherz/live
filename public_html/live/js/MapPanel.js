@@ -785,18 +785,10 @@ function setAppTime() {
 	}
 };
 
-var gmap = new OpenLayers.Layer.Google(
-		"Google Streets", // the default
-		{
-			numZoomLevels : 20,
-			sphericalMercator : true,
-			maxZoomLevel : 15,
-			maxExtent : new OpenLayers.Bounds(-20037508.34, -20037508.34,
-					20037508.34, 20037508.34)
-		});
+var osm = new OpenLayers.Layer.OSM();
 
 Application.layerstore = new GeoExt.data.LayerStore({
-			layers : [gmap,  new OpenLayers.Layer("No Overlay", {
+			layers : [osm,  new OpenLayers.Layer("No Overlay", {
 								checkedGroup : 'Precip',
 								isBaseLayer : false,
 								visibility : true

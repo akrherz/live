@@ -7,7 +7,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
 				region : 'north',
 				height : 10,
 				hidden : true,
-				title : 'Google Map Disabled by URL'
+				title : 'Map Disabled by URL'
 		};
 		if (this.initialConfig.enableMap){
 			mp = {
@@ -15,7 +15,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
 					layout : 'border',
 					region : 'north',
 					collapsible : true,
-					title : 'Google Map Panel',
+					title : 'Map Panel',
 					height : 300,
 					split : true,
 					items : [Application.MapPanel,
