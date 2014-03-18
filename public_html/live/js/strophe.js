@@ -87,32 +87,16 @@ var Base64 = (function () {
  * See http://pajhome.org.uk/crypt/md5 for details.
  */
 
-/*
- * Configurable variables. You may need to tweak these to be compatible with
- * the server-side, but the defaults work in most cases.
- */
-var hexcase = 0;  /* hex output format. 0 - lowercase; 1 - uppercase        */
-var b64pad  = "="; /* base-64 pad character. "=" for strict RFC compliance   */
-var chrsz   = 8;  /* bits per input character. 8 - ASCII; 16 - Unicode      */
+/* Some functions and variables have been stripped for use with Strophe */
 
 /*
  * These are the functions you'll usually want to call
  * They take string arguments and return either hex or base-64 encoded strings
  */
-function hex_sha1(s){return binb2hex(core_sha1(str2binb(s),s.length * chrsz));}
-function b64_sha1(s){return binb2b64(core_sha1(str2binb(s),s.length * chrsz));}
-function str_sha1(s){return binb2str(core_sha1(str2binb(s),s.length * chrsz));}
-function hex_hmac_sha1(key, data){ return binb2hex(core_hmac_sha1(key, data));}
+function b64_sha1(s){return binb2b64(core_sha1(str2binb(s),s.length * 8));}
+function str_sha1(s){return binb2str(core_sha1(str2binb(s),s.length * 8));}
 function b64_hmac_sha1(key, data){ return binb2b64(core_hmac_sha1(key, data));}
 function str_hmac_sha1(key, data){ return binb2str(core_hmac_sha1(key, data));}
-
-/*
- * Perform a simple self-test to see if the VM is working
- */
-function sha1_vm_test()
-{
-  return hex_sha1("abc") == "a9993e364706816aba3e25717850c26c9cd0d89d";
-}
 
 /*
  * Calculate the SHA-1 of an array of big-endian words, and a bit length
@@ -188,7 +172,7 @@ function sha1_kt(t)
 function core_hmac_sha1(key, data)
 {
   var bkey = str2binb(key);
-  if (bkey.length > 16) { bkey = core_sha1(bkey, key.length * chrsz); }
+  if (bkey.length > 16) { bkey = core_sha1(bkey, key.length * 8); }
 
   var ipad = new Array(16), opad = new Array(16);
   for (var i = 0; i < 16; i++)
@@ -197,7 +181,7 @@ function core_hmac_sha1(key, data)
     opad[i] = bkey[i] ^ 0x5C5C5C5C;
   }
 
-  var hash = core_sha1(ipad.concat(str2binb(data)), 512 + data.length * chrsz);
+  var hash = core_sha1(ipad.concat(str2binb(data)), 512 + data.length * 8);
   return core_sha1(opad.concat(hash), 512 + 160);
 }
 
@@ -227,10 +211,10 @@ function rol(num, cnt)
 function str2binb(str)
 {
   var bin = [];
-  var mask = (1 << chrsz) - 1;
-  for (var i = 0; i < str.length * chrsz; i += chrsz)
+  var mask = 255;
+  for (var i = 0; i < str.length * 8; i += 8)
   {
-    bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (32 - chrsz - i%32);
+    bin[i>>5] |= (str.charCodeAt(i / 8) & mask) << (24 - i%32);
   }
   return bin;
 }
@@ -241,25 +225,10 @@ function str2binb(str)
 function binb2str(bin)
 {
   var str = "";
-  var mask = (1 << chrsz) - 1;
-  for (var i = 0; i < bin.length * 32; i += chrsz)
+  var mask = 255;
+  for (var i = 0; i < bin.length * 32; i += 8)
   {
-    str += String.fromCharCode((bin[i>>5] >>> (32 - chrsz - i%32)) & mask);
-  }
-  return str;
-}
-
-/*
- * Convert an array of big-endian words to a hex string.
- */
-function binb2hex(binarray)
-{
-  var hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
-  var str = "";
-  for (var i = 0; i < binarray.length * 4; i++)
-  {
-    str += hex_tab.charAt((binarray[i>>2] >> ((3 - i%4)*8+4)) & 0xF) +
-           hex_tab.charAt((binarray[i>>2] >> ((3 - i%4)*8  )) & 0xF);
+    str += String.fromCharCode((bin[i>>5] >>> (24 - i%32)) & mask);
   }
   return str;
 }
@@ -279,7 +248,7 @@ function binb2b64(binarray)
                ((binarray[i+2 >> 2] >> 8 * (3 - (i+2)%4)) & 0xFF);
     for (j = 0; j < 4; j++)
     {
-      if (i * 8 + j * 6 > binarray.length * 32) { str += b64pad; }
+      if (i * 8 + j * 6 > binarray.length * 32) { str += "="; }
       else { str += tab.charAt((triplet >> 6*(3-j)) & 0x3F); }
     }
   }
@@ -294,15 +263,11 @@ function binb2b64(binarray)
  * See http://pajhome.org.uk/crypt/md5 for more info.
  */
 
-var MD5 = (function () {
-    /*
-     * Configurable variables. You may need to tweak these to be compatible with
-     * the server-side, but the defaults work in most cases.
-     */
-    var hexcase = 0;  /* hex output format. 0 - lowercase; 1 - uppercase */
-    var b64pad  = ""; /* base-64 pad character. "=" for strict RFC compliance */
-    var chrsz   = 8;  /* bits per input character. 8 - ASCII; 16 - Unicode */
+/*
+ * Everything that isn't used by Strophe has been stripped here!
+ */
 
+var MD5 = (function () {
     /*
      * Add integers, wrapping at 2^32. This uses 16-bit operations internally
      * to work around bugs in some JS interpreters.
@@ -322,14 +287,12 @@ var MD5 = (function () {
 
     /*
      * Convert a string to an array of little-endian words
-     * If chrsz is ASCII, characters >255 have their hi-byte silently ignored.
      */
     var str2binl = function (str) {
         var bin = [];
-        var mask = (1 << chrsz) - 1;
-        for(var i = 0; i < str.length * chrsz; i += chrsz)
+        for(var i = 0; i < str.length * 8; i += 8)
         {
-            bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (i%32);
+            bin[i>>5] |= (str.charCodeAt(i / 8) & 255) << (i%32);
         }
         return bin;
     };
@@ -339,10 +302,9 @@ var MD5 = (function () {
      */
     var binl2str = function (bin) {
         var str = "";
-        var mask = (1 << chrsz) - 1;
-        for(var i = 0; i < bin.length * 32; i += chrsz)
+        for(var i = 0; i < bin.length * 32; i += 8)
         {
-            str += String.fromCharCode((bin[i>>5] >>> (i % 32)) & mask);
+            str += String.fromCharCode((bin[i>>5] >>> (i % 32)) & 255);
         }
         return str;
     };
@@ -351,33 +313,12 @@ var MD5 = (function () {
      * Convert an array of little-endian words to a hex string.
      */
     var binl2hex = function (binarray) {
-        var hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
+        var hex_tab = "0123456789abcdef";
         var str = "";
         for(var i = 0; i < binarray.length * 4; i++)
         {
             str += hex_tab.charAt((binarray[i>>2] >> ((i%4)*8+4)) & 0xF) +
                 hex_tab.charAt((binarray[i>>2] >> ((i%4)*8  )) & 0xF);
-        }
-        return str;
-    };
-
-    /*
-     * Convert an array of little-endian words to a base-64 string
-     */
-    var binl2b64 = function (binarray) {
-        var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        var str = "";
-        var triplet, j;
-        for(var i = 0; i < binarray.length * 4; i += 3)
-        {
-            triplet = (((binarray[i   >> 2] >> 8 * ( i   %4)) & 0xFF) << 16) |
-                (((binarray[i+1 >> 2] >> 8 * ((i+1)%4)) & 0xFF) << 8 ) |
-                ((binarray[i+2 >> 2] >> 8 * ((i+2)%4)) & 0xFF);
-            for(j = 0; j < 4; j++)
-            {
-                if(i * 8 + j * 6 > binarray.length * 32) { str += b64pad; }
-                else { str += tab.charAt((triplet >> 6*(3-j)) & 0x3F); }
-            }
         }
         return str;
     };
@@ -503,24 +444,6 @@ var MD5 = (function () {
     };
 
 
-    /*
-     * Calculate the HMAC-MD5, of a key and some data
-     */
-    var core_hmac_md5 = function (key, data) {
-        var bkey = str2binl(key);
-        if(bkey.length > 16) { bkey = core_md5(bkey, key.length * chrsz); }
-
-        var ipad = new Array(16), opad = new Array(16);
-        for(var i = 0; i < 16; i++)
-        {
-            ipad[i] = bkey[i] ^ 0x36363636;
-            opad[i] = bkey[i] ^ 0x5C5C5C5C;
-        }
-
-        var hash = core_md5(ipad.concat(str2binl(data)), 512 + data.length * chrsz);
-        return core_md5(opad.concat(hash), 512 + 128);
-    };
-
     var obj = {
         /*
          * These are the functions you'll usually want to call.
@@ -528,34 +451,11 @@ var MD5 = (function () {
          * strings.
          */
         hexdigest: function (s) {
-            return binl2hex(core_md5(str2binl(s), s.length * chrsz));
-        },
-
-        b64digest: function (s) {
-            return binl2b64(core_md5(str2binl(s), s.length * chrsz));
+            return binl2hex(core_md5(str2binl(s), s.length * 8));
         },
 
         hash: function (s) {
-            return binl2str(core_md5(str2binl(s), s.length * chrsz));
-        },
-
-        hmac_hexdigest: function (key, data) {
-            return binl2hex(core_hmac_md5(key, data));
-        },
-
-        hmac_b64digest: function (key, data) {
-            return binl2b64(core_hmac_md5(key, data));
-        },
-
-        hmac_hash: function (key, data) {
-            return binl2str(core_hmac_md5(key, data));
-        },
-
-        /*
-         * Perform a simple self-test to see if the VM is working
-         */
-        test: function () {
-            return MD5.hexdigest("abc") === "900150983cd24fb0d6963f7d28e17f72";
+            return binl2str(core_md5(str2binl(s), s.length * 8));
         }
     };
 
@@ -568,10 +468,11 @@ var MD5 = (function () {
     Copyright 2006-2008, OGG, LLC
 */
 
+/* jshint undef: true, unused: true:, noarg: true, latedef: true */
 /*global document, window, setTimeout, clearTimeout, console,
-    XMLHttpRequest, ActiveXObject,
-    Base64, MD5,
-    Strophe, $build, $msg, $iq, $pres */
+    ActiveXObject, Base64, MD5, DOMParser */
+// from sha1.js
+/*global core_hmac_sha1, binb2str, str_hmac_sha1, str_sha1, b64_hmac_sha1*/
 
 /** File: strophe.js
  *  A JavaScript library for XMPP BOSH/XMPP over Websocket.
@@ -724,7 +625,7 @@ Strophe = {
      *  The version of the Strophe library. Unreleased builds will have
      *  a version of head-HASH where HASH is a partial revision.
      */
-    VERSION: "1.1.0",
+    VERSION: "",
 
     /** Constants: XMPP Namespace Constants
      *  Common namespace constants from the XMPP RFCs and XEPs.
@@ -1132,9 +1033,10 @@ Strophe = {
      */
     xmlHtmlNode: function (html)
     {
+        var node;
         //ensure text is escaped
         if (window.DOMParser) {
-            parser = new DOMParser();
+            var parser = new DOMParser();
             node = parser.parseFromString(html, "text/xml");
         } else {
             node = new ActiveXObject("Microsoft.XMLDOM");
@@ -1220,7 +1122,7 @@ Strophe = {
      */
     createHtml: function (elem)
     {
-        var i, el, j, tag, attribute, value, css, cssAttrs, attr, cssName, cssValue, children, child;
+        var i, el, j, tag, attribute, value, css, cssAttrs, attr, cssName, cssValue;
         if (elem.nodeType == Strophe.ElementType.NORMAL) {
             tag = elem.nodeName.toLowerCase();
             if(Strophe.XHTML.validTag(tag)) {
@@ -1425,10 +1327,12 @@ Strophe = {
      *      be one of the values in Strophe.LogLevel.
      *    (String) msg - The log message.
      */
+    /* jshint ignore:start */
     log: function (level, msg)
     {
         return;
     },
+    /* jshint ignore:end */
 
     /** Function: debug
      *  Log a message at the Strophe.LogLevel.DEBUG level.
@@ -2059,6 +1963,8 @@ Strophe.TimedHandler.prototype = {
  *
  *  > var conn = new Strophe.Connection("/http-bind/");
  *
+ *  WebSocket options:
+ *
  *  If you want to connect to the current host with a WebSocket connection you
  *  can tell Strophe to use WebSockets through a "protocol" attribute in the
  *  optional options parameter. Valid values are "ws" for WebSocket and "wss"
@@ -2067,12 +1973,22 @@ Strophe.TimedHandler.prototype = {
  *
  *  > var conn = new Strophe.Connection("/xmpp-websocket/", {protocol: "wss"});
  *
- *  Note that relative URLs starting _NOT_ with a "/" will also include the path
+ *  Note that relative URLs _NOT_ starting with a "/" will also include the path
  *  of the current site.
  *
  *  Also because downgrading security is not permitted by browsers, when using
  *  relative URLs both BOSH and WebSocket connections will use their secure
  *  variants if the current connection to the site is also secure (https).
+ *
+ *  BOSH options:
+ *
+ *  by adding "sync" to the options, you can control if requests will
+ *  be made synchronously or not. The default behaviour is asynchronous.
+ *  If you want to make requests synchronous, make "sync" evaluate to true:
+ *  > var conn = new Strophe.Connection("/http-bind/", {sync: true});
+ *  You can also toggle this on an already established connection:
+ *  > conn.options.sync = true;
+ *
  *
  *  Parameters:
  *    (String) service - The BOSH or WebSocket service URL.
@@ -2087,8 +2003,8 @@ Strophe.Connection = function (service, options)
     this.service = service;
 
     // Configuration options
-    this._options = options || {};
-    var proto = this._options.protocol || "";
+    this.options = options || {};
+    var proto = this.options.protocol || "";
 
     // Select protocal based on service or options
     if (service.indexOf("ws:") === 0 || service.indexOf("wss:") === 0 ||
@@ -2148,7 +2064,7 @@ Strophe.Connection = function (service, options)
         if (Strophe._connectionPlugins.hasOwnProperty(k)) {
             var ptype = Strophe._connectionPlugins[k];
             // jslint complaints about the below line, but this is fine
-            var F = function () {};
+            var F = function () {}; // jshint ignore:line
             F.prototype = ptype;
             this[k] = new F();
             this[k].init(this);
@@ -2299,8 +2215,8 @@ Strophe.Connection.prototype = {
         this.authenticated = false;
         this.errors = 0;
 
-        // parse jid for domain and resource
-        this.domain = this.domain || Strophe.getDomainFromJid(this.jid);
+        // parse jid for domain
+        this.domain = Strophe.getDomainFromJid(this.jid);
 
         this._changeConnectStatus(Strophe.Status.CONNECTING, null);
 
@@ -2333,7 +2249,7 @@ Strophe.Connection.prototype = {
      */
     attach: function (jid, sid, rid, callback, wait, hold, wind)
     {
-        this._proto.attach(jid, sid, rid, callback, wait, hold, wind);
+        this._proto._attach(jid, sid, rid, callback, wait, hold, wind);
     },
 
     /** Function: xmlInput
@@ -2354,10 +2270,12 @@ Strophe.Connection.prototype = {
      *  Parameters:
      *    (XMLElement) elem - The XML data received by the connection.
      */
+    /* jshint unused:false */
     xmlInput: function (elem)
     {
         return;
     },
+    /* jshint unused:true */
 
     /** Function: xmlOutput
      *  User overrideable function that receives XML data sent to the
@@ -2377,10 +2295,12 @@ Strophe.Connection.prototype = {
      *  Parameters:
      *    (XMLElement) elem - The XMLdata sent by the connection.
      */
+    /* jshint unused:false */
     xmlOutput: function (elem)
     {
         return;
     },
+    /* jshint unused:true */
 
     /** Function: rawInput
      *  User overrideable function that receives raw data coming into the
@@ -2394,10 +2314,12 @@ Strophe.Connection.prototype = {
      *  Parameters:
      *    (String) data - The data received by the connection.
      */
+    /* jshint unused:false */
     rawInput: function (data)
     {
         return;
     },
+    /* jshint unused:true */
 
     /** Function: rawOutput
      *  User overrideable function that receives raw data sent to the
@@ -2411,10 +2333,12 @@ Strophe.Connection.prototype = {
      *  Parameters:
      *    (String) data - The data sent by the connection.
      */
+    /* jshint unused:false */
     rawOutput: function (data)
     {
         return;
     },
+    /* jshint unused:true */
 
     /** Function: send
      *  Send a stanza.
@@ -2943,8 +2867,7 @@ Strophe.Connection.prototype = {
         }
         var mechanisms = bodyWrap.getElementsByTagName("mechanism");
         var matched = [];
-        var i, mech, auth_str, hashed_auth_str,
-            found_authentication = false;
+        var i, mech, found_authentication = false;
         if (!hasFeatures) {
             this._proto._no_auth_received(_callback);
             return;
@@ -3084,6 +3007,7 @@ Strophe.Connection.prototype = {
      *  Returns:
      *    false to remove the handler.
      */
+    /* jshint unused:false */
     _auth1_cb: function (elem)
     {
         // build plaintext auth iq
@@ -3108,6 +3032,7 @@ Strophe.Connection.prototype = {
 
         return false;
     },
+    /* jshint unused:true */
 
     /** PrivateFunction: _sasl_success_cb
      *  _Private_ handler for succesful SASL authentication.
@@ -3124,7 +3049,7 @@ Strophe.Connection.prototype = {
             var serverSignature;
             var success = Base64.decode(Strophe.getText(elem));
             var attribMatch = /([a-z]+)=([^,]+)(,|$)/;
-            matches = success.match(attribMatch);
+            var matches = success.match(attribMatch);
             if (matches[1] == "v") {
                 serverSignature = matches[2];
             }
@@ -3298,6 +3223,7 @@ Strophe.Connection.prototype = {
      *  Returns:
      *    false to remove the handler.
      */
+    /* jshint unused:false */
     _sasl_failure_cb: function (elem)
     {
         // delete unneeded handlers
@@ -3315,6 +3241,7 @@ Strophe.Connection.prototype = {
         this._changeConnectStatus(Strophe.Status.AUTHFAIL, null);
         return false;
     },
+    /* jshint unused:true */
 
     /** PrivateFunction: _auth2_cb
      *  _Private_ handler to finish legacy authentication.
@@ -3447,8 +3374,6 @@ Strophe.Connection.prototype = {
         }
         this.timedHandlers = newList;
 
-        var body, time_elapsed;
-
         clearTimeout(this._idleTimeout);
 
         this._proto._onIdle();
@@ -3521,8 +3446,6 @@ Strophe.SASLMechanism = function(name, isClientFirst, priority) {
 };
 
 Strophe.SASLMechanism.prototype = {
-  _sasl_data: {},
-
   /**
    *  Function: test
    *  Checks if mechanism able to run.
@@ -3541,9 +3464,11 @@ Strophe.SASLMechanism.prototype = {
    *  Returns:
    *    (Boolean) If mechanism was able to run.
    */
+  /* jshint unused:false */
   test: function(connection) {
     return true;
   },
+  /* jshint unused:true */
 
   /** PrivateFunction: onStart
    *  Called before starting mechanism on some connection.
@@ -3567,9 +3492,11 @@ Strophe.SASLMechanism.prototype = {
    *  Returns:
    *    (String) Mechanism response.
    */
+  /* jshint unused:false */
   onChallenge: function(connection, challenge) {
     throw new Error("You should implement challenge handling!");
   },
+  /* jshint unused:true */
 
   /** PrivateFunction: onFailure
    *  Protocol informs mechanism implementation about SASL failure.
@@ -3621,7 +3548,7 @@ Strophe.SASLPlain.test = function(connection) {
   return connection.authcid !== null;
 };
 
-Strophe.SASLPlain.prototype.onChallenge = function(connection, challenge) {
+Strophe.SASLPlain.prototype.onChallenge = function(connection) {
   var auth_str = connection.authzid;
   auth_str = auth_str + "\u0000";
   auth_str = auth_str + connection.authcid;
@@ -3664,23 +3591,23 @@ Strophe.SASLSHA1.prototype.onChallenge = function(connection, challenge, test_cn
   auth_str += ",r=";
   auth_str += cnonce;
 
-  this._sasl_data.cnonce = cnonce;
-  this._sasl_data["client-first-message-bare"] = auth_str;
+  connection._sasl_data.cnonce = cnonce;
+  connection._sasl_data["client-first-message-bare"] = auth_str;
 
   auth_str = "n,," + auth_str;
 
   this.onChallenge = function (connection, challenge)
   {
-    var nonce, salt, iter, Hi, U, U_old;
+    var nonce, salt, iter, Hi, U, U_old, i, k;
     var clientKey, serverKey, clientSignature;
     var responseText = "c=biws,";
-    var authMessage = this._sasl_data["client-first-message-bare"] + "," +
+    var authMessage = connection._sasl_data["client-first-message-bare"] + "," +
       challenge + ",";
-    var cnonce = this._sasl_data.cnonce;
+    var cnonce = connection._sasl_data.cnonce;
     var attribMatch = /([a-z]+)=([^,]+)(,|$)/;
 
     while (challenge.match(attribMatch)) {
-      matches = challenge.match(attribMatch);
+      var matches = challenge.match(attribMatch);
       challenge = challenge.replace(matches[0], "");
       switch (matches[1]) {
       case "r":
@@ -3696,7 +3623,7 @@ Strophe.SASLSHA1.prototype.onChallenge = function(connection, challenge, test_cn
     }
 
     if (nonce.substr(0, cnonce.length) !== cnonce) {
-      this._sasl_data = {};
+      connection._sasl_data = {};
       return connection._sasl_failure_cb();
     }
 
@@ -3816,7 +3743,7 @@ Strophe.SASLMD5.prototype.onChallenge = function(connection, challenge, test_cno
                                               MD5.hexdigest(A2)) + ",";
   responseText += 'qop=auth';
 
-  this.onChallenge = function (connection, challenge)
+  this.onChallenge = function ()
   {
     return "";
   }.bind(this);
@@ -3840,10 +3767,10 @@ Strophe.Connection.prototype.mechanisms[Strophe.SASLMD5.prototype.name] = Stroph
     Copyright 2006-2008, OGG, LLC
 */
 
-/*global document, window, setTimeout, clearTimeout, console,
+/* jshint undef: true, unused: true:, noarg: true, latedef: true */
+/*global window, setTimeout, clearTimeout,
     XMLHttpRequest, ActiveXObject,
-    Base64, MD5,
-    Strophe, $build, $msg, $iq, $pres */
+    Strophe, $build */
 
 
 /** PrivateClass: Strophe.Request
@@ -4250,7 +4177,7 @@ Strophe.Bosh.prototype = {
             req.xhr.abort();
             // jslint complains, but this is fine. setting to empty func
             // is necessary for IE6
-            req.xhr.onreadystatechange = function () {};
+            req.xhr.onreadystatechange = function () {}; // jshint ignore:line
         }
     },
 
@@ -4272,8 +4199,8 @@ Strophe.Bosh.prototype = {
 
         if (this._requests.length < 2 && data.length > 0 &&
             !this._conn.paused) {
-            body = this._buildBody();
-            for (i = 0; i < data.length; i++) {
+            var body = this._buildBody();
+            for (var i = 0; i < data.length; i++) {
                 if (data[i] !== null) {
                     if (data[i] === "restart") {
                         body.attrs({
@@ -4298,7 +4225,7 @@ Strophe.Bosh.prototype = {
         }
 
         if (this._requests.length > 0) {
-            time_elapsed = this._requests[0].age();
+            var time_elapsed = this._requests[0].age();
             if (this._requests[0].dead !== null) {
                 if (this._requests[0].timeDead() >
                     Math.floor(Strophe.SECONDARY_TIMEOUT * this.wait)) {
@@ -4478,7 +4405,7 @@ Strophe.Bosh.prototype = {
                           "." + req.sends + " posting");
 
             try {
-                req.xhr.open("POST", this._conn.service, true);
+                req.xhr.open("POST", this._conn.service, this._conn.options.sync ? false : true);
             } catch (e2) {
                 Strophe.error("XHR open failed.");
                 if (!this._conn.connected) {
@@ -4493,8 +4420,8 @@ Strophe.Bosh.prototype = {
             // or on a gradually expanding retry window for reconnects
             var sendFunc = function () {
                 req.date = new Date();
-                if (self._conn._options.customHeaders){
-                    var headers = self._conn._options.customHeaders;
+                if (self._conn.options.customHeaders){
+                    var headers = self._conn.options.customHeaders;
                     for (var header in headers) {
                         if (headers.hasOwnProperty(header)) {
                             req.xhr.setRequestHeader(header, headers[header]);
@@ -4682,9 +4609,9 @@ Strophe.Bosh.prototype = {
     Copyright 2006-2008, OGG, LLC
 */
 
-/*global document, window, setTimeout, clearTimeout, console,
-    Base64, MD5,
-    Strophe, $build, $msg, $iq, $pres */
+/* jshint undef: true, unused: true:, noarg: true, latedef: true */
+/*global document, window, clearTimeout, WebSocket,
+    DOMParser, Strophe, $build */
 
 /** Class: Strophe.WebSocket
  *  _Private_ helper class that handles WebSocket Connections
@@ -4725,7 +4652,7 @@ Strophe.Websocket = function(connection) {
         // URL together from options, current URL and the path.
         var new_service = "";
 
-        if (connection._options.protocol === "ws" && window.location.protocol !== "https:") {
+        if (connection.options.protocol === "ws" && window.location.protocol !== "https:") {
             new_service += "ws";
         } else {
             new_service += "wss";
@@ -4779,9 +4706,9 @@ Strophe.Websocket.prototype = {
         var condition = "";
         var text = "";
 
-        ns = "urn:ietf:params:xml:ns:xmpp-streams";
-        for (i = 0; i < error.childNodes.length; i++) {
-            e = error.childNodes[i];
+        var ns = "urn:ietf:params:xml:ns:xmpp-streams";
+        for (var i = 0; i < error.childNodes.length; i++) {
+            var e = error.childNodes[i];
             if (e.getAttribute("xmlns") !== ns) {
                 break;
             } if (e.nodeName === "text") {
@@ -4791,7 +4718,7 @@ Strophe.Websocket.prototype = {
             }
         }
 
-        errorString = "WebSocket stream error: ";
+        var errorString = "WebSocket stream error: ";
 
         if (condition) {
             errorString += condition;
@@ -4927,7 +4854,7 @@ Strophe.Websocket.prototype = {
         } else if (message.data === "</stream:stream>") {
             this._conn.rawInput(message.data);
             this._conn.xmlInput(document.createElement("stream:stream"));
-            this._conn._changeConnectStatus(Strophe.Status.CONNFAIL, error);
+            this._conn._changeConnectStatus(Strophe.Status.CONNFAIL, "Received closing stream");
             this._conn._doDisconnect();
             return;
         } else {
@@ -5015,7 +4942,7 @@ Strophe.Websocket.prototype = {
      *
      * Nothing to do here for WebSockets
      */
-    _onClose: function(event) {
+    _onClose: function() {
         if(this._conn.connected && !this._conn.disconnecting) {
             Strophe.error("Websocket closed unexcectedly");
             this._conn._doDisconnect();
@@ -5067,7 +4994,7 @@ Strophe.Websocket.prototype = {
     _onIdle: function () {
         var data = this._conn._data;
         if (data.length > 0 && !this._conn.paused) {
-            for (i = 0; i < data.length; i++) {
+            for (var i = 0; i < data.length; i++) {
                 if (data[i] !== null) {
                     var stanza, rawStanza;
                     if (data[i] === "restart") {
@@ -5100,7 +5027,7 @@ Strophe.Websocket.prototype = {
      * (string) message - The websocket message.
      */
     _onMessage: function(message) {
-        var elem;
+        var elem, data;
         // check for closing stream
         if (message.data === "</stream:stream>") {
             var close = "</stream:stream>";
