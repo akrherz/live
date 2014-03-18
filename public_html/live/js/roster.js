@@ -27,7 +27,7 @@ function onBuddyPresence(msg) {
 			Application.log("Self presence: ["+ username +"] ["+ resource +"] available");			
 			if (Application.AUTOJOIN){
 				Ext.Msg.alert('Warning',
-						'The chat server indicated you have another NWSChatLive session ['
+						'The chat server indicated you have another '+Application.NAME+' session ['
 								+ resource + '] active. Disabling auto-joined chatrooms.');
 				Application.AUTOJOIN = false;
 			}
@@ -42,7 +42,7 @@ function onBuddyPresence(msg) {
 		Ext.Msg.show({
 			
 			   title:'New Buddy Request',
-			   msg: 'NWSChat user '+ username +' wishes to add you as a buddy. Is this okay?',
+			   msg: 'User '+ username +' wishes to add you as a buddy. Is this okay?',
 			   buttons: Ext.Msg.YESNO,
 			   fn: function(btn){
 				 if (btn == 'yes'){

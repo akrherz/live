@@ -6,6 +6,7 @@ $config = Array(
 	"xmpp_domain" => "laptop.local",
 	"xmpp_mucservice" => "conference.laptop.local",
 	"nwschatadmin" => "akrherz@localhost",	
+	"live_appname" => "NWSChat Live",
 );
 
 ?>

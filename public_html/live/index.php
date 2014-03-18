@@ -3,11 +3,12 @@ require_once("../../include/props.php");
 
 $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 		gmdate("His"));
+$appname = $config["live_appname"];
 ?>
 <html lang='en'>
 <head>
  <meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
- <title>NWSChat Live</title>
+ <title><?php echo $appname; ?></title>
  <link rel="stylesheet" type="text/css" href="/ext-3.4.1/resources/css/ext-all.css"/>
  <link rel="stylesheet" type="text/css" href="live.css"/>
 </head>
@@ -26,10 +27,13 @@ chat within the rooms nor save preferences.</p>
 to login with this "Live" client or most any other XMPP client like Pidgin.</p>
 
 <p><form id="myregisterform">
-<br />Username: <input type="text" id="reguser" name="reguser" />
-<br />Password: <input type="text" id="regpass" name="regpass" />
-<br />Email: <input type="text" id="regemail" name="regemail" />
-<br /><button type="button" onclick="Application.register();">Register Account</button>
+<table>
+<tr><th>Username:</th><td><input type="text" id="reguser" name="reguser" /></td></tr>
+<tr><th>Password:</th><td><input type="text" id="regpass" name="regpass" /></td></tr>
+<tr><th>Email:</th><td><input type="text" id="regemail" name="regemail" /></td></tr>
+<tr><td colspan="2"><input type="checkbox" id="okusage">I agree my usage is edcuational and without warranty.</td></tr>
+<tr><td colspan="2"><button type="button" onclick="Application.register();">Register Account</button></td></tr>
+</table>
 </form>
 </div>
 
@@ -50,7 +54,7 @@ to login with this "Live" client or most any other XMPP client like Pidgin.</p>
 </div>
 
 <div id="loginmessage" class="x-hide-display">
-Welcome to NWSChat Live, please log in with your NWSChat account.
+Welcome to <?php echo $appname; ?>, please log in with your user account.
 <br /><a href="/pwupdate.php">Forgot your password?</a>
 <?php if(isset($_REQUEST["nomap"])){ 
   echo "<br />Switch to <a href='?'>NWSChat Live with Map</a>";	
@@ -60,7 +64,7 @@ Welcome to NWSChat Live, please log in with your NWSChat account.
 </div>
 
 <div id="help" class="x-hide-display">
-<h3>NWSChat Live Application</h3>
+<h3><?php echo $appname; ?> Application</h3>
 
 <p><h4>Most Recent Changes</h4>
 <ul>
@@ -68,7 +72,7 @@ Welcome to NWSChat Live, please log in with your NWSChat account.
  <li>25 Feb 2014: Improve stability</li>
 </ul>
 
-<p style="margin-top: 5px;">"NWSChat Live" is a pure web browser instant messaging client 
+<p style="margin-top: 5px;">"<?php echo $appname; ?>" is a pure web browser instant messaging client 
 for NWSChat.  The purpose of the application is to provide users 
 with a painless means to join the NWSChat conversation without
 installing third party software or worrying about local network
@@ -152,6 +156,7 @@ Strophe.log = function(level, msg){
 <script type="text/javascript" src="100/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>
 <script type="text/javascript">
+ Application.NAME = "<?php echo $appname; ?>";
  Application.ROUTE = "<?php echo $config["punjab_route"]; ?>";
  Application.BOSH = "<?php echo $config["bosh_service"]; ?>";
  Application.RECONNECT = true;

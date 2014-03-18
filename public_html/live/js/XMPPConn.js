@@ -187,7 +187,7 @@ function onConnect(status) {
 					}
 				});
 
-		/* Send request for NWSChat Live prefs */
+		/* Send request for Live prefs */
 		var stanza = $iq({
 					type : 'get',
 					id : '_get3'
@@ -198,7 +198,7 @@ function onConnect(status) {
 				}).tree();
 		Application.XMPPConn.sendIQ(stanza, parsePrefs);
 
-		/* Send request for NWSChat Live views */
+		/* Send request for Live views */
 		var stanza = $iq({
 					type : 'get',
 					id : '_get2'
@@ -774,8 +774,8 @@ function messageParser(msg) {
 						background : '#fff'
 					},
 					title : $(msg).find("subject").text()
-							|| 'NWSChat System Message',
-					html : "<p><b>NWSChat System Message</b><p>" + $(msg).find('body').text() + "</p>"
+							|| 'System Message',
+					html : "<p><b>System Message</b><p>" + $(msg).find('body').text() + "</p>"
 
 				})).show();
 	}
