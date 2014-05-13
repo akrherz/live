@@ -84,7 +84,7 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
 						var fgcolor = Application.getPreference('fgcolor', '000000');
 						
 						/* allchat */
-						if (this.ownerCt.ownerCt.barejid == null){
+						if (this.ownerCt.ownerCt.chatType == "allchats"){
 							txt.emptyText = '';
 							txt.setValue('');
 							(new Application.AllChatMessageWindow({
