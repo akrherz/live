@@ -4,7 +4,7 @@ require_once("../../include/props.php");
 $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 		gmdate("His"));
 $appname = $config["live_appname"];
-?>
+?><!DOCTYPE html>
 <html lang='en'>
 <head>
  <meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
@@ -68,7 +68,6 @@ Welcome to <?php echo $appname; ?>, please log in with your user account.
 
 <p><h4>Most Recent Changes</h4>
 <ul>
- <li>18 Mar 2014: Google Map option was removed as per licensing issues</li>
  <li>25 Feb 2014: Improve stability</li>
 </ul>
 
@@ -115,6 +114,7 @@ you use.</p>
 </script>
 
 <?php if (!isset($_REQUEST["nomap"])){ ?>
+<script type="text/javascript" src="<?php echo $config["live_gmaps_url"]; ?>"></script>
 <script type="text/javascript" src="/js/OpenLayers_GeoExt.js"></script>
 <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>
@@ -160,14 +160,13 @@ Strophe.log = function(level, msg){
  Application.ROUTE = "<?php echo $config["punjab_route"]; ?>";
  Application.BOSH = "<?php echo $config["bosh_service"]; ?>";
  Application.RECONNECT = true;
- Application.AUTOJOIN = true;
  Application.ATTEMPTS = 0;
  Application.XMPPHOST = "<?php echo $config["xmpp_domain"]; ?>";
  Application.XMPPMUCHOST = "<?php echo $config["xmpp_mucservice"]; ?>";
  Application.XMPPRESOURCE = "<?php echo $xmppresource; ?>";
- Application.LOGIN_OPT_USER = true;
- Application.LOGIN_OPT_ANONYMOUS = true;
- Application.LOGIN_OPT_REGISTER = true;
+ Application.LOGIN_OPT_USER = <?php echo $config["live_login_opt_user"]; ?>;
+ Application.LOGIN_OPT_ANONYMOUS = <?php echo $config["live_login_opt_anonymous"]; ?>;
+ Application.LOGIN_OPT_REGISTER = <?php echo $config["live_login_opt_register"]; ?>;
  
  soundManager.url = "swf/";
  soundManager.consoleOnly = true;
