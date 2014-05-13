@@ -24,13 +24,7 @@ function onBuddyPresence(msg) {
 		if (msg.getAttribute('type') == 'unavailable'){
 			Application.log("Self presence: ["+ username +"] ["+ resource +"] unavailable");			
 		} else {
-			Application.log("Self presence: ["+ username +"] ["+ resource +"] available");			
-			if (Application.AUTOJOIN){
-				Ext.Msg.alert('Warning',
-						'The chat server indicated you have another '+Application.NAME+' session ['
-								+ resource + '] active. Disabling auto-joined chatrooms.');
-				Application.AUTOJOIN = false;
-			}
+			Application.log("Self presence: ["+ username +"] ["+ resource +"] available");
 		}
 	}
 	/* Check for status */
