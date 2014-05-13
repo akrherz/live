@@ -51,8 +51,6 @@ function buildXMPP(){
  */
 Application.login = function(username, password) {
 	jid = username + "@" + Application.XMPPHOST + "/"+ Application.XMPPRESOURCE;
-	// Reset AUTOJOIN to true
-	Application.AUTOJOIN = true;
 	if (typeof Application.XMPPConn === 'undefined') {
 		buildXMPP();
 	}
@@ -340,9 +338,7 @@ function parseBookmarks(msg) {
 					anonymous : anonymous,
 					leaf : true
 				});
-		if (! Application.AUTOJOIN && autojoin){
-			Application.log("AUTOJOIN is false, not autojoining: "+jid);
-		} else if (autojoin && Ext.getCmp("chatpanel").getMUC(jid) == null) {
+		if (autojoin && Ext.getCmp("chatpanel").getMUC(jid) == null) {
 			/*
 			 * We need to slow down the loading of chatrooms as this can be
 			 * a very expensive browser operation, IE will complain about
