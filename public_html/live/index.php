@@ -120,10 +120,10 @@ you use.</p>
 <?php } ?>
  <!-- Finally, the app -->
 <?php if (isset($_GET["devel"])){ ?>
+<script type="text/javascript" src="js/overrides.js"></script>
 <script type='text/javascript' src='js/strophe.js'></script>
 <script type='text/javascript' src='js/strophe.register.js'></script>
 <script type='text/javascript' src='js/disco.js'></script>
-<script type="text/javascript" src="js/overrides.js"></script>
 <script type="text/javascript" src="js/CheckColumn.js"></script>
 <script type="text/javascript" src="js/LoginPanel.js"></script>
 <script type="text/javascript" src="js/TabLoginPanel.js"></script>
