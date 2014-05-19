@@ -22,7 +22,7 @@ Application.TabLoginPanel = Ext.extend(Ext.TabPanel, {
 		if (Application.LOGIN_OPT_ANONYMOUS){
 			this.add({
 				xtype : 'panel',
-				contentEl: 'anonymous',
+				contentEl: 'anonymous_div',
 				preventBodyReset : true,
 				title : 'Anonymous Login'
 			});
@@ -30,7 +30,7 @@ Application.TabLoginPanel = Ext.extend(Ext.TabPanel, {
 		if (Application.LOGIN_OPT_REGISTER){
 			this.add({
 				xtype : 'panel',
-				contentEl: 'register',
+				contentEl: 'register_div',
 				preventBodyReset : true,
 				title : 'Register Account'
 			});

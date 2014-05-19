@@ -14,14 +14,14 @@ $appname = $config["live_appname"];
 </head>
 <body>
 
-<div id="anonymous" class="x-hide-display">
+<div id="anonymous_div" class="x-hide-display">
 <p><strong>Anonymous Login:</strong></p>
 <p>You can login to this service without registering, you will not be able to
 chat within the rooms nor save preferences.</p>
 <button type="button" onclick="Application.doAnonymousLogin();">Login Anonymously</button>
 </div>
 
-<div id="register" class="x-hide-display">
+<div id="register_div" class="x-hide-display">
 <p><strong>Register for An Account:</strong></p>
 <p>You can create an account on this Jabber server. You can use this account
 to login with this "Live" client or most any other XMPP client like Pidgin.</p>
