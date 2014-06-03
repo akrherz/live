@@ -94,6 +94,7 @@ Application.register = function(){
 	        Application.log("The Server does not support In-Band Registration");
 	    } else if (status === Strophe.Status.CONNECTED) {
 	    	Application.log('connected?');
+			Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
 	        // do something after successful authentication
 	    } else {
 	    	Application.log(status);
@@ -144,6 +145,7 @@ function onConnect(status) {
 		Application.log('Strophe.Status.ATTACHED...');
 	} else if (status == Strophe.Status.CONNECTED) {
 		Application.log('Strophe.Status.CONNECTED...');
+		Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
 		Application.RECONNECT = true;
 
 		/* Add Connection Handlers, removed on disconnect it seems */

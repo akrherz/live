@@ -331,6 +331,5 @@ Application.doLogin = function() {
 		Application.log("Invalid Password");
 		return;
 	}
-	Application.USERNAME = username;
 	Application.login(username, password);
 };
