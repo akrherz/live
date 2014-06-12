@@ -53,10 +53,6 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
 			});
 
 			Ext.TaskMgr.start(Application.MapTask);
-			/* Dunno why I have to wait until here */
-			var ctrl = new OpenLayers.Control.SelectFeature([lsrs,sbws]);
-			Ext.getCmp('map').map.addControl(ctrl);
-			ctrl.activate();
 		}
 
 

@@ -68,6 +68,8 @@ Welcome to <?php echo $appname; ?>, please log in with your user account.
 
 <p><h4>Most Recent Changes</h4>
 <ul>
+ <li>12 Jun 2014: Fix bug where warnings and local storm reports were not 
+ clickable on the map.</li>
  <li>25 Feb 2014: Improve stability</li>
 </ul>
 
@@ -191,6 +193,11 @@ Strophe.log = function(level, msg){
  		enableMap : <?php echo (isset($_REQUEST["nomap"]) ? 'false' : 'true'); ?>
  	})).show();
 	Ext.TaskMgr.start(Application.ServiceGuard);
+<?php if (!isset($_REQUEST["nomap"])){ ?>
+	var ctrl = new OpenLayers.Control.SelectFeature([lsrs,sbws]);
+	Ext.getCmp('map').map.addControl(ctrl);
+	ctrl.activate();
+<?php  } ?>
  });
 </script>
 
