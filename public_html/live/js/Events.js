@@ -45,7 +45,9 @@ Application.syncPreferences = function(){
 											value : record.get("value")
 										}).up();
 	}, stanza);
-	Application.XMPPConn.sendIQ(stanza.tree());
+	if (Application.XMPPConn !== undefined){
+		Application.XMPPConn.sendIQ(stanza.tree());
+	}
 };
 
 Application.removePreference = function(key) {
