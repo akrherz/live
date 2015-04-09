@@ -116,7 +116,6 @@ you use.</p>
 </script>
 
 <?php if (!isset($_REQUEST["nomap"])){ ?>
-<script type="text/javascript" src="<?php echo $config["live_gmaps_url"]; ?>"></script>
 <script type="text/javascript" src="/js/OpenLayers_GeoExt.js"></script>
 <script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
 <?php } ?>
