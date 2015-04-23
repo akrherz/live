@@ -6,20 +6,30 @@ Ext.ns("Application");
 		strokeColor : '#3c783c',
 		graphicZIndex : 2
 	},
+	"Marginal Risk" : {
+		fillColor : '#7fc57f',
+		strokeColor : '#3c783c',
+		graphicZIndex : 3
+	},
 	"Slight Risk" : {
 		fillColor : '#f6f67f',
 		strokeColor : '#ff9600',
-		graphicZIndex : 3
+		graphicZIndex : 4
+	},
+	"Enhanced Risk" : {
+		fillColor : '#e6c27f',
+		strokeColor : '#ff7f00',
+		graphicZIndex : 5
 	},
 	"Moderate Risk" : {
 		fillColor : '#e67f7f',
 		strokeColor : '#cd0000',
-		graphicZIndex : 4
+		graphicZIndex : 6
 	},
 	"High Risk" : {
 		fillColor : '#ff00ff',
 		strokeColor : '#000000',
-		graphicZIndex : 5
+		graphicZIndex : 7
 	}
 };
 var spcConvStyleMap = new OpenLayers.StyleMap({
