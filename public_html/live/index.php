@@ -117,7 +117,7 @@ you use.</p>
 
 <?php if (!isset($_REQUEST["nomap"])){ ?>
 <script type="text/javascript" src="/js/OpenLayers_GeoExt.js"></script>
-<script type="text/javascript" src="101/<?php echo gmdate('YmdHi'); ?>.js"></script>
+<script type="text/javascript" src="live.js"></script>
 <?php } ?>
  <!-- Finally, the app -->
 <?php if (isset($_GET["devel"])){ ?>
@@ -154,7 +154,7 @@ Strophe.log = function(level, msg){
 };
 </script>
 <?php } else { ?>
-<script type="text/javascript" src="100/<?php echo gmdate('YmdHi'); ?>.js"></script>
+<script type="text/javascript" src="js/MapPanel.js"></script>
 <?php } ?>
 <script type="text/javascript">
  Application.NAME = "<?php echo $appname; ?>";
