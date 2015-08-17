@@ -5,9 +5,9 @@
 include("../../include/props.php");
 include_once "../../include/utils.php";
 $URLS = Array(
- 0 => "http://www.hpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day1_latest_netlink.kml",
- 1 => "http://www.hpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day2_latest_netlink.kml",
- 2 => "http://www.hpc.ncep.noaa.gov/kml/qpf/QPF120hr_Day1-5_latest_netlink.kml",
+ 0 => "http://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day1_latest_netlink.kml",
+ 1 => "http://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day2_latest_netlink.kml",
+ 2 => "http://www.wpc.ncep.noaa.gov/kml/qpf/QPF120hr_Day1-5_latest_netlink.kml",
  3 => "http://www.spc.noaa.gov/products/outlook/day1otlk.kml",
  4 => "http://www.spc.noaa.gov/products/outlook/day2otlk.kml",
  5 => "http://www.spc.noaa.gov/products/outlook/day3otlk.kml",
