@@ -635,7 +635,7 @@ function messageParser(msg) {
 	var from = msg.getAttribute('from');
 	var type = msg.getAttribute('type');
 	var elems = msg.getElementsByTagName('body');
-	var x = $(msg).find("x[xmlns='jabber:x:delay']");
+	var x = $(msg).find("delay[xmlns='urn:xmpp:delay']");
 	var html = $(msg).find('html');
 	var body = elems[0];
 	var txt = "";
@@ -659,12 +659,13 @@ function messageParser(msg) {
 	}
 
 	if (x.length > 0) {
-		stamp = x[0].getAttribute('stamp');
+		stamp = UTCStringToDate(x[0].getAttribute('stamp').substring(0, 19),
+								'Y-m-d\\Th:i:s');
 		isDelayed = true;
 	} else {
-		stamp = (new Date()).toUTC().format('Ymd\\TH:i:s');
+		stamp = new Date();
 	}
-
+	
 	if (type == "groupchat") {
 		/* Look to see if a product_id is embedded */
 		product_id = null;
@@ -683,7 +684,7 @@ function messageParser(msg) {
 		mpc = Ext.getCmp("chatpanel").getMUC(room);
 		if (mpc && sender) {
 			mpc.gp.getStore().addSorted(new Ext.data.Record({
-						ts : UTCStringToDate(stamp, 'Ymd\\Th:i:s'),
+						ts : stamp,
 						author : sender,
 						message : txt,
 						room : null,
@@ -700,7 +701,7 @@ function messageParser(msg) {
 			if (!isDelayed){
 				/* Add to allchats */
 				Ext.getCmp("__allchats__").gp.getStore().addSorted(new Ext.data.Record({
-					ts : UTCStringToDate(stamp, 'Ymd\\Th:i:s'),
+					ts : stamp,
 					author : sender,
 					room : Strophe.getNodeFromJid(from),
 					message : txt,
@@ -751,7 +752,7 @@ function messageParser(msg) {
 		}
 		// Ext.getCmp("chatpanel").setActiveTab(cp);
 		cp.gp.store.addSorted(new Ext.data.Record({
-					ts : UTCStringToDate(stamp, 'Ymd\\Th:i:s'),
+					ts : stamp,
 					author : username,
 					room : null,
 					xdelay : false,
