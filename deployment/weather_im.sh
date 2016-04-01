@@ -1,6 +1,9 @@
 #!/bin/bash
 # This script does what is necessary to copy relative bits out of this
 # project and into the tree for the weather.im service, we run this on iem12
+cd ..
+echo "Building live.js via Google Closure"
+sh build.sh
 
 DEST="/mesonet/www/apps/weather.im/html/live/"
 LIVE="/mesonet/www/apps/live/public_html/live/"
