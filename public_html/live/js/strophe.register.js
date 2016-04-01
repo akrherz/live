@@ -41,8 +41,12 @@ Strophe.addConnectionPlugin('register', {
         Strophe.Status.CONFLICT        = i + 4;
         Strophe.Status.NOTACCEPTABLE   = i + 5;
 
-        if (conn.disco)
+        if (conn.disco) {
+          if(conn.disco.addFeature)
             conn.disco.addFeature(Strophe.NS.REGISTER);
+          if(conn.disco.addNode)
+            conn.disco.addNode(Strophe.NS.REGISTER, {items:[]});
+        }
 
         // hooking strophe's connection.reset
         var self = this, reset = conn.reset.bind(conn);
@@ -74,10 +78,11 @@ Strophe.addConnectionPlugin('register', {
                 // Save this request in case we want to authenticate later
                 self._connect_cb_data = {req: req,
                                          raw: raw};
-                // remember that we already processed stream:features
-                self.processed_features = true;
-                self._register_cb(req, callback, raw);
-                delete self._registering;
+                if(self._register_cb(req, callback, raw)) {
+                    // remember that we already processed stream:features
+                    self.processed_features = true;
+                    delete self._registering;
+                }
             }
         };
 
@@ -184,7 +189,7 @@ Strophe.addConnectionPlugin('register', {
 
         var conncheck = conn._proto._connect_cb(bodyWrap);
         if (conncheck === Strophe.Status.CONNFAIL) {
-            return;
+            return false;
         }
 
         // Check for the stream:features tag
@@ -192,20 +197,21 @@ Strophe.addConnectionPlugin('register', {
         var mechanisms = bodyWrap.getElementsByTagName("mechanism");
         if (register.length === 0 && mechanisms.length === 0) {
             conn._proto._no_auth_received(_callback);
-            return;
+            return false;
         }
 
-        //if (register.length === 0) {
-            // http://stackoverflow.com/questions/10414252
-            //conn._changeConnectStatus(Strophe.Status.REGIFAIL, null);
-            //return;
-        //}
+        if (register.length === 0) {
+            conn._changeConnectStatus(Strophe.Status.REGIFAIL, null);
+            return true;
+        }
 
         // send a get request for registration, to get all required data fields
         conn._addSysHandler(this._get_register_cb.bind(this),
                             null, "iq", null, null);
         conn.send($iq({type: "get"}).c("query",
             {xmlns: Strophe.NS.REGISTER}).tree());
+
+        return true;
     },
 
     /** PrivateFunction: _get_register_cb
@@ -315,11 +321,11 @@ Strophe.addConnectionPlugin('register', {
             } else {
                 conn._changeConnectStatus(Strophe.Status.REGIFAIL, error);
             }
+        } else {
+            Strophe.info("Registration successful.");
+
+            conn._changeConnectStatus(Strophe.Status.REGISTERED, null);
         }
-
-        Strophe.info("Registered successful.");
-
-        conn._changeConnectStatus(Strophe.Status.REGISTERED, null);
 
         return false;
     }
