@@ -23,6 +23,8 @@ chat within the rooms nor save preferences.</p>
 
 <div id="register_div" class="x-hide-display">
 <p><strong>Register for An Account:</strong></p>
+Due to spammers, you need to register for an account <a href="/create.php">here</a>.
+<!-- 
 <p>You can create an account on this Jabber server. You can use this account
 to login with this "Live" client or most any other XMPP client like Pidgin.</p>
 
@@ -35,6 +37,7 @@ to login with this "Live" client or most any other XMPP client like Pidgin.</p>
 <tr><td colspan="2"><button type="button" onclick="Application.register();">Register Account</button></td></tr>
 </table>
 </form>
+-->
 </div>
 
 <form id="myloginform" method="post" action="pass.php" class="x-hidden">
