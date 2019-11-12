@@ -1,5 +1,5 @@
 <?php
-require_once("../../include/props.php");
+require_once "../../include/props.php";
 
 $xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
 		gmdate("His"));
@@ -9,7 +9,7 @@ $appname = $config["live_appname"];
 <head>
  <meta charset="UTF-8"><!-- Ensure our XMPP stuff is UTF-8 as well -->
  <title><?php echo $appname; ?></title>
- <link rel="stylesheet" type="text/css" href="/ext-3.4.1/resources/css/ext-all.css"/>
+ <link rel="stylesheet" type="text/css" href="/vendor/ext/3.4.1/resources/css/ext-all.css"/>
  <link rel="stylesheet" type="text/css" href="live.css"/>
 </head>
 <body>
@@ -107,13 +107,13 @@ you use.</p>
 <script language='javascript' type='text/javascript' src='/js/jquery.1.9.1.min.js'></script>
 <!-- ExtJS Stuff -->
 
-<script type="text/javascript" src="/ext-3.4.1/adapter/jquery/ext-jquery-adapter.js"></script>
-<script type="text/javascript" src="/ext-3.4.1/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" src="/ext-3.4.1/ext-all.js"></script>
+<script type="text/javascript" src="/vendor/ext/3.4.1/adapter/jquery/ext-jquery-adapter.js"></script>
+<script type="text/javascript" src="/vendor/ext/3.4.1/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="/vendor/ext/3.4.1/ext-all.js"></script>
 <!--  SoundManager -->
 <script type="text/javascript" src="/js/soundmanager2-jsmin.js"></script>
 <script type="text/javascript">
- Ext.BLANK_IMAGE_URL = '/ext-3.4.1/resources/images/default/s.gif';
+ Ext.BLANK_IMAGE_URL = '/vendor/ext/3.4.1/resources/images/default/s.gif';
  Ext.ns("Application");
  Application.DEBUGMODE = <?php echo (isset($_GET["devel"])) ? 'true': 'false'; ?>;
 </script>
