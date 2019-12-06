@@ -647,9 +647,9 @@ var q23d = new OpenLayers.Layer.TMS('NMQ Q2 3 Day Precip',
 			isBaseLayer : false
 		});
 
-var goesIR = new OpenLayers.Layer.TMS('GOES IR',
+var goesEastM1VIS = new OpenLayers.Layer.TMS('GOES East Mesoscale1 Visible',
 		'https://mesonet.agron.iastate.edu/cache/tile.py/', {
-			layername : 'goes-ir-4km-900913',
+			layername : 'goes_east_mesoscale-1_ch02',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -659,9 +659,9 @@ var goesIR = new OpenLayers.Layer.TMS('GOES IR',
 			getURL : get_my_url,
 			isBaseLayer : false
 		});
-var goesVIS = new OpenLayers.Layer.TMS('GOES Visible Composite',
+var goesWestM1VIS = new OpenLayers.Layer.TMS('GOES West Mesoscale1 Visible',
 		'https://mesonet.agron.iastate.edu/cache/tile.py/', {
-			layername : 'goes-vis-1km-900913',
+			layername : 'goes_west_mesoscale-1_ch02',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -673,7 +673,7 @@ var goesVIS = new OpenLayers.Layer.TMS('GOES Visible Composite',
 		});
 var goesWestVIS = new OpenLayers.Layer.TMS('GOES West Visible',
 		'https://mesonet.agron.iastate.edu/cache/tile.py/', {
-			layername : 'goes-west-vis-1km-900913',
+			layername : 'goes_west_conus_ch02',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -685,7 +685,7 @@ var goesWestVIS = new OpenLayers.Layer.TMS('GOES West Visible',
 		});
 var goesEastVIS = new OpenLayers.Layer.TMS('GOES East Visible',
 		'https://mesonet.agron.iastate.edu/cache/tile.py/', {
-			layername : 'goes-east-vis-1km-900913',
+			layername : 'goes_west_conus_ch13',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -695,9 +695,21 @@ var goesEastVIS = new OpenLayers.Layer.TMS('GOES East Visible',
 			getURL : get_my_url,
 			isBaseLayer : false
 		});
-var goesWV = new OpenLayers.Layer.TMS('GOES Water Vapor',
+var goesEastWV = new OpenLayers.Layer.TMS('GOES East Water Vapor',
 		'https://mesonet.agron.iastate.edu/cache/tile.py/', {
-			layername : 'goes-wv-4km-900913',
+			layername : 'goes_east_conus_ch09',
+			service : '1.0.0',
+			type : 'png',
+			visibility : false,
+			refreshable : true,
+			checkedGroup : 'Satellite',
+			opacity : 0.8,
+			getURL : get_my_url,
+			isBaseLayer : false
+		});
+var goesWestWV = new OpenLayers.Layer.TMS('GOES West Water Vapor',
+		'https://mesonet.agron.iastate.edu/cache/tile.py/', {
+			layername : 'goes_west_conus_ch09',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -720,7 +732,7 @@ var firezones = new OpenLayers.Layer.TMS('NWS Fire Zones',
 		});
 var counties = new OpenLayers.Layer.TMS('US Counties',
 		'https://mesonet.agron.iastate.edu/c/c.py/', {
-			layername : 'c-900913',
+			layername : 'uscounties',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -731,7 +743,7 @@ var counties = new OpenLayers.Layer.TMS('US Counties',
 		});
 var states = new OpenLayers.Layer.TMS('US States',
 		'https://mesonet.agron.iastate.edu/c/c.py/', {
-			layername : 's-900913',
+			layername : 'usstates',
 			service : '1.0.0',
 			type : 'png',
 			visibility : false,
@@ -987,7 +999,10 @@ Application.layerstore = new GeoExt.data.LayerStore({
 								checkedGroup : 'Precip',
 								isBaseLayer : false,
 								visibility : true
-							}), q2hsr, ridgeII, goesIR, goesVIS, goesEastVIS, goesWestVIS, goesWV, q21h, q21d, q22d,
+                            }), q2hsr, ridgeII, goesEastVIS, goesEastWV,
+                            goesEastM1VIS,
+                            goesWestVIS, goesWestWV, goesWestM1VIS,
+                            q21h, q21d, q22d,
 					q23d, sbws, lsrs, qpf15, qpf2, qpf1, spc3, spc2, spc1,  new OpenLayers.Layer("Blank", {
 								isBaseLayer : true,
 								visibility : false
