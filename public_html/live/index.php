@@ -1,8 +1,8 @@
 <?php
 require_once "../../include/props.php";
 
-$xmppresource = sprintf("NWSChatLive_%s_%s", $_SERVER["REMOTE_ADDR"],
-		gmdate("His"));
+$xmppresource = sprintf("WeatherIMLive_%s_%s", $_SERVER["REMOTE_ADDR"],
+        gmdate("His"));
 $appname = $config["live_appname"];
 ?><!DOCTYPE html>
 <html lang='en'>
@@ -60,9 +60,9 @@ to login with this "Live" client or most any other XMPP client like Pidgin.</p>
 Welcome to <?php echo $appname; ?>, please log in with your user account.
 <br /><a href="/pwupdate.php">Forgot your password?</a>
 <?php if(isset($_REQUEST["nomap"])){ 
-  echo "<br />Switch to <a href='?'>NWSChat Live with Map</a>";	
+  echo "<br />Switch to <a href='?'>Weather.IM Live with Map</a>";    
 } else {
-  echo "<br />Switch to <a href='?nomap'>NWSChat Live without Map</a>";		
+  echo "<br />Switch to <a href='?nomap'>Weather.IM Live without Map</a>";        
 } ?>
 </div>
 
@@ -153,7 +153,7 @@ you use.</p>
 <script type="text/javascript" src="js/UIBuilder.js"></script>
 <script type="text/javascript">
 Strophe.log = function(level, msg){
-	Application.log( msg );
+    Application.log( msg );
 };
 </script>
 <?php } else { ?>
@@ -178,27 +178,27 @@ Strophe.log = function(level, msg){
  /* Try HTML5 Audio first? */
  soundManager.preferFlash = false;
  soundManager.onload = function() {
- 	Application.log("SoundManager2 Loaded...");	
+     Application.log("SoundManager2 Loaded...");    
  };
  
  Ext.onReady(function(){
 
-	Ext.EventManager.on(window, 'beforeunload', function() {
-		if (typeof Application.XMPPConn != 'undefined'){
-			Application.XMPPConn.flush();
-			Application.XMPPConn.disconnect();
-		}
-	});	 
- 	Ext.QuickTips.init();
- 	(new Application.LiveViewport({
- 		renderTo : Ext.getBody(),
- 		enableMap : <?php echo (isset($_REQUEST["nomap"]) ? 'false' : 'true'); ?>
- 	})).show();
-	Ext.TaskMgr.start(Application.ServiceGuard);
+    Ext.EventManager.on(window, 'beforeunload', function() {
+        if (typeof Application.XMPPConn != 'undefined'){
+            Application.XMPPConn.flush();
+            Application.XMPPConn.disconnect();
+        }
+    });     
+     Ext.QuickTips.init();
+     (new Application.LiveViewport({
+         renderTo : Ext.getBody(),
+         enableMap : <?php echo (isset($_REQUEST["nomap"]) ? 'false' : 'true'); ?>
+     })).show();
+    Ext.TaskMgr.start(Application.ServiceGuard);
 <?php if (!isset($_REQUEST["nomap"])){ ?>
-	var ctrl = new OpenLayers.Control.SelectFeature([lsrs,sbws]);
-	Ext.getCmp('map').map.addControl(ctrl);
-	ctrl.activate();
+    var ctrl = new OpenLayers.Control.SelectFeature([lsrs,sbws]);
+    Ext.getCmp('map').map.addControl(ctrl);
+    ctrl.activate();
 <?php  } ?>
  });
 </script>

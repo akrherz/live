@@ -17,20 +17,20 @@ Application.colors = ['000000', //black
 Application.colorpointer = 0;
 
 Application.UserColorStore = new Ext.data.Store({
-	fields : ['user', 'color']
+    fields : ['user', 'color']
 });
 
 Application.getUserColor = function(user) {
-	idx = Application.UserColorStore.find('user', user);
-	if (idx == -1){
-		c = Application.colors[ Application.colorpointer ];
-		Application.UserColorStore.add(new Ext.data.Record({user: user, color: c}));
-		Application.colorpointer++;
-		if (Application.colorpointer > 12){
-			Application.colorpointer = 0;
-		}
-	} else {
-		c = Application.UserColorStore.getAt(idx).get("color");
-	}
-	return c;
+    idx = Application.UserColorStore.find('user', user);
+    if (idx == -1){
+        c = Application.colors[ Application.colorpointer ];
+        Application.UserColorStore.add(new Ext.data.Record({user: user, color: c}));
+        Application.colorpointer++;
+        if (Application.colorpointer > 12){
+            Application.colorpointer = 0;
+        }
+    } else {
+        c = Application.UserColorStore.getAt(idx).get("color");
+    }
+    return c;
 };
