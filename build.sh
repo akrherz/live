@@ -7,7 +7,6 @@ cd $DEVDIR
 java -jar ~/lib/compiler.jar \
 --js=js/overrides.js \
 --js=js/strophe.js \
---js=js/strophe.register.js \
 --js=js/disco.js \
 --js=js/LoginPanel.js \
 --js=js/TabLoginPanel.js \
