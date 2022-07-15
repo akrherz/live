@@ -6,7 +6,6 @@ Application.MapLegend = Ext.extend(Ext.Window, {
     autoScroll : true,
     title : 'Map Legends',
     hidden : true,
-    autoScroll : true,
     closeAction : 'hide',
 
     initComponent : function() {
