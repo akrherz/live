@@ -89,6 +89,10 @@ var sbwStyles = {
         strokeColor : 'green',
         graphicZIndex : 6
     },
+    "SQ" : {
+        strokeColor : 'yellow',
+        graphicZIndex : 8
+    },
     "SV" : {
         strokeColor : 'yellow',
         graphicZIndex : 8
