@@ -5,7 +5,7 @@ Application.LoginPanel = Ext.extend(Ext.Panel, {
     initComponent : function() {
         
         this.items = [{
-                    html : '<img src="../images/nws.png" width="100"/>',
+                    html : '<img src="images/nws.png" width="100"/>',
                     height : 105,
                     width : 105
         },{
