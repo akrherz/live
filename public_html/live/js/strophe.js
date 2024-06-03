@@ -87,7 +87,7 @@
 
               for (let d = 0; d < docStrings.length; d++) {
                 try {
-                  // eslint-disable-next-line no-undef
+                   
                   const doc = new ActiveXObject(docStrings[d]);
                   return doc;
                 } catch (e) {// Try next one
@@ -415,7 +415,7 @@
 
 
               test() {
-                // eslint-disable-line class-methods-use-this
+                 
                 return true;
               }
               /** PrivateFunction: onStart
@@ -446,7 +446,7 @@
 
 
               onChallenge(connection, challenge) {
-                // eslint-disable-line
+                 
                 throw new Error("You should implement challenge handling!");
               }
               /** PrivateFunction: clientChallenge
@@ -499,7 +499,7 @@
               }
 
               test(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return connection.authcid === null;
               }
 
@@ -522,7 +522,7 @@
               }
 
               onChallenge(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
 
                 /** According to XEP-178, an authzid SHOULD NOT be presented when the
                  * authcid contained or implied in the client certificate is the JID (i.e.
@@ -614,12 +614,12 @@
               }
 
               test(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return connection.pass !== null;
               }
 
               onChallenge(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 let auth_str = 'n,';
 
                 if (connection.authcid !== null) {
@@ -649,12 +649,12 @@
               }
 
               test(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return connection.authcid !== null;
               }
 
               onChallenge(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 const {
                   authcid,
                   authzid,
@@ -898,12 +898,12 @@
               }
 
               test(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return connection.authcid !== null;
               }
 
               onChallenge(connection, challenge) {
-                // eslint-disable-line class-methods-use-this
+                 
                 let nonce, salt, iter, Hi, U, U_old, i, k;
                 let responseText = "c=biws,";
                 let authMessage = `${connection._sasl_data["client-first-message-bare"]},${challenge},`;
@@ -966,7 +966,7 @@
               }
 
               clientChallenge(connection, test_cnonce) {
-                // eslint-disable-line class-methods-use-this
+                 
                 const cnonce = test_cnonce || MD5.hexdigest("" + Math.random() * 1234567890);
                 let auth_str = "n=" + utils.utf16to8(connection.authcid);
                 auth_str += ",r=";
@@ -991,12 +991,12 @@
               }
 
               test(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return connection.pass !== null;
               }
 
               onChallenge(connection) {
-                // eslint-disable-line class-methods-use-this
+                 
                 let auth_str = '\u0000';
 
                 if (connection.authcid !== null) {
@@ -2924,7 +2924,7 @@
 
 
               getUniqueId(suffix) {
-                // eslint-disable-line class-methods-use-this
+                 
                 const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                   const r = Math.random() * 16 | 0,
                         v = c === 'x' ? r : r & 0x3 | 0x8;
@@ -3157,7 +3157,7 @@
 
 
               xmlInput(elem) {
-                // eslint-disable-line
+                 
                 return;
               }
               /** Function: xmlOutput
@@ -3181,7 +3181,7 @@
 
 
               xmlOutput(elem) {
-                // eslint-disable-line
+                 
                 return;
               }
               /** Function: rawInput
@@ -3199,7 +3199,7 @@
 
 
               rawInput(data) {
-                // eslint-disable-line
+                 
                 return;
               }
               /** Function: rawOutput
@@ -3217,7 +3217,7 @@
 
 
               rawOutput(data) {
-                // eslint-disable-line
+                 
                 return;
               }
               /** Function: nextValidRid
@@ -3234,7 +3234,7 @@
 
 
               nextValidRid(rid) {
-                // eslint-disable-line
+                 
                 return;
               }
               /** Function: send
@@ -3966,7 +3966,7 @@
 
 
               sortMechanismsByPriority(mechanisms) {
-                // eslint-disable-line class-methods-use-this
+                 
                 // Sorting mechanisms according to priority.
                 for (let i = 0; i < mechanisms.length - 1; ++i) {
                   let higher = i;
@@ -4122,7 +4122,7 @@
 
 
               _onLegacyAuthIQResult(elem) {
-                // eslint-disable-line no-unused-vars
+                 
                 // build plaintext auth iq
                 const iq = $iq({
                   type: "set",
@@ -5761,7 +5761,7 @@
 
 
               _reset() {
-                // eslint-disable-line class-methods-use-this
+                 
                 return;
               }
               /** PrivateFunction: _connect
@@ -5973,7 +5973,7 @@
 
 
               _streamWrap(stanza) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return "<wrapper>" + stanza + '</wrapper>';
               }
               /** PrivateFunction: _closeSocket
@@ -6006,7 +6006,7 @@
 
 
               _emptyQueue() {
-                // eslint-disable-line class-methods-use-this
+                 
                 return true;
               }
               /** PrivateFunction: _onClose
@@ -6058,14 +6058,14 @@
                */
 
 
-              _onDisconnectTimeout() {} // eslint-disable-line class-methods-use-this
+              _onDisconnectTimeout() {}  
 
               /** PrivateFunction: _abortAllRequests
                *  _Private_ helper function that makes sure all pending requests are aborted.
                */
 
 
-              _abortAllRequests() {} // eslint-disable-line class-methods-use-this
+              _abortAllRequests() {}  
 
               /** PrivateFunction: _onError
                * _Private_ function to handle websockets errors.
@@ -6220,7 +6220,7 @@
 
 
               _reqToData(stanza) {
-                // eslint-disable-line class-methods-use-this
+                 
                 return stanza;
               }
               /** PrivateFunction: _send
