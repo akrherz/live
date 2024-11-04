@@ -97,12 +97,12 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
             this.gp.soundOn = false;
         }
 
-        pref = "muc::" + Strophe.getNodeFromJid(this.barejid) + "::nwsbothidden";
+        pref = "muc::" + Strophe.getNodeFromJid(this.barejid) + "::iembothidden";
         if (Application.getPreference(pref, false)) {
             /* hacky */
             this.gp.toolbars[0].items.items[3].toggle(true, true);
-            this.gp.toolbars[0].items.items[3].setText("NWSBot Hidden");
-            this.gp.store.filterBy(nwsbotFilter);
+            this.gp.toolbars[0].items.items[3].setText("IEMBot Hidden");
+            this.gp.store.filterBy(iembotFilter);
         }
 
         

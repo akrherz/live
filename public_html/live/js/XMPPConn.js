@@ -696,7 +696,7 @@ function messageParser(msg) {
             // row = mpc.gp.getView().getRow(i);
             // if (row) row.scrollIntoView();
             if (mpc.gp.getStore().isFiltered()) {
-                mpc.gp.getStore().filterBy(nwsbotFilter);
+                mpc.gp.getStore().filterBy(iembotFilter);
             }
             if (!isDelayed){
                 /* Add to allchats */
@@ -710,7 +710,7 @@ function messageParser(msg) {
                     product_id : product_id
                 }));
                 if (Ext.getCmp("__allchats__").gp.getStore().isFiltered()) {
-                    Ext.getCmp("__allchats__").gp.getStore().filterBy(nwsbotFilter);
+                    Ext.getCmp("__allchats__").gp.getStore().filterBy(iembotFilter);
                 }
             }
         }
@@ -783,7 +783,7 @@ function geomParser(msg, isDelayed) {
     if (!Ext.getCmp("map")) {
         return;
     }
-    /* Look for nwsbot geometry declarations */
+    /* Look for iembot geometry declarations */
     var elems = msg.getElementsByTagName('body');
     var body = elems[0];
     var html = msg.getElementsByTagName('html');

@@ -1,10 +1,10 @@
 Ext.ns("Application");
 
 /*
- * Need a simple filter for NWSBot messages
+ * Need a simple filter for IEMBot messages
  */
-function nwsbotFilter(record, id){
-    if (record.get("author") == "nwsbot"){ return false;}
+function iembotFilter(record, _id){
+    if (record.get("author") == "iembot"){ return false;}
       return true;
 }
 
