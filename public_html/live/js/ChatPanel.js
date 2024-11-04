@@ -53,7 +53,7 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
     buildItems : function() {
         this.gp = this.items.items[0];
         this.te = this.items.items[1];
-        /* Remove nwsbot muter */
+        /* Remove iembot muter */
         this.gp.getTopToolbar().remove( this.gp.getTopToolbar().items.items[3] );
         /* Remove sound muter */
         this.gp.getTopToolbar().remove( this.gp.getTopToolbar().items.items[3] );

@@ -19,8 +19,8 @@ Application.msgFormatter = new Ext.XTemplate(
             getAuthorClass : function(jid) {
                 //console.log("node: "+Strophe.getNodeFromJid(jid) );
                 if (jid == null) return "author-default";
-                if (Strophe.getNodeFromJid(jid) == 'nwsbot'){
-                    return "author-nwsbot";
+                if (Strophe.getNodeFromJid(jid) == 'iembot'){
+                    return "author-iembot";
                 }
                 if (Strophe.getNodeFromJid(jid).match(/^nws/)){
                     return "author-nws";
@@ -33,7 +33,7 @@ Application.msgFormatter = new Ext.XTemplate(
 Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
     region : 'center',
     soundOn : true,
-    nwsbotHide: false,
+    iembotHide: false,
     stripeRows : true,
     autoExpandColumn : 'message',
     autoScroll : true,
@@ -62,21 +62,21 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 icon : 'icons/text.png',
                 cls : 'x-btn-text-icon'
             }, {
-                text : 'Hide NWSBot',
+                text : 'Hide IEMBot',
                 enableToggle : true,
                 toggleHandler : function(btn, toggled) {
                     var pref = "muc::"+ Strophe.getNodeFromJid( btn.ownerCt.ownerCt.ownerCt.barejid )
-                    +"::nwsbothidden";
+                    +"::iembothidden";
                     var store = btn.ownerCt.ownerCt.getStore();
-                    btn.ownerCt.ownerCt.nwsbotHide = toggled;
+                    btn.ownerCt.ownerCt.iembotHide = toggled;
                     if (toggled) {
                         Application.setPreference(pref, 'true');
-                        store.filterBy(nwsbotFilter);
-                        btn.setText("NWSBot Hidden");
+                        store.filterBy(iembotFilter);
+                        btn.setText("IEMBot Hidden");
                     } else {
                         Application.removePreference(pref);
                         store.clearFilter(false);
-                        btn.setText("Hide NWSBot");
+                        btn.setText("Hide IEMBot");
                     }
                 }
             }, {
@@ -156,7 +156,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             if (!this.soundOn){
                 return true;
             }
-            var nonNWSBot = false;
+            var nonIEMBot = false;
             var nothingNew = true;
             for (var i = 0; i < records.length; i++) {
                 /* No events for delayed messages */
@@ -167,8 +167,8 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 if (records[i].get('author') == this.ownerCt.handle){
                     continue;
                 }
-                if (records[i].get("author") != "nwsbot") {
-                    nonNWSBot = true;
+                if (records[i].get("author") != "iembot") {
+                    nonIEMBot = true;
                 }
                 if (records[i].get("message").match(/tornado/i)){
                     Application.MsgBus.fireEvent("soundevent", "tornado");
@@ -182,15 +182,15 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             if (nothingNew){
                 return true;
             }
-            if (nonNWSBot) {
+            if (nonIEMBot) {
                 // Make this tab show the new icon for the new message
                 this.ownerCt.setIconCls('new-tab');
                 Application.MsgBus.fireEvent("soundevent", "new_message");
             } else {
-                // If nwsbot is muted, lets stop the events
-                if (! this.nwsbotHide){
+                // If iembot is muted, lets stop the events
+                if (! this.iembotHide){
                     this.ownerCt.setIconCls('new-tab');
-                    Application.MsgBus.fireEvent("soundevent", "nwsbot");
+                    Application.MsgBus.fireEvent("soundevent", "iembot");
                 }
             }
         }, this);

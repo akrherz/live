@@ -94,9 +94,9 @@ Application.soundPrefs = new Ext.Window({
                 fieldLabel : 'Volume'
             }, new Ext.grid.EditorGridPanel({
                 store : new Ext.data.ArrayStore({
-                            data : [['new_message', 'New Message (Non NWSBot)', true, 'default'],
+                            data : [['new_message', 'New Message (Non IEMBot)', true, 'default'],
                                     ['new_conversation', 'New Conversation', true, 'doorbell'],
-                                    ['nwsbot', 'NWSBot Message', true, 'default'],
+                                    ['iembot', 'IEMBot Message', true, 'default'],
                                     ['myhandle', 'Message with your name in it', true, 'bleep'],
                                     ['tornado', 'Message with "Tornado" within text', true, 'eas']],
                             fields : [{
