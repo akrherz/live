@@ -42,21 +42,21 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 text : 'Clear Room Log',
                 cls : 'x-btn-text-icon',
                 icon : 'icons/close.png',
-                handler : function(btn, e) {
+                handler : function(btn) {
                     btn.ownerCt.ownerCt.getStore().removeAll();
                 }
             }, {
                 text : 'Print Log',
                 icon : 'icons/print.png',
                 cls : 'x-btn-text-icon',
-                handler : function(btn, e) {
+                handler : function(btn) {
                     btn.ownerCt.ownerCt.getGridEl().print({
                                 isGrid : true
                             });
                 }
             }, {
                 text : 'View As HTML',
-                handler : function(btn, e) {
+                handler : function(btn) {
                     showHtmlVersion(btn.ownerCt.ownerCt);
                 },
                 icon : 'icons/text.png',
@@ -65,9 +65,9 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 text : 'Hide IEMBot',
                 enableToggle : true,
                 toggleHandler : function(btn, toggled) {
-                    var pref = "muc::"+ Strophe.getNodeFromJid( btn.ownerCt.ownerCt.ownerCt.barejid )
+                    const pref = "muc::"+ Strophe.getNodeFromJid( btn.ownerCt.ownerCt.ownerCt.barejid )
                     +"::iembothidden";
-                    var store = btn.ownerCt.ownerCt.getStore();
+                    const store = btn.ownerCt.ownerCt.getStore();
                     btn.ownerCt.ownerCt.iembotHide = toggled;
                     if (toggled) {
                         Application.setPreference(pref, 'true');
@@ -84,7 +84,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 enableToggle : true,
                 toggleHandler : function(btn, toggled) {
                     //var store = btn.ownerCt.ownerCt.getStore();
-                    var pref = "muc::"+ Strophe.getNodeFromJid( btn.ownerCt.ownerCt.ownerCt.barejid )
+                    const pref = "muc::"+ Strophe.getNodeFromJid( btn.ownerCt.ownerCt.ownerCt.barejid )
                                 +"::mute";
                     if (toggled) {
                         Application.setPreference(pref, 'true');
@@ -99,7 +99,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },{
                 icon : 'icons/font-less.png',
                 handler : function(){
-                    var size = parseInt(Application.getPreference('font-size', 14)) - 2;
+                    const size = parseInt(Application.getPreference('font-size', 14)) - 2;
                     Application.setPreference('font-size', size);
                     //cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
                     cssfmt = String.format('normal {0}px arial', size);
@@ -109,7 +109,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             }, {
                 icon : 'icons/font-more.png',
                 handler : function(){
-                    var size = parseInt(Application.getPreference('font-size', 14)) + 2;
+                    const size = parseInt(Application.getPreference('font-size', 14)) + 2;
                     Application.setPreference('font-size', size);
                     cssfmt = String.format('normal {0}px arial', size);
                     Ext.util.CSS.updateRule('td.x-grid3-td-message', 'font', cssfmt);
@@ -128,7 +128,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     sortable : true,
                     dataIndex : 'ts',
                     scope : this,
-                    renderer : function(value, p, record) {
+                    renderer : function(_value, _p, record) {
                         return Application.msgFormatter.apply({
                             author: record.get('author'),
                             message: record.get('message'),
@@ -152,12 +152,12 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                                 type : 'boolean'
                             }]
                 });
-        this.store.on('add', function(store, records, index) {
+        this.store.on('add', function(_store, records, _index) {
             if (!this.soundOn){
                 return true;
             }
-            var nonIEMBot = false;
-            var nothingNew = true;
+            let nonIEMBot = false;
+            let nothingNew = true;
             for (var i = 0; i < records.length; i++) {
                 /* No events for delayed messages */
                 if (records[i].get('xdelay')){
@@ -196,7 +196,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         }, this);
         var config = {
             viewConfig : {
-                onAdd : function(ds, records, index) {
+                onAdd : function(_ds, _records, index) {
                     this.constructor.prototype.onAdd.apply(this, arguments);
                     //this.grid.getSelectionModel().selectRow(index);
                     //this.focusRow(index);

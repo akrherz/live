@@ -62,9 +62,10 @@ Welcome to <?php echo $appname; ?>, please log in with your user account.
  <li>25 Feb 2014: Improve stability</li>
 </ul>
 
-<p style="margin-top: 5px;">"<?php echo $appname; ?>" is a pure web browser instant messaging client 
-for NWSChat.  The purpose of the application is to provide users 
-with a painless means to join the NWSChat conversation without
+<p style="margin-top: 5px;">"<?php echo $appname; ?>" is a pure web browser
+instant messaging client 
+for WeatherIM.  The purpose of the application is to provide users 
+with a painless means to join the WeatherIM conversation without
 installing third party software or worrying about local network
 firewalls.  Since this application runs purely over HTTPS 
 (port 443) and without third party browser plugins, almost all users 
