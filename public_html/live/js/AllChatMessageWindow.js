@@ -17,7 +17,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
             text : 'Send Message',
             scope : this,
             handler : function(){
-                var tbl = this.find('name', 'columns')[0];
+                const tbl = this.find('name', 'columns')[0];
                 Ext.each(tbl.findByType('checkbox'), function(cb){
                     if (! cb.checked){ return; }
                     Application.XMPPConn.send($msg({
@@ -50,9 +50,9 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
         Ext.getCmp("chatpanel").items.each(function(panel) {
             if (panel.chatType != 'groupchat') { return; }
             if (panel.anonymous) { return; }
-            var room = Strophe.getNodeFromJid(panel.barejid);
+            const room = Strophe.getNodeFromJid(panel.barejid);
             if (this.items.items[1].find('name',room).length == 0){
-                var tbl = this.find('name', 'columns')[0];
+                const tbl = this.find('name', 'columns')[0];
                 pos = (tbl.entries % 3) ;
                 //console.log("Adding room:"+ room +" at pos:"+pos);
                 tbl.items.items[pos].add({
