@@ -2,7 +2,7 @@ ci:
   autoupdate_schedule: quarterly
 repos:
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: 'v9.37.0'
+    rev: 'v10.0.0-alpha.1'
     hooks:
       - id: eslint
 
