@@ -3,7 +3,8 @@
  * Connection, message, presence, roster, and IQ handlers
  */
 
- 
+import { UTCStringToDate } from '../events/event-handlers.js';
+import { onBuddyPresence } from '../chat/ChatComponents.js';
 
 function buildXMPP(){
     Application.log("Initializing XMPPConn Obj");
@@ -252,16 +253,13 @@ function parsePrefs(msg) {
     }
     Application.prefStore.locked = true;
     setSounds();
-    try {
-        var size = parseInt(Application.getPreference('font-size', 14)) + 2;
-        // var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
-        var cssfmt = String.format('normal {0}px arial', size);
-        Ext.util.CSS.updateRule('td.x-grid3-td-message', 'font', cssfmt);
-        Ext.util.CSS.updateRule('.message-entry-box', 'font', cssfmt);
-        updateMap();
-        Application.updateColors();
-    } catch (e) {
-    }
+    var size = parseInt(Application.getPreference('font-size', 14)) + 2;
+    // var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
+    var cssfmt = String.format('normal {0}px arial', size);
+    Ext.util.CSS.updateRule('td.x-grid3-td-message', 'font', cssfmt);
+    Ext.util.CSS.updateRule('.message-entry-box', 'font', cssfmt);
+    updateMap();
+    Application.updateColors();
     Application.prefStore.locked = false;
 }
 
@@ -443,7 +441,7 @@ function onPresence(msg) {
     return true;
 }
 
-function getMUCIcon(affiliation, role) {
+function getMUCIcon(affiliation) {
     if (affiliation == 'owner')
         return 'icons/owner.png';
     if (affiliation == 'admin')
@@ -638,10 +636,7 @@ function messageParser(msg) {
                 product_id = x[i].getAttribute("product_id");
             }
         }
-                try{
         geomParser(msg, isDelayed);
-        }catch (err){
-                }
         var sender = Strophe.getResourceFromJid(from);
         var room = Strophe.getBareJidFromJid(from);
         var mpc = Ext.getCmp("chatpanel").getMUC(room);

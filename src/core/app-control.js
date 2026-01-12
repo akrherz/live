@@ -1,7 +1,9 @@
 /**
  * Application Core
- * Application.Control, doLogin, ServiceGuard, UTCStringToDate
+ * Application.Control, doLogin, ServiceGuard
  */
+
+import { saveBookmarks } from '../dialogs/Dialogs.js';
 
 Ext.ns("Application");
 
@@ -9,7 +11,7 @@ Application.log = function(text) {
     console.log("Application.log:", text);
 };
 
-function onPresenceCheck(item, checked) {
+function onPresenceCheck(item) {
     if (item.xmpp == 'available') {
         Application.XMPPConn.send($pres());
     } else {
@@ -232,7 +234,7 @@ Application.Control = {
                         c.contextNode = node;
                         c.showAt(e.getXY());
                     },
-                    movenode: function(tp, node, oldParent, newParent, index){
+                    movenode: function(){
                         saveBookmarks();
                     },
                     click : function(n) {
@@ -250,7 +252,7 @@ Application.Control = {
                 root : new Ext.tree.TreeNode({
                             initialLoad : false,
                             listeners : {
-                                beforeappend : function(tree, root, node, index) {
+                                beforeappend : function(_tree, root, node) {
                                     /*
                                      * Ensure that we are appending an unique
                                      * node
@@ -262,7 +264,7 @@ Application.Control = {
                                     }
                                     return true; /* lets be safe */
                                 },
-                                append : function(tree, root, node, index) {
+                                append : function(_tree, root) {
                                     if (root.initialLoad) {
                                         saveBookmarks();
                                     }

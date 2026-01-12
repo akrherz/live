@@ -170,7 +170,7 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
                         arguments);
         this.buildItems();
     },
-    getJidByHandle : function(handle){
+    getJidByHandle : function(){
         return this.barejid;
     },
     buildItems : function() {
@@ -571,7 +571,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                                 type : 'boolean'
                             }]
                 });
-        this.store.on('add', function(_store, records, _index) {
+        this.store.on('add', function(_store, records) {
             if (!this.soundOn){
                 return true;
             }
@@ -910,8 +910,7 @@ function onBuddyPresence(msg) {
 
 }
 
-// Expose onBuddyPresence globally for XMPP handlers
-window.onBuddyPresence = onBuddyPresence;
+export { onBuddyPresence };
 
 Ext.namespace('Ext.ux.panel');
 
@@ -1012,7 +1011,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
 
                 // Activate this tab on mouse up
                 // (Fixes bug which prevents a tab from being activated by clicking it)
-                , onMouseUp: function(event) {
+                , onMouseUp: function() {
                     if (this.dropEl.ownerCt.move) {
                         if (!this.dropEl.disabled && this.dropEl.ownerCt.activeTab == null) {
                             this.dropEl.ownerCt.setActiveTab(this.dropEl);
@@ -1107,7 +1106,7 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
         Ext.ux.panel.DDTabPanel.DropTarget.superclass.constructor.call(this, tabpanel.stripWrap, config);
     }
 
-    ,notifyOver: function(dd, e, data){
+    ,notifyOver: function(dd, e){
         var tabs = this.tabpanel.items;
         var last = tabs.length;
 
@@ -1156,7 +1155,7 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
         return 'x-dd-drop-ok';
     }
 
-    ,notifyDrop: function(dd, e, data){
+    ,notifyDrop: function(dd, e){
         this.tabpanel.arrow.hide();
         
         // no parent into child
@@ -1201,7 +1200,7 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
         return true;
     }
 
-    ,notifyOut: function(dd, e, data){
+    ,notifyOut: function(){
         this.tabpanel.arrow.hide();
     }
 });

@@ -23,7 +23,7 @@ Application.saveViews = function() {
 
 };
 
-function saveBookmarks() {
+export function saveBookmarks() {
     /* Save bookmarks to the server, please */
     var root = Ext.getCmp("bookmarks").root;
     var stanza = $iq({
@@ -44,7 +44,6 @@ function saveBookmarks() {
             }, stanza);
     Application.XMPPConn.sendIQ(stanza.tree());
 }
-window.saveBookmarks = saveBookmarks;
 
 Ext.util.Format.comboRenderer = function(combo) {
     return function(value) {
@@ -71,7 +70,7 @@ var combo = new Ext.form.ComboBox({
             mode : 'local',
             store : Application.SoundStore,
             listeners : {
-                change : function(field, newVal, oldVal){
+                change : function(_field, newVal){
                     Application.playSound(newVal);
                 }
             },
@@ -109,7 +108,7 @@ Application.soundPrefs = new Ext.Window({
                 value : 50,
                 width : 200,
                 listeners : {
-                    changecomplete : function(slider, newval, thumb) {
+                    changecomplete : function(_slider, newval) {
                         Application.setPreference('volume', newval);
                         Application.MsgBus.fireEvent("soundevent", "default");
                     }
@@ -207,7 +206,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'Set From Current View',
-                handler : function(btn, e) {
+                handler : function() {
                     Ext.getCmp("mfv1").bounds = Ext.getCmp("map").map
                             .getExtent();
                     Application.saveViews();
@@ -215,7 +214,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'View',
-                handler : function(btn, e) {
+                handler : function() {
                     var bnds = Ext.getCmp("mfv1").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -231,7 +230,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'Set From Current View',
-                handler : function(btn, e) {
+                handler : function() {
                     Ext.getCmp("mfv2").bounds = Ext.getCmp("map").map
                             .getExtent();
                     Application.saveViews();
@@ -239,7 +238,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'View',
-                handler : function(btn, e) {
+                handler : function() {
                     var bnds = Ext.getCmp("mfv2").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -255,7 +254,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'Set From Current View',
-                handler : function(btn, e) {
+                handler : function() {
                     Ext.getCmp("mfv3").bounds = Ext.getCmp("map").map
                             .getExtent();
                     Application.saveViews();
@@ -263,7 +262,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'View',
-                handler : function(btn, e) {
+                handler : function() {
                     var bnds = Ext.getCmp("mfv3").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -279,7 +278,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'Set From Current View',
-                handler : function(btn, e) {
+                handler : function() {
                     Ext.getCmp("mfv4").bounds = Ext.getCmp("map").map
                             .getExtent();
                     Application.saveViews();
@@ -287,7 +286,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'View',
-                handler : function(btn, e) {
+                handler : function() {
                     var bnds = Ext.getCmp("mfv4").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -303,7 +302,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'Set From Current View',
-                handler : function(btn, e) {
+                handler : function() {
                     Ext.getCmp("mfv5").bounds = Ext.getCmp("map").map
                             .getExtent();
                     Application.saveViews();
@@ -311,7 +310,7 @@ Application.boundsFavorites = new Ext.Window({
             }, {
                 xtype : 'button',
                 text : 'View',
-                handler : function(btn, e) {
+                handler : function() {
                     var bnds = Ext.getCmp("mfv5").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);

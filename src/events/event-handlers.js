@@ -5,7 +5,7 @@
 
 Ext.ns("Application");
 
-function UTCStringToDate(dtStr, format) {
+export function UTCStringToDate(dtStr, format) {
     var dt = Date.parseDate(dtStr, format);
     if (dt == undefined)
         return ''; // or whatever you want to do
@@ -14,9 +14,6 @@ function UTCStringToDate(dtStr, format) {
     }
     return dt;
 }
-
-// Expose globally for handlers.js
-window.UTCStringToDate = UTCStringToDate;
 
 Application.MsgBus = new Ext.util.Observable();
 Application.MsgBus.addEvents('message');
