@@ -11,7 +11,6 @@ if (typeof window !== 'undefined') {
 // User identity and connection settings
 export const config = {
   NAME: "Weather.IM Live",
-  ROUTE: "xmpp:openfire-bosh:5222",
   BOSH: "https://weather.im/http-bind/",
   RECONNECT: true,
   ATTEMPTS: 0,

@@ -1,18 +1,48 @@
 /**
- * Weather.IM Live - Main Entry Point (Refactored)
+ * Weather.IM Live - Main Entry Point
  * 
  * This file now serves as the minimal bootstrap for the application.
- * Most functionality has been extracted into separate modules for better organization.
+ * All functionality has been extracted into separate modules.
  */
 
 // Import configuration
 import './config.js';
 
-// Import map components
+// Import Strophe.js from npm package and set up plugins
+import './lib/strophe-setup.js';
+import './lib/strophe-disco-plugin.js';
+
+// Import ExtJS utilities and extensions
+import './lib/extjs-utilities.js';
+
+// Import login components
+import './auth/LoginPanel.js';
+
+// Import map layers and components
+import './map/layers.js';
 import './map/MapPanel.js';
 
-// Import all legacy components (to be further refactored)
-import './legacy-components.js';
+// Import chat components
+import './chat/ChatComponents.js';
+
+// Import XMPP handlers
+import './xmpp/handlers.js';
+
+// Import dialog windows
+import './dialogs/Dialogs.js';
+
+// Import UI components
+import './ui/core-components.js';
+import './ui/additional-windows.js';
+
+// Import utilities
+import './utils/grid-utilities.js';
+
+// Import core application control
+import './core/app-control.js';
+
+// Import event handlers
+import './events/event-handlers.js';
 
 console.log('Weather.IM Live ES module loaded');
 
@@ -87,6 +117,8 @@ function initializeApp() {
       
       // Activate map feature selection controls
       if (window.OpenLayers && window.lsrs && window.sbws) {
+        const lsrs = window.lsrs;
+        const sbws = window.sbws;
         const ctrl = new OpenLayers.Control.SelectFeature([lsrs, sbws]);
         Ext.getCmp('map').map.addControl(ctrl);
         ctrl.activate();

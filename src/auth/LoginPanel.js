@@ -1,60 +1,38 @@
 /**
- * Login Panel Components
- * ExtJS manages the window/tabs, HTML provides content
+ * Login Panel Component
+ * Simple panel with login content
  */
 
 Ext.ns("Application");
 
 /**
- * TabLoginPanel - Tabbed interface with multiple login options
- * Shows tabs based on Application.LOGIN_OPT_* config values
+ * LoginPanel - Simple login panel with HTML content
  */
-Application.TabLoginPanel = Ext.extend(Ext.TabPanel, {
+Application.LoginPanel = Ext.extend(Ext.Panel, {
     initComponent : function() {
         var config = {
-            width : 420,
-            height: 250,
-            autoScroll : true
+            html: '<div style="text-align:center;"><img src="/images/nws.png" width="100"/></div>' +
+                  '<p><label>Username:</label><br/>' +
+                  '<input type="text" id="username" name="username" /></p>' +
+                  '<p><label>Password:</label><br/>' +
+                  '<input type="password" id="password" name="password" /></p>' +
+                  '<p><button type="button" onclick="Application.doLogin()">Login</button> ' +
+                  '<button type="button" onclick="Ext.getCmp(\'debug\').show()">Show Debug</button></p>' +
+                  '<p>Welcome to Weather.IM... please log in with your user account.<br />' +
+                  '<a href="/pwupdate.php">Forgot your password?</a></p>' +
+                  '<hr/>' +
+                  '<p><strong>Anonymous Login:</strong></p>' +
+                  '<p>You can login to this service without registering. You will not be able to ' +
+                  'chat within the rooms nor save preferences.</p>' +
+                  '<button type="button" onclick="Application.doAnonymousLogin()">Login Anonymously</button>' +
+                  '<hr/>' +
+                  '<p><strong>Register for An Account:</strong></p>' +
+                  '<p>Due to spammers, you need to register for an account <a href="/create.php">here</a>.</p>',
+            border: false,
+            autoScroll: true,
+            bodyStyle: 'padding:10px'
         };
         Ext.apply(this, Ext.apply(this.initialConfig, config));
-
-        Application.TabLoginPanel.superclass.initComponent.apply(this, arguments);
-        this.buildItems();
-    },
-    buildItems : function() {
-        if (Application.LOGIN_OPT_USER){
-            this.add({
-                xtype : 'panel',
-                title : 'Login with Account',
-                contentEl: 'login_div',
-                preventBodyReset : true,
-                border: false,
-                padding: 10
-            });
-        }
-        if (Application.LOGIN_OPT_ANONYMOUS){
-            this.add({
-                xtype : 'panel',
-                contentEl: 'anonymous_div',
-                preventBodyReset : true,
-                title : 'Anonymous Login',
-                border: false,
-                padding: 10
-            });
-        }
-        if (Application.LOGIN_OPT_REGISTER){
-            this.add({
-                xtype : 'panel',
-                contentEl: 'register_div',
-                preventBodyReset : true,
-                title : 'Register Account',
-                border: false,
-                padding: 10
-            });
-        }
-        this.activate(0);
+        Application.LoginPanel.superclass.initComponent.apply(this, arguments);
     }
 });
-
-Ext.reg('tabloginpanel', Application.TabLoginPanel);
-

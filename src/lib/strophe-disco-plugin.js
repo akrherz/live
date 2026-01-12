@@ -159,9 +159,9 @@ Strophe.addConnectionPlugin('disco', {
         var from = stanza.getAttribute('from');
         var query_attrs = {xmlns: Strophe.NS.DISCO_ITEMS};
         var node = stanza.getElementsByTagName('query')[0].getAttribute('node');
+        var items = null;
         if (node) {
             query_attrs.node = node;
-            var items = null;
             for (var i = 0; i < this._items.length; i++) {
                 if (this._items[i].node == node) {
                     items = this._items[i].call_back(stanza);
@@ -169,7 +169,7 @@ Strophe.addConnectionPlugin('disco', {
                 }
             }
         } else {
-            var items = this._items;
+            items = this._items;
         }
         var iqresult = $iq({type: 'result', id: id, to: from}).c('query', query_attrs);
         for (var i = 0; i < items.length; i++) {
