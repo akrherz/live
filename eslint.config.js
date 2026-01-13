@@ -15,10 +15,6 @@ module.exports = [
             ecmaVersion: 2015,
             sourceType: "module",
             globals: {
-                // jQuery and dependencies
-                "$": "readonly",
-                "jQuery": "readonly",
-                
                 // ExtJS
                 "Ext": "readonly",
                 
@@ -57,12 +53,15 @@ module.exports = [
                 "setTimeout": "readonly",
                 "setInterval": "readonly",
                 "clearTimeout": "readonly",
-                "clearInterval": "readonly"
+                "clearInterval": "readonly",
+                "DOMParser": "readonly"
             }
         },
         rules: {
             "no-undef": "error",
-            "no-unused-vars": "warn"
+            "no-unused-vars": "warn",
+            "no-var": "warn",
+            "prefer-const": "warn"
         }
     }
 ];
