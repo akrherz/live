@@ -245,7 +245,7 @@ function setSounds() {
  */
 function parsePrefs(msg) {
     Application.prefStore.removeAll();
-    var elem = $(msg).find("pref");
+    var elem = msg.getElementsByTagName("pref");
     for (var i = 0; i < elem.length; i++) {
         var key = elem[i].getAttribute("key");
         var value = elem[i].getAttribute("value");
@@ -267,7 +267,7 @@ function parseViews(msg) {
     if (!Ext.getCmp("map")) {
         return;
     }
-    var elem = $(msg).find("view");
+    var elem = msg.getElementsByTagName("view");
     for (var i = 0; i < elem.length; i++) {
         var label = elem[i].getAttribute("label");
         var bounds = elem[i].getAttribute("bounds");
@@ -285,12 +285,12 @@ function parseViews(msg) {
 }
 
 function parseBookmarks(msg) {
-    var elem = $(msg).find("conference");
+    var elem = msg.getElementsByTagName("conference");
     var autoJoinedRooms = 0;
     for (var i = 0; i < elem.length; i++) {
         var alias = elem[i].getAttribute("name");
         var jid = elem[i].getAttribute("jid");
-        var nick = $(elem[i]).find('nick').text();
+        var nick = elem[i].getElementsByTagName('nick')[0] ? elem[i].getElementsByTagName('nick')[0].textContent : '';
         if (nick == null || nick == "") {
             nick = Application.USERNAME;
         }
@@ -381,16 +381,16 @@ function onRoster(msg) {
 
 function rosterParser(msg) {
     var root = Ext.getCmp("buddies").root;
-    var roster_items = $(msg).find('item');
+    var roster_items = msg.getElementsByTagName('item');
     for (var i = 0; i < roster_items.length; i++) {
         /* Look to see if there is a group */
-        var groups = $(roster_items[i]).find('group');
+        var groups = roster_items[i].getElementsByTagName('group');
         for (var j = 0; j < groups.length; j++) {
-            var group = $(groups[j]);
-            var child = root.findChild('group', group.text()) || root.appendChild({
+            var group = groups[j];
+            var child = root.findChild('group', group.textContent) || root.appendChild({
                         leaf : false,
-                        group : group.text(),
-                        text : group.text(),
+                        group : group.textContent,
+                        text : group.textContent,
                         expanded : true,
                         loaded : true
                     });
@@ -463,8 +463,8 @@ function presenceParser(msg) {
             return;
         }
         /* Look to see if we got a 201 status */
-        if ($(msg).find('status').length > 0) {
-            var error = $(msg).find('status');
+        if (msg.getElementsByTagName('status').length > 0) {
+            var error = msg.getElementsByTagName('status');
             if (error[0].getAttribute('code') == '201') {
                 Ext.Msg.alert('Status', 'Sorry, chatroom [' + room
                                 + '] does not exist.');
@@ -473,8 +473,8 @@ function presenceParser(msg) {
             }
         }
         /* Look to see if we got a 407 error */
-        if ($(msg).find('error').length > 0) {
-            error = $(msg).find('error');
+        if (msg.getElementsByTagName('error').length > 0) {
+            error = msg.getElementsByTagName('error');
             if (error[0].getAttribute('code') == '407') {
                 Ext.Msg.alert('Status',
                         'Sorry, your account is not authorized to access chatroom ['
@@ -484,8 +484,8 @@ function presenceParser(msg) {
             }
         }
         /* Look to see if we got a 409 error */
-        if ($(msg).find('error').length > 0) {
-            error = $(msg).find('error');
+        if (msg.getElementsByTagName('error').length > 0) {
+            error = msg.getElementsByTagName('error');
             if (error[0].getAttribute('code') == '409') {
                 Ext.Msg.alert('Status',
                         'Sorry, your requested chatroom handle is already in use by room ['
@@ -495,8 +495,8 @@ function presenceParser(msg) {
             }
         }
         /* Look to see if we got a 307 error */
-        if ($(msg).find('status').length > 0) {
-            error = $(msg).find('status');
+        if (msg.getElementsByTagName('status').length > 0) {
+            error = msg.getElementsByTagName('status');
             if (error[0].getAttribute('code') == '307') {
                 Ext.Msg.alert('Status',
                                 'Your account signed into this chatroom ['
@@ -511,7 +511,7 @@ function presenceParser(msg) {
                         .getResourceFromJid(from));
 
         /* Look to see if we can see JIDs */
-        var xitem = $(msg).find("item");
+        var xitem = msg.getElementsByTagName("item");
         var jid = from;
         var affiliation;
         var role;
@@ -528,10 +528,10 @@ function presenceParser(msg) {
              * jid='fire-daryl.e.herzmann@localhost/Live_127.0.0.1'
              * affiliation='none' role='participant'/></x> </presence>
              */
-            var roletest = $(xitem[0]).find("role");
+            var roletest = xitem[0].getElementsByTagName("role");
             if (roletest.length > 0) {
                 try {
-                    role = roletest.text();
+                    role = roletest[0].textContent;
                 } catch (err) {
                     var vDebug = "roletest bug\n:";
                     vDebug += Strophe.xmlescape(Strophe.serialize( msg )) + "\n";
@@ -596,8 +596,8 @@ function messageParser(msg) {
     var from = msg.getAttribute('from');
     var type = msg.getAttribute('type');
     var elems = msg.getElementsByTagName('body');
-    var x = $(msg).find("delay[xmlns='urn:xmpp:delay']");
-    var html = $(msg).find('html');
+    var x = msg.querySelectorAll("delay[xmlns='urn:xmpp:delay']");
+    var html = msg.getElementsByTagName('html');
     var body = elems[0];
     var txt = "";
     var isDelayed = false;
@@ -608,8 +608,8 @@ function messageParser(msg) {
      * will display pretty. 
      */
     if (html.length > 0) {
-                var v = $(msg).find('html').find('body');
-                txt = (navigator.userAgent.match(/msie/i)) ? v[0].xml : $(v[0]).html();
+                var v = msg.getElementsByTagName('html')[0].getElementsByTagName('body');
+                txt = (navigator.userAgent.match(/msie/i)) ? v[0].xml : v[0].innerHTML;
         txt = txt.replace(/\<p/g, "<span").replace(/\<\/p\>/g,"</span>");
         if (txt == ""){
             Application.log("Message Failure:"+ msg);
@@ -630,7 +630,7 @@ function messageParser(msg) {
     if (type == "groupchat") {
         /* Look to see if a product_id is embedded */
         var product_id = null;
-        var x = $(msg).find('x');
+        var x = msg.getElementsByTagName('x');
         for (var i = 0; i < x.length; i++) {
             if (x[i].getAttribute("product_id")) {
                 product_id = x[i].getAttribute("product_id");
@@ -676,7 +676,7 @@ function messageParser(msg) {
         var jid = Strophe.getBareJidFromJid(from);
         var cp = Ext.getCmp("chatpanel").getChat(jid);
         /* Chat states stuff! */
-        var composing = $(msg).find("composing");
+        var composing = msg.getElementsByTagName("composing");
         if (composing.length > 0) {
             if (cp) {
                 cp.setIconCls("typing-tab");
@@ -688,7 +688,7 @@ function messageParser(msg) {
              *  } var gone = $(msg).find("gone"); if (gone.length > 0){
              *  }
              */
-        var paused = $(msg).find("paused");
+        var paused = msg.getElementsByTagName("paused");
         if (paused.length > 0) {
             if (cp) {
                 cp.setIconCls("paused-tab");
@@ -730,9 +730,9 @@ function messageParser(msg) {
                         padding : '10',
                         background : '#fff'
                     },
-                    title : $(msg).find("subject").text()
+                    title : (msg.getElementsByTagName("subject")[0] ? msg.getElementsByTagName("subject")[0].textContent : null)
                             || 'System Message',
-                    html : "<p><b>System Message</b><p>" + $(msg).find('body').text() + "</p>"
+                    html : "<p><b>System Message</b><p>" + (msg.getElementsByTagName('body')[0] ? msg.getElementsByTagName('body')[0].textContent : '') + "</p>"
 
                 })).show();
     }
@@ -747,12 +747,12 @@ function geomParser(msg, isDelayed) {
     var html = msg.getElementsByTagName('html');
     var txt = null;
     if (html.length > 0) {
-                var v = $(msg).find('html').find('body');
-                txt = (navigator.userAgent.match(/msie/i)) ? v[0].xml : $(v[0]).html();
+                var v = msg.getElementsByTagName('html')[0].getElementsByTagName('body');
+                txt = (navigator.userAgent.match(/msie/i)) ? v[0].xml : v[0].innerHTML;
     } else {
         txt = Strophe.getText(body);
     }
-    var x = $(msg).find('x');
+    var x = msg.getElementsByTagName('x');
     if (x.length == 0) {
         return;
     }

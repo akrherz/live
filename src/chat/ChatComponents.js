@@ -1,8 +1,3 @@
-/**
- * Chat UI Components
- * ExtJS panels and components for chat functionality
- */
-
 Ext.ns("Application");
 
 Application.MUCChatPanel = Ext.extend(Ext.Panel, {
@@ -371,7 +366,9 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                                 message: Application.replaceURLWithHTMLLinks(text)
                             })).show();
                         } else {
-                        const nodes = $.parseHTML(Application.replaceURLWithHTMLLinks(text));
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(Application.replaceURLWithHTMLLinks(text), 'text/html');
+                        const nodes = Array.from(doc.body.childNodes);
                         let msg = $msg({
                             to : this.ownerCt.ownerCt.barejid,
                             type : this.ownerCt.ownerCt.chatType
@@ -840,8 +837,8 @@ function onBuddyPresence(msg) {
         }
     }
     /* Check for status */
-    if ($(msg).find('status').length > 0) {
-        status = $(msg).find('status').text();
+    if (msg.getElementsByTagName('status').length > 0) {
+        status = msg.getElementsByTagName('status')[0].textContent;
     }
     /* Check for subscription request */
     if (msg.getAttribute('type') == 'subscribe'){
@@ -882,7 +879,7 @@ function onBuddyPresence(msg) {
                         });
                     }
                     if (!msg.getAttribute('type')) {
-                        if ($(msg).find('show').length > 0) {
+                        if (msg.getElementsByTagName('show').length > 0) {
                             leaf.setIconCls('buddy-away');
                         } else {
                             leaf.setIconCls('buddy-online');
