@@ -8,7 +8,8 @@ import { requireElement } from "iemjs";
  * Creates a login panel with HTML content
  */
 export function createLoginPanel() {
-  return new Ext.Panel({
+  return {
+    xtype: "panel",
     html: `
             <div class="login-panel">
                 <div class="login-header">
@@ -75,5 +76,5 @@ export function createLoginPanel() {
         });
       },
     },
-  });
+  };
 }
