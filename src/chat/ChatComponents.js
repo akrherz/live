@@ -220,7 +220,7 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
                         jid = Strophe.getBareJidFromJid(n.attributes.jid);
                     } 
                     Application.log("Wish to start chat with:"+ jid);
-                    const cp = Ext.getCmp("chatpanel").getChat( jid );
+                    let cp = Ext.getCmp("chatpanel").getChat( jid );
                     if (! cp){
                         cp = Ext.getCmp("chatpanel").addChat( jid );
                     }
@@ -350,7 +350,7 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                     popup : null,
                     handler : function() {
                         const txt = this.ownerCt.getComponent(0);
-                        const text = txt.getValue().trim();
+                        let text = txt.getValue().trim();
                         if (text.length === 0) {
                             txt.focus();
                             return false;

@@ -391,7 +391,7 @@ Application.CreatePrivateChat = new Ext.Window({
                 text : 'Start Chat',
                 scope : privform,
                 handler : function() {
-                    const barejid = this.getForm().findField('username')
+                    let barejid = this.getForm().findField('username')
                             .getValue();
                     if (barejid.indexOf("@") == -1) {
                         barejid = barejid + "@" + Application.XMPPHOST;
