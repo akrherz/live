@@ -3,6 +3,8 @@
  * OpenLayers layer definitions, style maps, feature stores, and grid components
  */
 
+import { lsrStyles } from './lsr-styles.js';
+
 Ext.ns("Application");
 
   var spcConvStyles = {
@@ -113,125 +115,7 @@ var lsrStyleMap = new OpenLayers.StyleMap({
                 fillOpacity : 1
             }
         });
-var lsrStyles = {
-    "UA" : {
-        externalGraphic : "../lsr/icons/airplaneUA.png"
-    },
-    "UUA" : {
-        externalGraphic : "../lsr/icons/airplaneUUA.png"
-    },
-    "0" : {
-        externalGraphic : "../lsr/icons/tropicalstorm.gif"
-    },
-    "1" : {
-        externalGraphic : "../lsr/icons/flood.png"
-    },
-    "2" : {
-        externalGraphic : "../lsr/icons/other.png"
-    },
-    "3" : {
-        externalGraphic : "../lsr/icons/other.png"
-    },
-    "4" : {
-        externalGraphic : "../lsr/icons/other.png"
-    },
-    "5" : {
-        externalGraphic : "../lsr/icons/ice.png"
-    },
-    "6" : {
-        externalGraphic : "../lsr/icons/cold.png"
-    },
-    "7" : {
-        externalGraphic : "../lsr/icons/cold.png"
-    },
-    "8" : {
-        externalGraphic : "../lsr/icons/fire.png"
-    },
-    "9" : {
-        externalGraphic : "../lsr/icons/other.png"
-    },
-    "a" : {
-        externalGraphic : "../lsr/icons/other.png"
-    },
-    "A" : {
-        externalGraphic : "../lsr/icons/wind.png"
-    },
-    "B" : {
-        externalGraphic : "../lsr/icons/downburst.png"
-    },
-    "C" : {
-        externalGraphic : "../lsr/icons/funnelcloud.png"
-    },
-    "D" : {
-        externalGraphic : "../lsr/icons/winddamage.png"
-    },
-    "E" : {
-        externalGraphic : "../lsr/icons/flood.png"
-    },
-    "F" : {
-        externalGraphic : "../lsr/icons/flood.png"
-    },
-    "G" : {
-        externalGraphic : "../lsr/icons/wind.png"
-    },
-    "H" : {
-        externalGraphic : "../lsr/icons/hail.png"
-    },
-    "I" : {
-        externalGraphic : "../lsr/icons/hot.png"
-    },
-    "J" : {
-        externalGraphic : "../lsr/icons/fog.png"
-    },
-    "K" : {
-        externalGraphic : "../lsr/icons/lightning.gif"
-    },
-    "L" : {
-        externalGraphic : "../lsr/icons/lightning.gif"
-    },
-    "M" : {
-        externalGraphic : "../lsr/icons/wind.png"
-    },
-    "N" : {
-        externalGraphic : "../lsr/icons/wind.png"
-    },
-    "O" : {
-        externalGraphic : "../lsr/icons/wind.png"
-    },
-    "P" : {
-        externalGraphic : "../lsr/icons/other.png"
-    },
-    "Q" : {
-        externalGraphic : "../lsr/icons/tropicalstorm.gif"
-    },
-    "R" : {
-        externalGraphic : "../lsr/icons/heavyrain.png"
-    },
-    "s" : {
-        externalGraphic : "../lsr/icons/sleet.png"
-    },
-    "S" : {
-        externalGraphic : "../lsr/icons/snow.png"
-    },
-    "T" : {
-        externalGraphic : "../lsr/icons/tornado.png"
-    },
-    "U" : {
-        externalGraphic : "../lsr/icons/fire.png"
-    },
-    "V" : {
-        externalGraphic : "../lsr/icons/avalanche.gif"
-    },
-    "W" : {
-        externalGraphic : "../lsr/icons/waterspout.png"
-    },
-    "X" : {
-        externalGraphic : "../lsr/icons/funnelcloud.png"
-    },
-    "Z" : {
-        externalGraphic : "../lsr/icons/blizzard.png"
-    }
-};
+// Using shared lsr-styles.js module for icon definitions
 lsrStyleMap.addUniqueValueRules('default', 'ptype', lsrStyles);
 sbwStyleMap.addUniqueValueRules('default', 'ptype', sbwStyles);
 
