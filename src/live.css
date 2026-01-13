@@ -58,3 +58,151 @@ td.x-grid3-td-message div.x-grid3-cell-inner {
 .author-default {
     font-weight: bold;
 }
+/* Login Panel Styles */
+.login-panel {
+    padding: 20px;
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header img {
+    display: block;
+    margin: 0 auto 15px;
+}
+
+.login-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.login-section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.login-section.primary-section {
+    background: #fff;
+    border: 2px solid #0066cc;
+}
+
+.login-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.welcome-text {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.login-form {
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background: #0066cc;
+    color: white;
+    flex: 1;
+}
+
+.btn-primary:hover {
+    background: #0052a3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.form-footer {
+    text-align: center;
+}
+
+.form-footer a {
+    color: #0066cc;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+.login-section p {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.login-section p:last-child {
+    margin-bottom: 0;
+}

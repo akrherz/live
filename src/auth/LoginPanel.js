@@ -2,35 +2,79 @@
  * Login Panel Component
  * Simple panel with login content
  */
+import { requireElement } from "iemjs";
 
 /**
- * LoginPanel - Simple login panel with HTML content
+ * Creates a login panel with HTML content
+ * @returns {Ext.Panel} The configured login panel
  */
-Application.LoginPanel = Ext.extend(Ext.Panel, {
-    initComponent : function() {
-        var config = {
-            html: '<div style="text-align:center;"><img src="/images/nws.png" width="100"/></div>' +
-                  '<p><label>Username:</label><br/>' +
-                  '<input type="text" id="username" name="username" /></p>' +
-                  '<p><label>Password:</label><br/>' +
-                  '<input type="password" id="password" name="password" /></p>' +
-                  '<p><button type="button" onclick="Application.doLogin()">Login</button> ' +
-                  '<button type="button" onclick="Ext.getCmp(\'debug\').show()">Show Debug</button></p>' +
-                  '<p>Welcome to Weather.IM... please log in with your user account.<br />' +
-                  '<a href="/pwupdate.php">Forgot your password?</a></p>' +
-                  '<hr/>' +
-                  '<p><strong>Anonymous Login:</strong></p>' +
-                  '<p>You can login to this service without registering. You will not be able to ' +
-                  'chat within the rooms nor save preferences.</p>' +
-                  '<button type="button" onclick="Application.doAnonymousLogin()">Login Anonymously</button>' +
-                  '<hr/>' +
-                  '<p><strong>Register for An Account:</strong></p>' +
-                  '<p>Due to spammers, you need to register for an account <a href="/create.php">here</a>.</p>',
-            border: false,
-            autoScroll: true,
-            bodyStyle: 'padding:10px'
-        };
-        Ext.apply(this, Ext.apply(this.initialConfig, config));
-        Application.LoginPanel.superclass.initComponent.apply(this, arguments);
-    }
-});
+export function createLoginPanel() {
+  return new Ext.Panel({
+    html: `
+            <div class="login-panel">
+                <div class="login-header">
+                    <img src="/images/nws.png" width="100" alt="NWS Logo" />
+                    <h2>Weather.IM Live</h2>
+                </div>
+                
+                <div class="login-section primary-section">
+                    <h3>Sign In</h3>
+                    <p class="welcome-text">Welcome to Weather.IM... please log in with your user account.</p>
+                    <form id="login-form" class="login-form">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" class="form-control" autocomplete="username" />
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" />
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="button" id="debug-btn" class="btn btn-secondary">Debug</button>
+                        </div>
+                        <div class="form-footer">
+                            <a href="/pwupdate.php">Forgot your password?</a>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="login-section">
+                    <h3>Anonymous Access</h3>
+                    <p>You can login to this service without registering. Note that anonymous users cannot chat within rooms or save preferences.</p>
+                    <button type="button" id="anonymous-btn" class="btn btn-secondary btn-block">
+                        Login Anonymously
+                    </button>
+                </div>
+                
+                <div class="login-section">
+                    <h3>New User?</h3>
+                    <p>Due to spam prevention, new users must register for an account.</p>
+                    <a href="/create.php" class="btn btn-secondary btn-block">Create Account</a>
+                </div>
+            </div>
+        `,
+    border: false,
+    autoScroll: true,
+    listeners: {
+      afterrender: () => {
+        // Attach event listeners after panel is rendered
+        const form = requireElement("login-form");
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          Application.doLogin();
+        });
+
+        const debugBtn = requireElement("debug-btn");
+        debugBtn.addEventListener("click", () => {
+          Ext.getCmp("debug").show();
+        });
+
+        const anonBtn = requireElement("anonymous-btn");
+        anonBtn.addEventListener("click", () => {
+          Application.doAnonymousLogin();
+        });
+      },
+    },
+  });
+}

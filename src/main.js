@@ -15,9 +15,6 @@ import './lib/strophe-disco-plugin.js';
 // Import ExtJS utilities and extensions
 import './lib/extjs-utilities.js';
 
-// Import login components
-import './auth/LoginPanel.js';
-
 // Import map layers and components
 import './map/layers.js';
 import './map/MapPanel.js';

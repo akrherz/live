@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@geoext/geoext": "^7.0.1",
+    "iemjs": "^0.0.7",
     "strophe.js": "^4.0.0-rc0"
   },
   "devDependencies": {
