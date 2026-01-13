@@ -442,7 +442,7 @@ Application.JoinChatroomDialog = new Ext.Window({
                                     alias : alias,
                                     anonymous : anonymous,
                                     autojoin : autojoin,
-                                    icon : 'icons/chat.png',
+                                    icon : '/icons/chat.png',
                                     handle : handle,
                                     leaf : true
                                 });

@@ -22,23 +22,23 @@ td.x-grid3-td-message div.x-grid3-cell-inner {
     font-size: 30px !important;
 }
 .buddy-online {
-    background-image: url(icons/available.png) !important;
+    background-image: url(/icons/available.png) !important;
 }
 .buddy-offline {
-    background-image: url(icons/person.png) !important;
+    background-image: url(/icons/person.png) !important;
 }
 .buddy-away {
-    background-image: url(icons/away.png) !important;
+    background-image: url(/icons/away.png) !important;
 }
 .chatroom-icon {
-    background-image: url(icons/chat.png) !important;
+    background-image: url(/icons/chat.png) !important;
 }
 
 .new-tab{
-  background-image:url(icons/new_tab.gif)  !important;
+  background-image:url(/icons/new_tab.gif)  !important;
 }
 .typing-tab{
-  background-image:url(icons/typing.png)  !important;
+  background-image:url(/icons/typing.png)  !important;
   color : #FF0000 !important;
 }
 .paused-tab{
