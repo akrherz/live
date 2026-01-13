@@ -148,11 +148,11 @@ Application.Control = {
         handler : function(btn) {
             if (btn.soundOn) {
                 btn.setIcon('icons/mute.png');
-                soundManager.muteAll();
+                Application.audioMuted = true;
                 btn.soundOn = false;
             } else {
                 btn.setIcon('icons/volume.png');
-                soundManager.unmuteAll();
+                Application.audioMuted = false;
                 btn.soundOn = true;
                 Application.MsgBus.fireEvent("soundevent", "default");
             }

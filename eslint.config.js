@@ -36,7 +36,6 @@ module.exports = [
                 "iemdata": "readonly",
                 "moment": "readonly",
                 "google": "readonly",
-                "soundManager": "readonly",
                 "iembotFilter": "readonly",
                 "UTCStringToDate": "readonly",
                 "onBuddyPresence": "readonly",
@@ -54,14 +53,16 @@ module.exports = [
                 "setInterval": "readonly",
                 "clearTimeout": "readonly",
                 "clearInterval": "readonly",
-                "DOMParser": "readonly"
+                "DOMParser": "readonly",
+                "Audio": "readonly"
             }
         },
         rules: {
             "no-undef": "error",
             "no-unused-vars": "warn",
             "no-var": "warn",
-            "prefer-const": "warn"
+            "prefer-const": "warn",
+            "no-const-assign": "error"
         }
     }
 ];

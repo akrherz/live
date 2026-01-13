@@ -77,15 +77,8 @@ function initializeApp() {
     };
   }
 
-  // Configure SoundManager
-  if (window.soundManager) {
-    soundManager.url = "swf/";
-    soundManager.onready = function() {
-      if (Application.log) {
-        Application.log("SoundManager2 Loaded...");
-      }
-    };
-  }
+  // Initialize audio mute state
+  Application.audioMuted = false;
 
   // ExtJS configuration
   Ext.BLANK_IMAGE_URL = '/vendor/ext/3.4.1/resources/images/default/s.gif';

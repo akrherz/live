@@ -20,33 +20,37 @@ Application.MsgBus.addEvents('message');
 Application.MsgBus.addEvents('loggedin');
 Application.MsgBus.addEvents('loggedout');
 
+// Audio cache for reusing Audio objects
+const audioCache = {};
+
 Application.playSound = function(sidx) {
-    if (!soundManager || ! soundManager.ok() || soundManager.playState == 1) {
+    // Check if audio is muted
+    if (Application.audioMuted) {
         return;
     }
     
-    let snd = soundManager.getSoundById(sidx);
-    if (!snd) {
-        const idx = Application.SoundStore.find('id', sidx);
-        if (idx == -1) {
-            Application.log("Could not find sound: " + sidx);
-            return;
-        }
-        const record = Application.SoundStore.getAt(idx);
-        snd = soundManager.createSound({
-                    id : record.get("id"),
-                    url : record.get("src"),
-                    onplay : function() {
-                    },
-                    onfinish : function() {
-                    }
-                });
+    const idx = Application.SoundStore.find('id', sidx);
+    if (idx == -1) {
+        Application.log("Could not find sound: " + sidx);
+        return;
     }
-    if (snd){
-        snd.play({
-                volume : Application.getPreference('volume', 100)
-            });
+    
+    const record = Application.SoundStore.getAt(idx);
+    const url = record.get("src");
+    
+    // Create or reuse audio element
+    if (!audioCache[sidx]) {
+        audioCache[sidx] = new Audio(url);
     }
+    
+    const audio = audioCache[sidx];
+    audio.volume = Application.getPreference('volume', 100) / 100;
+    
+    // Reset to beginning if already playing
+    audio.currentTime = 0;
+    audio.play().catch(function(err) {
+        console.error('Error playing sound:', err);
+    });
 };
 
 Application.MsgBus.on('soundevent', function(sevent) {
