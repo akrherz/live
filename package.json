@@ -1,0 +1,34 @@
+{
+  "name": "live",
+  "version": "1.0.0",
+  "description": "Weather.IM Live Client ======================",
+  "homepage": "https://github.com/akrherz/live#readme",
+  "bugs": {
+    "url": "https://github.com/akrherz/live/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akrherz/live.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "eslint.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "extjs-gpl": "^6.2.0",
+    "iemjs": "^0.0.7",
+    "ol": "^10.7.0",
+    "strophe.js": "^4.0.0-rc0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.5",
+    "vite": "^7.3.1"
+  }
+}
