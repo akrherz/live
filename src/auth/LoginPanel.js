@@ -6,7 +6,6 @@ import { requireElement } from "iemjs";
 
 /**
  * Creates a login panel with HTML content
- * @returns {Ext.Panel} The configured login panel
  */
 export function createLoginPanel() {
   return new Ext.Panel({
@@ -16,7 +15,7 @@ export function createLoginPanel() {
                     <img src="/images/nws.png" width="100" alt="NWS Logo" />
                     <h2>Weather.IM Live</h2>
                 </div>
-                
+
                 <div class="login-section primary-section">
                     <h3>Sign In</h3>
                     <p class="welcome-text">Welcome to Weather.IM... please log in with your user account.</p>
@@ -38,7 +37,7 @@ export function createLoginPanel() {
                         </div>
                     </form>
                 </div>
-                
+
                 <div class="login-section">
                     <h3>Anonymous Access</h3>
                     <p>You can login to this service without registering. Note that anonymous users cannot chat within rooms or save preferences.</p>
@@ -46,7 +45,7 @@ export function createLoginPanel() {
                         Login Anonymously
                     </button>
                 </div>
-                
+
                 <div class="login-section">
                     <h3>New User?</h3>
                     <p>Due to spam prevention, new users must register for an account.</p>

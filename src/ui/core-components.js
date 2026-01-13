@@ -139,13 +139,12 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
             renderTo: Ext.getBody(),
         });
 
-        const loginPanel = createLoginPanel();
         new Ext.Window({
             id: "loginwindow",
             modal: true,
             closable: false,
             title: "Weather.IM Live Login Options",
-            items: [loginPanel],
+            items: [createLoginPanel()],
         }).show();
     },
 });
