@@ -3,8 +3,6 @@
  * Simple panel with login content
  */
 
-Ext.ns("Application");
-
 /**
  * LoginPanel - Simple login panel with HTML content
  */

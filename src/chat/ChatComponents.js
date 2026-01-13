@@ -1,7 +1,5 @@
 import { $msg, $pres, Strophe } from 'strophe.js';
 
-Ext.ns("Application");
-
 Application.MUCChatPanel = Ext.extend(Ext.Panel, {
     hideMode : 'offsets',
     closable : true,
@@ -809,7 +807,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
             }
         }
     };
-})());Ext.ns('Application');
+})());
 /*
  * Handles all of the ROSTER related activities
  */

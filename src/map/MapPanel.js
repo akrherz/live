@@ -5,12 +5,6 @@
 
 import { lsrStyles } from './lsr-styles.js';
 
-// Initialize Application namespace
-if (typeof window !== 'undefined') {
-  window.Application = window.Application || {};
-  Ext.ns("Application");
-}
-
 // SPC Convective Outlook Styles
 const spcConvStyles = {
   "General Thunder": {

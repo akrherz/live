@@ -3,8 +3,6 @@
  * DebugWindow, LiveViewport, MapLegend
  */
 
-Ext.ns("Application");
-
 Application.msgtpl = new Ext.XTemplate('<p>{date:date("g:i:s A")} :: {msg}</p>');
 
 Application.DebugWindow = Ext.extend(Ext.Window, {

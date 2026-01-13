@@ -80,7 +80,6 @@ function initializeApp() {
 
   // ExtJS configuration
   Ext.BLANK_IMAGE_URL = '/vendor/ext/3.4.1/resources/images/default/s.gif';
-  Ext.ns("Application");
   
   Ext.onReady(function() {
     console.log('Ext.onReady fired');

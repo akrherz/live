@@ -5,8 +5,6 @@
 
 import { $iq, $pres } from 'strophe.js';
 
-Ext.ns("Application");
-
 export function UTCStringToDate(dtStr, format) {
     const dt = Date.parseDate(dtStr, format);
     if (dt == undefined)

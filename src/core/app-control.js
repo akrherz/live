@@ -6,8 +6,6 @@
 import { $pres, Strophe } from 'strophe.js';
 import { saveBookmarks } from '../dialogs/Dialogs.js';
 
-Ext.ns("Application");
-
 Application.log = function(text) {
     console.log("Application.log:", text);
 };

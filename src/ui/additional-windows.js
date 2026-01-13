@@ -5,9 +5,6 @@
 
 import { $msg, $pres, $iq, Strophe } from 'strophe.js';
 
-Ext.ns("Application");
-
-
 Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
     title : 'Where to send this message?',
     width : 460,

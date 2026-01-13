@@ -5,8 +5,6 @@
 
 import { lsrStyles } from './lsr-styles.js';
 
-Ext.ns("Application");
-
   var spcConvStyles = {
     "General Thunder" : {
         fillColor : '#c0e8c0',
