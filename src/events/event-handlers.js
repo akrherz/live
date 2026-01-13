@@ -6,7 +6,7 @@
 Ext.ns("Application");
 
 export function UTCStringToDate(dtStr, format) {
-    var dt = Date.parseDate(dtStr, format);
+    const dt = Date.parseDate(dtStr, format);
     if (dt == undefined)
         return ''; // or whatever you want to do
     if (typeof dt.fromUTC === 'function') {
@@ -25,14 +25,14 @@ Application.playSound = function(sidx) {
         return;
     }
     
-    var snd = soundManager.getSoundById(sidx);
+    let snd = soundManager.getSoundById(sidx);
     if (!snd) {
-        var idx = Application.SoundStore.find('id', sidx);
+        const idx = Application.SoundStore.find('id', sidx);
         if (idx == -1) {
             Application.log("Could not find sound: " + sidx);
             return;
         }
-        var record = Application.SoundStore.getAt(idx);
+        const record = Application.SoundStore.getAt(idx);
         snd = soundManager.createSound({
                     id : record.get("id"),
                     url : record.get("src"),
@@ -51,11 +51,11 @@ Application.playSound = function(sidx) {
 
 Application.MsgBus.on('soundevent', function(sevent) {
 
-    var enable = Application.getPreference("sound::" + sevent + "::enabled", 'true');
+    const enable = Application.getPreference("sound::" + sevent + "::enabled", 'true');
     if (enable == 'false') {
         return;
     }
-    var sidx = Application.getPreference("sound::" + sevent + "::sound", 'default');
+    const sidx = Application.getPreference("sound::" + sevent + "::sound", 'default');
     Application.playSound(sidx);
 
 });
@@ -102,14 +102,14 @@ Application.MsgBus.on('joinchat', function(room, handle, anonymous) {
             if (handle == null || handle == "") {
                 handle = Application.USERNAME;
             }
-            var mcp = Ext.getCmp("chatpanel").getMUC(room);
+            let mcp = Ext.getCmp("chatpanel").getMUC(room);
             if (mcp == null) {
                 
                 Application.log("Creating chatroom:" + room);
                 mcp = Ext.getCmp("chatpanel").addMUC(room, handle, anonymous);
                 // Ext.getCmp("chatpanel").setActiveTab(mcp);
                 /* Initial Presence */
-                var p = $pres({
+                const p = $pres({
                             to : room + '/' + handle
                         });
                 if (anonymous) {

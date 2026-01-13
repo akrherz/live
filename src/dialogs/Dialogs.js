@@ -1,7 +1,7 @@
 Ext.ns("Application");
 
 Application.saveViews = function() {
-    var stanza = $iq({
+    const stanza = $iq({
                 type : 'set',
                 id : '_set1'
             }).c('query', {
@@ -9,8 +9,8 @@ Application.saveViews = function() {
             }).c('storage', {
                 xmlns : 'nwschatlive:views'
             });
-    for (var i = 1; i < 6; i++) {
-        var bnds = Ext.getCmp('mfv' + i).bounds;
+    for (let i = 1; i < 6; i++) {
+        const bnds = Ext.getCmp('mfv' + i).bounds;
         if (bnds) {
             stanza.c('view', {
                 label : Ext.getCmp('mfv' + i).getValue(),
@@ -25,8 +25,8 @@ Application.saveViews = function() {
 
 export function saveBookmarks() {
     /* Save bookmarks to the server, please */
-    var root = Ext.getCmp("bookmarks").root;
-    var stanza = $iq({
+    const root = Ext.getCmp("bookmarks").root;
+    const stanza = $iq({
                 type : 'set',
                 id : '_set1'
             }).c('query', {
@@ -47,7 +47,7 @@ export function saveBookmarks() {
 
 Ext.util.Format.comboRenderer = function(combo) {
     return function(value) {
-        var record = combo.findRecord(combo.valueField, value);
+        const record = combo.findRecord(combo.valueField, value);
         return record
                 ? record.get(combo.displayField)
                 : combo.valueNotFoundText;
@@ -63,7 +63,7 @@ Ext.util.Format.comboRenderer = function(combo) {
                 ['elevator', 'Elevator', 'sounds/elevator.mp3']]
         });
 
-var combo = new Ext.form.ComboBox({
+const combo = new Ext.form.ComboBox({
             typeAhead : false,
             triggerAction : 'all',
             lazyRender : true,
@@ -89,9 +89,7 @@ Application.soundPrefs = new Ext.Window({
                 handler : function() {
                     
                     Ext.getCmp("soundpanel").getStore().each(function(record){
-                        var eidx = record.get("id");
-                        //console.log("Saving sound "+ eidx +"| Enabled "+ record.get("enabled") 
-                        //    +"| Sound "+ record.get('sound'));
+                        const eidx = record.get("id");
                         Application.setPreference('sound::'+eidx+'::enabled', 
                                                     record.get("enabled")?'true':'false');
                         Application.setPreference('sound::'+eidx+'::sound', record.get('sound'));
@@ -182,8 +180,8 @@ Application.boundsFavorites = new Ext.Window({
             buttons : [{
                         text : 'Save Settings',
                         handler : function() {
-                            for (var i = 1; i < 6; i++) {
-                                var nval = Ext.getCmp("mfv" + i).getValue();
+                            for (let i = 1; i < 6; i++) {
+                                const nval = Ext.getCmp("mfv" + i).getValue();
                                 if (nval != '') {
                                     Ext.getCmp("fm" + i).setText(nval);
                                 }
@@ -215,7 +213,7 @@ Application.boundsFavorites = new Ext.Window({
                 xtype : 'button',
                 text : 'View',
                 handler : function() {
-                    var bnds = Ext.getCmp("mfv1").bounds;
+                    const bnds = Ext.getCmp("mfv1").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
                     }
@@ -239,7 +237,7 @@ Application.boundsFavorites = new Ext.Window({
                 xtype : 'button',
                 text : 'View',
                 handler : function() {
-                    var bnds = Ext.getCmp("mfv2").bounds;
+                    const bnds = Ext.getCmp("mfv2").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
                     }
@@ -263,7 +261,7 @@ Application.boundsFavorites = new Ext.Window({
                 xtype : 'button',
                 text : 'View',
                 handler : function() {
-                    var bnds = Ext.getCmp("mfv3").bounds;
+                    const bnds = Ext.getCmp("mfv3").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
                     }
@@ -287,7 +285,7 @@ Application.boundsFavorites = new Ext.Window({
                 xtype : 'button',
                 text : 'View',
                 handler : function() {
-                    var bnds = Ext.getCmp("mfv4").bounds;
+                    const bnds = Ext.getCmp("mfv4").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
                     }
@@ -311,7 +309,7 @@ Application.boundsFavorites = new Ext.Window({
                 xtype : 'button',
                 text : 'View',
                 handler : function() {
-                    var bnds = Ext.getCmp("mfv5").bounds;
+                    const bnds = Ext.getCmp("mfv5").bounds;
                     if (bnds) {
                         Ext.getCmp("map").map.zoomToExtent(bnds, true);
                     }
@@ -319,7 +317,7 @@ Application.boundsFavorites = new Ext.Window({
             }]
         });
 
-var mucform = new Ext.form.FormPanel({
+const mucform = new Ext.form.FormPanel({
             labelWidth : 200,
             padding : 5,
             items : [{
@@ -362,7 +360,7 @@ var mucform = new Ext.form.FormPanel({
                     }],
             listeners : {
                 render : function() {
-                    var h = mucform.getForm().findField('roomhandle')
+                    const h = mucform.getForm().findField('roomhandle')
                             .getValue();
                     if (!h) {
                         mucform.getForm().findField('roomhandle')
@@ -373,7 +371,7 @@ var mucform = new Ext.form.FormPanel({
             }
         });
 
-var privform = new Ext.form.FormPanel({
+const privform = new Ext.form.FormPanel({
             labelWidth : 100,
             padding : 5,
             items : [{
@@ -393,13 +391,13 @@ Application.CreatePrivateChat = new Ext.Window({
                 text : 'Start Chat',
                 scope : privform,
                 handler : function() {
-                    var barejid = this.getForm().findField('username')
+                    const barejid = this.getForm().findField('username')
                             .getValue();
                     if (barejid.indexOf("@") == -1) {
                         barejid = barejid + "@" + Application.XMPPHOST;
                     }
                     Application.CreatePrivateChat.hide();
-                    var cp = Ext.getCmp("chatpanel").getChat(barejid);
+                    let cp = Ext.getCmp("chatpanel").getChat(barejid);
                     if (!cp) {
                         cp = Ext.getCmp("chatpanel").addChat(barejid);
                     }
@@ -423,16 +421,16 @@ Application.JoinChatroomDialog = new Ext.Window({
                 text : "Join Room",
                 scope : mucform,
                 handler : function() {
-                    var roomname = this.getForm().findField('roomname').getValue();
-                    var room = roomname + "@conference." + Application.XMPPHOST;
-                    var handle = this.getForm().findField('roomhandle').getValue();
-                    var ibook = this.getForm().findField('bookmark').getValue();
-                    var anonymous = this.getForm().findField('anonymous')
+                    const roomname = this.getForm().findField('roomname').getValue();
+                    const room = roomname + "@conference." + Application.XMPPHOST;
+                    const handle = this.getForm().findField('roomhandle').getValue();
+                    const ibook = this.getForm().findField('bookmark').getValue();
+                    const anonymous = this.getForm().findField('anonymous')
                             .getValue();
-                    var autojoin = this.getForm().findField('autojoin').getValue();
+                    const autojoin = this.getForm().findField('autojoin').getValue();
                     /* Add XMPP MUC Bookmark */
                     if (ibook) {
-                        var alias = this.getForm().findField('roomalias')
+                        let alias = this.getForm().findField('roomalias')
                                 .getValue();
                         if (alias == "") {
                             alias = roomname;
