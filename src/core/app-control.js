@@ -3,6 +3,7 @@
  * Application.Control, doLogin, ServiceGuard
  */
 
+import { $pres, Strophe } from 'strophe.js';
 import { saveBookmarks } from '../dialogs/Dialogs.js';
 
 Ext.ns("Application");

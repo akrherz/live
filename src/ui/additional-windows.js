@@ -3,6 +3,8 @@
  * AllChatMessageWindow, buildAddBuddy
  */
 
+import { $msg, $pres, $iq, Strophe } from 'strophe.js';
+
 Ext.ns("Application");
 
 

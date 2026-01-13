@@ -3,6 +3,8 @@
  * MsgBus events, sound system, chat events
  */
 
+import { $iq, $pres } from 'strophe.js';
+
 Ext.ns("Application");
 
 export function UTCStringToDate(dtStr, format) {

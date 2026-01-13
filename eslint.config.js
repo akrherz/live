@@ -18,12 +18,6 @@ module.exports = [
                 // ExtJS
                 "Ext": "readonly",
                 
-                // XMPP/Strophe
-                "Strophe": "readonly",
-                "$msg": "readonly",
-                "$pres": "readonly",
-                "$iq": "readonly",
-                
                 // OpenLayers
                 "ol": "readonly",
                 "OpenLayers": "readonly",

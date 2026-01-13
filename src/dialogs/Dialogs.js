@@ -1,3 +1,5 @@
+import { $iq } from 'strophe.js';
+
 Ext.ns("Application");
 
 Application.saveViews = function() {

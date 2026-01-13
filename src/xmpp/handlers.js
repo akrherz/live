@@ -3,6 +3,7 @@
  * Connection, message, presence, roster, and IQ handlers
  */
 
+import { $iq, $pres, Strophe } from 'strophe.js';
 import { UTCStringToDate } from '../events/event-handlers.js';
 import { onBuddyPresence } from '../chat/ChatComponents.js';
 

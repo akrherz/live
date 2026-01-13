@@ -4,7 +4,7 @@
  * TODO: manage node hierarchies, and node on info request
  */
 
-import { Strophe, $iq } from './strophe-setup.js';
+import { Strophe, $iq } from 'strophe.js';
 
 Strophe.addConnectionPlugin('disco', {
     _connection: null,

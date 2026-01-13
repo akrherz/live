@@ -1,3 +1,5 @@
+import { $msg, $pres, Strophe } from 'strophe.js';
+
 Ext.ns("Application");
 
 Application.MUCChatPanel = Ext.extend(Ext.Panel, {

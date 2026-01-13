@@ -9,7 +9,7 @@
 import './config.js';
 
 // Import Strophe.js from npm package and set up plugins
-import './lib/strophe-setup.js';
+import { Strophe } from 'strophe.js';
 import './lib/strophe-disco-plugin.js';
 
 // Import ExtJS utilities and extensions
@@ -68,14 +68,12 @@ function initializeApp() {
   
   console.log('All dependencies loaded, initializing app...');
   
-  // Configure Strophe logging if available
-  if (window.Strophe) {
-    Strophe.log = function(level, msg) {
-      if (Application.log) {
-        Application.log(msg);
-      }
-    };
-  }
+  // Configure Strophe logging
+  Strophe.log = function(level, msg) {
+    if (Application.log) {
+      Application.log(msg);
+    }
+  };
 
   // Initialize audio mute state
   Application.audioMuted = false;
