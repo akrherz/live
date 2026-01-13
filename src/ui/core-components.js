@@ -3,7 +3,7 @@
  * DebugWindow, LiveViewport, MapLegend
  */
 
-import { createLoginPanel } from "../auth/LoginPanel.js";
+import { LoginPanel } from "../auth/LoginPanel.js";
 import { MapPanel } from "../map/MapPanel.js";
 
 Application.msgtpl = new Ext.XTemplate(
@@ -144,7 +144,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
             modal: true,
             closable: false,
             title: "Weather.IM Live Login Options",
-            items: [createLoginPanel()],
+            items: [LoginPanel],
         }).show();
     },
 });

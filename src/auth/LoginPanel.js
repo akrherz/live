@@ -7,8 +7,7 @@ import { requireElement } from "iemjs";
 /**
  * Creates a login panel with HTML content
  */
-export function createLoginPanel() {
-  return {
+export const LoginPanel = {
     xtype: "panel",
     html: `
             <div class="login-panel">
@@ -57,24 +56,23 @@ export function createLoginPanel() {
     border: false,
     autoScroll: true,
     listeners: {
-      afterrender: () => {
-        // Attach event listeners after panel is rendered
-        const form = requireElement("login-form");
-        form.addEventListener("submit", (e) => {
-          e.preventDefault();
-          Application.doLogin();
-        });
+        afterrender: () => {
+            // Attach event listeners after panel is rendered
+            const form = requireElement("login-form");
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                Application.doLogin();
+            });
 
-        const debugBtn = requireElement("debug-btn");
-        debugBtn.addEventListener("click", () => {
-          Ext.getCmp("debug").show();
-        });
+            const debugBtn = requireElement("debug-btn");
+            debugBtn.addEventListener("click", () => {
+                Ext.getCmp("debug").show();
+            });
 
-        const anonBtn = requireElement("anonymous-btn");
-        anonBtn.addEventListener("click", () => {
-          Application.doAnonymousLogin();
-        });
-      },
+            const anonBtn = requireElement("anonymous-btn");
+            anonBtn.addEventListener("click", () => {
+                Application.doAnonymousLogin();
+            });
+        },
     },
-  };
-}
+};
