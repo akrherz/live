@@ -115,7 +115,7 @@ const sigc = new OpenLayers.Layer.Vector("Convective Sigmets", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=7",
+    url: "https://mesonet.agron.iastate.edu/geojson/convective_sigmet.php",
     format: new OpenLayers.Format.GeoJSON({
       projection: new OpenLayers.Projection("EPSG:4326"),
       internalProjection: new OpenLayers.Projection("EPSG:900913"),
@@ -132,7 +132,7 @@ const qpf1 = new OpenLayers.Layer.Vector("Day 1 QPF", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=0",
+    url: "https://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day1_latest_netlink.kml",
     format: new OpenLayers.Format.KML({
       extractStyles: true,
       extractAttributes: true,
@@ -149,7 +149,7 @@ const qpf2 = new OpenLayers.Layer.Vector("Day 2 QPF", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=1",
+    url: "https://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day2_latest_netlink.kml",
     format: new OpenLayers.Format.KML({
       extractStyles: true,
       extractAttributes: true,
@@ -167,7 +167,7 @@ const spc1 = new OpenLayers.Layer.Vector("Day 1 Convective Outlook", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=3",
+    url: "https://www.spc.noaa.gov/products/outlook/day1otlk.kml",
     format: new OpenLayers.Format.KML({
       extractStyles: false,
       extractAttributes: true,
@@ -185,7 +185,7 @@ const spc2 = new OpenLayers.Layer.Vector("Day 2 Convective Outlook", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=4",
+    url: "https://www.spc.noaa.gov/products/outlook/day2otlk.kml",
     format: new OpenLayers.Format.KML({
       extractStyles: false,
       extractAttributes: true,
@@ -203,7 +203,7 @@ const spc3 = new OpenLayers.Layer.Vector("Day 3 Convective Outlook", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=5",
+    url: "https://www.spc.noaa.gov/products/outlook/day3otlk.kml",
     format: new OpenLayers.Format.KML({
       extractStyles: false,
       extractAttributes: true,
@@ -220,7 +220,7 @@ const qpf15 = new OpenLayers.Layer.Vector("Day 1-5 QPF", {
   projection: new OpenLayers.Projection("EPSG:4326"),
   visibility: false,
   protocol: new OpenLayers.Protocol.HTTP({
-    url: "data-proxy.php?id=2",
+    url: "https://www.wpc.ncep.noaa.gov/kml/qpf/QPF120hr_Day1-5_latest_netlink.kml",
     format: new OpenLayers.Format.KML({
       extractStyles: true,
       extractAttributes: true,
