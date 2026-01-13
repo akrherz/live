@@ -185,7 +185,7 @@ Application.Control = {
                 }),
                 listeners : {
                     click : function(n) {
-                        var cp = Ext.getCmp("chatpanel").getChat( n.attributes.barejid );
+                        let cp = Ext.getCmp("chatpanel").getChat( n.attributes.barejid );
                         if (! cp){
                             cp = Ext.getCmp("chatpanel").addChat( n.attributes.barejid );
                         }
@@ -215,7 +215,7 @@ Application.Control = {
                                     }],
                             listeners : {
                                 itemclick : function(item) {
-                                    var n = item.parentMenu.contextNode;
+                                    const n = item.parentMenu.contextNode;
                                     switch (item.id) {
                                         case 'delete-node' :
                                             if (n.parentNode) {
@@ -230,7 +230,7 @@ Application.Control = {
                 listeners : {
                     contextmenu : function(node, e) {
                         node.select();
-                        var c = node.getOwnerTree().contextMenu;
+                        const c = node.getOwnerTree().contextMenu;
                         c.contextNode = node;
                         c.showAt(e.getXY());
                     },
@@ -239,7 +239,7 @@ Application.Control = {
                     },
                     click : function(n) {
                         Application.JoinChatroomDialog.show(null, function(){
-                            var form = this.items.items[0].getForm();
+                            const form = this.items.items[0].getForm();
                             form.findField("roomname").setValue(Strophe.getNodeFromJid(n.attributes.jid));
                             form.findField("roomhandle").setValue(n.attributes.handle);
                             form.findField("bookmark").enable();
@@ -257,7 +257,7 @@ Application.Control = {
                                      * Ensure that we are appending an unique
                                      * node
                                      */
-                                    var oldnode = root.findChild('jid', node.attributes.jid);
+                                    const oldnode = root.findChild('jid', node.attributes.jid);
                                     if (oldnode) {
                                         Application.log("Replacing MUC bookmark: "+ node.attributes.jid );
                                         root.removeChild(oldnode, true);
@@ -284,7 +284,7 @@ Application.Control = {
                 listeners : {
                     click : function(n) {
                         Application.JoinChatroomDialog.show(null, function(){
-                            var form = this.items.items[0].getForm();
+                            const form = this.items.items[0].getForm();
                             form.findField("roomname").setValue(Strophe.getNodeFromJid(n.attributes.jid));
                             form.findField("roomhandle").setValue(Application.USERNAME);
                             form.findField("bookmark").enable();
@@ -307,8 +307,8 @@ Application.doLogin = function() {
     }
     
     // Get username from HTML input or ExtJS component
-    var usernameField = Ext.getCmp('username') || document.getElementById('username');
-    var username = usernameField.getValue ? usernameField.getValue() : usernameField.value;
+    const usernameField = Ext.getCmp('username') || document.getElementById('username');
+    let username = usernameField.getValue ? usernameField.getValue() : usernameField.value;
     
     if (username.indexOf("@") > 0) {
         username = Strophe.getNodeFromJid(username);
@@ -317,8 +317,8 @@ Application.doLogin = function() {
     username = username.replace(/^\s+|\s+$/g, '');
     
     // Get password from HTML input or ExtJS component
-    var passwordField = Ext.getCmp('password') || document.getElementById('password');
-    var password = passwordField.getValue ? passwordField.getValue() : passwordField.value;
+    const passwordField = Ext.getCmp('password') || document.getElementById('password');
+    const password = passwordField.getValue ? passwordField.getValue() : passwordField.value;
     
     if (username == "") {
         Application.log("Invalid Username");

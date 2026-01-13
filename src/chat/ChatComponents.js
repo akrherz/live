@@ -39,11 +39,11 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
         } else {
             this.items[1].emptyText = "Type message here";
         }
-        var config = {
+        const config = {
             listeners : {
                 activate : function(self) {
                     if (self.iconCls && self.ownerCt && self.ownerCt.getActiveTab) {
-                        var tab = self.ownerCt.getTabEl(self);
+                        const tab = self.ownerCt.getTabEl(self);
                         if (tab) {
                             self.ownerCt.unhideTabStripItem(self);
                             self.setIconClass('tabno');
@@ -52,7 +52,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
                 },
                 deactivate : function(self) {
                     if (self.iconCls && self.ownerCt && self.ownerCt.getActiveTab) {
-                        var tab = self.ownerCt.getTabEl(self);
+                        const tab = self.ownerCt.getTabEl(self);
                         if (tab) {
                             self.setIconClass('tabno');
                         }
@@ -72,7 +72,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
         this.roomusers.root.removeAll();
     },
     getJidByHandle : function(handle) {
-        var node = this.roomusers.root.findChild('text', handle);
+        const node = this.roomusers.root.findChild('text', handle);
         if (node == null)
             return null;
         if (Strophe.getDomainFromJid(node.attributes.jid) == Application.XMPPMUCHOST)
@@ -101,7 +101,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
             this.te.disable();
         }
 
-        var pref = "muc::" + Strophe.getNodeFromJid(this.barejid) + "::mute";
+        let pref = "muc::" + Strophe.getNodeFromJid(this.barejid) + "::mute";
         if (Application.getPreference(pref, false)) {
             /* hacky */
             this.gp.toolbars[0].items.items[4].toggle(true, true);
@@ -144,7 +144,7 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
                     split : true
                 })
             ];
-        var config = {
+        const config = {
             listeners : {
                 activate : function(self) {
                     self.setIconCls('tabno');
@@ -196,16 +196,16 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             text : 'test',
             listeners : {
                 append : function(tree, node) {
-                    var sz = node.childNodes.length;
+                    const sz = node.childNodes.length;
                     tree.setTitle(sz + " people in room");
                 },
                 remove : function(tree, node) {
-                    var sz = node.childNodes.length;
+                    const sz = node.childNodes.length;
                     tree.setTitle(sz + " people in room");
                 }
             }
         };
-        var config = {
+        const config = {
             plugins: new Ext.ux.DataTip({
                 tpl: '<div>JID: {jid}<br />Affiliation: {affiliation}<br />Role: {role}</div>',
                 constrainPosition: true
@@ -214,18 +214,18 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
                 click : function(n) {
                     if (!n.attributes.jid)
                         return;
-                    var username = Strophe.getNodeFromJid(n.attributes.jid);
+                    const username = Strophe.getNodeFromJid(n.attributes.jid);
                     /* Can't speak with ourself */
                     if (username == Application.USERNAME) {
                         return;
                     }
                     /* Now, we either talk with private or private via MUC */
-                    var jid = n.attributes.jid;
+                    let jid = n.attributes.jid;
                     if (Strophe.getDomainFromJid(n.attributes.jid) == Application.XMPPHOST) {
                         jid = Strophe.getBareJidFromJid(n.attributes.jid);
                     } 
                     Application.log("Wish to start chat with:"+ jid);
-                    var cp = Ext.getCmp("chatpanel").getChat( jid );
+                    const cp = Ext.getCmp("chatpanel").getChat( jid );
                     if (! cp){
                         cp = Ext.getCmp("chatpanel").addChat( jid );
                     }
@@ -265,16 +265,17 @@ Application.UserColorStore = new Ext.data.Store({
 });
 
 Application.getUserColor = function(user) {
-    var idx = Application.UserColorStore.find('user', user);
+    const idx = Application.UserColorStore.find('user', user);
+    let c = null
     if (idx == -1){
-        var c = Application.colors[ Application.colorpointer ];
+        c = Application.colors[ Application.colorpointer ];
         Application.UserColorStore.add(new Ext.data.Record({user: user, color: c}));
         Application.colorpointer++;
         if (Application.colorpointer > 12){
             Application.colorpointer = 0;
         }
     } else {
-        var c = Application.UserColorStore.getAt(idx).get("color");
+        c = Application.UserColorStore.getAt(idx).get("color");
     }
     return c;
 };
@@ -353,14 +354,14 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                     width : 60,
                     popup : null,
                     handler : function() {
-                        var txt = this.ownerCt.getComponent(0);
-                        var text = txt.getValue().trim();
+                        const txt = this.ownerCt.getComponent(0);
+                        const text = txt.getValue().trim();
                         if (text.length === 0) {
                             txt.focus();
                             return false;
                         }
-                        var bgcolor = Application.getPreference('bgcolor', 'FFFFFF');
-                        var fgcolor = Application.getPreference('fgcolor', '000000');
+                        const bgcolor = Application.getPreference('bgcolor', 'FFFFFF');
+                        const fgcolor = Application.getPreference('fgcolor', '000000');
                         
                         /* allchat */
                         if (this.ownerCt.ownerCt.chatType == "allchats"){
@@ -370,8 +371,8 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                                 message: Application.replaceURLWithHTMLLinks(text)
                             })).show();
                         } else {
-                        var nodes = $.parseHTML(Application.replaceURLWithHTMLLinks(text));
-                        var msg = $msg({
+                        const nodes = $.parseHTML(Application.replaceURLWithHTMLLinks(text));
+                        let msg = $msg({
                             to : this.ownerCt.ownerCt.barejid,
                             type : this.ownerCt.ownerCt.chatType
                         }).c("active", {xmlns : 'http://jabber.org/protocol/chatstates'}).up()
@@ -383,7 +384,7 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                     style : "color:#" + fgcolor + ";background:#"
                             + bgcolor + ";"
                         });
-                        for (var i=0;i<nodes.length;i++){
+                        for (let i=0;i<nodes.length;i++){
                             msg = msg.cnode(nodes[i]);
                             if (i < nodes.length){
                               msg = msg.up();
@@ -402,9 +403,6 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                                                 author : Application.USERNAME,
                                                 message :Application.replaceURLWithHTMLLinks(text)
                                             }));
-                            //i = this.ownerCt.ownerCt.gp.getStore().getCount()
-                            //        - 1;
-                            //this.ownerCt.ownerCt.gp.getView().getRow(i).scrollIntoView();
                         }
                         }
 
@@ -521,7 +519,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     const size = parseInt(Application.getPreference('font-size', 14)) - 2;
                     Application.setPreference('font-size', size);
                     //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
-                    var cssfmt = String.format('normal {0}px arial', size);
+                    const cssfmt = String.format('normal {0}px arial', size);
                     Ext.util.CSS.updateRule('td.x-grid3-td-message', 'font', cssfmt);
                     Ext.util.CSS.updateRule('.message-entry-box', 'font', cssfmt);
                 }
@@ -530,7 +528,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 handler : function(){
                     const size = parseInt(Application.getPreference('font-size', 14)) + 2;
                     Application.setPreference('font-size', size);
-                    var cssfmt = String.format('normal {0}px arial', size);
+                    const cssfmt = String.format('normal {0}px arial', size);
                     Ext.util.CSS.updateRule('td.x-grid3-td-message', 'font', cssfmt);
                     Ext.util.CSS.updateRule('.message-entry-box', 'font', cssfmt);
                 }
@@ -577,7 +575,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             }
             let nonIEMBot = false;
             let nothingNew = true;
-            for (var i = 0; i < records.length; i++) {
+            for (let i = 0; i < records.length; i++) {
                 /* No events for delayed messages */
                 if (records[i].get('xdelay')){
                     continue;
@@ -613,14 +611,14 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 }
             }
         }, this);
-        var config = {
+        const config = {
             viewConfig : {
                 onAdd : function(_ds, _records, index) {
                     this.constructor.prototype.onAdd.apply(this, arguments);
                     //this.grid.getSelectionModel().selectRow(index);
                     //this.focusRow(index);
                     
-                    var row = this.grid.getView().getRow(index);
+                    const row = this.grid.getView().getRow(index);
                     if (row) row.scrollIntoView();
                 },
                 templates : {
@@ -719,7 +717,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
 
 //  Target the body (if the host is a Panel), or, if there is no body, the main Element.
     function onHostRender() {
-        var e = this.body || this.el;
+        const e = this.body || this.el;
         if (this.dataTip.renderToTarget) {
             this.dataTip.render(e);
         }
@@ -739,7 +737,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
     }
     
     function beforeTreeTipShow(tip) {
-        var e = Ext.fly(tip.triggerElement).findParent('div.x-tree-node-el', null, true),
+        const e = Ext.fly(tip.triggerElement).findParent('div.x-tree-node-el', null, true),
             node = e ? tip.host.getNodeById(e.getAttribute('tree-node-id', 'ext')) : null;
         if(node){
             updateTip(tip, node.attributes);
@@ -749,7 +747,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
     }
 
     function beforeGridTipShow(tip) {
-        var rec = this.host.getStore().getAt(this.host.getView().findRowIndex(tip.triggerElement));
+        const rec = this.host.getStore().getAt(this.host.getView().findRowIndex(tip.triggerElement));
         if (rec){
             updateTip(tip, rec.data);
         } else {
@@ -758,7 +756,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
     }
 
     function beforeViewTipShow(tip) {
-        var rec = this.host.getRecord(tip.triggerElement);
+        const rec = this.host.getRecord(tip.triggerElement);
         if (rec){
             updateTip(tip, rec.data);
         } else {
@@ -767,7 +765,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
     }
 
     function beforeFormTipShow(tip) {
-        var el = Ext.fly(tip.triggerElement).child('input,textarea'),
+        const el = Ext.fly(tip.triggerElement).child('input,textarea'),
             field = el ? this.host.getForm().findField(el.id) : null;
         if (field && (field.tooltip || tip.tpl)){
             updateTip(tip, field.tooltip || field);
@@ -777,7 +775,7 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
     }
 
     function beforeComboTipShow(tip) {
-        var rec = this.host.store.getAt(this.host.selectedIndex);
+        const rec = this.host.store.getAt(this.host.selectedIndex);
         if (rec){
             updateTip(tip, rec.data);
         } else {
@@ -824,11 +822,11 @@ Ext.ux.DataTip = Ext.extend(Ext.ToolTip, (function() {
 function onBuddyPresence(msg) {
 
     // Okay, we know who we got the presence from
-    var jid = msg.getAttribute('from');
-    var barejid = Strophe.getBareJidFromJid(jid);
-    var resource = Strophe.getResourceFromJid(jid);
-    var username = Strophe.getNodeFromJid(jid);
-    var status = 'Available';
+    const jid = msg.getAttribute('from');
+    const barejid = Strophe.getBareJidFromJid(jid);
+    const resource = Strophe.getResourceFromJid(jid);
+    const username = Strophe.getNodeFromJid(jid);
+    let status = 'Available';
     /* IMPORTANT: If we find our own username, then we need to set a global 
      * flag to prevent auto-login from working
      */
@@ -855,11 +853,11 @@ function onBuddyPresence(msg) {
                fn: function(btn){
                  if (btn == 'yes'){
                      /* <presence to='fire-daryl.e.herzmann@localhost' type='subscribed'/> */
-                     var stanza = $pres({to: jid, type: 'subscribed'});
+                     const stanza = $pres({to: jid, type: 'subscribed'});
                      Application.XMPPConn.send(stanza.tree());
                      Application.buildAddBuddy(username, username ,'Buddies');
                  }  else {
-                     var stanza = $pres({to: jid, type: 'unsubscribed'});
+                     const stanza = $pres({to: jid, type: 'unsubscribed'});
                      Application.XMPPConn.send(stanza.tree()); 
                  }
                },
@@ -875,7 +873,7 @@ function onBuddyPresence(msg) {
             //console.log("Looking for:"+ barejid +", this node:"+ 
             //    leaf.attributes.jid);
                 if (leaf.attributes.barejid == barejid) {
-                    var res = leaf.attributes.resources.get(resource);
+                    const res = leaf.attributes.resources.get(resource);
                     if (!res){
                         //console.log("Adding:"+ resource +" Status:"+ status);
                         leaf.attributes.resources.add(resource, {
@@ -963,7 +961,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
         );
         this.arrow.hide();
         // Create a drop target for this tab panel
-        var tabsDDGroup = this.ddGroupId;
+        const tabsDDGroup = this.ddGroupId;
         this.dd = new Ext.ux.panel.DDTabPanel.DropTarget(this, {
             ddGroup: tabsDDGroup
         });
@@ -977,7 +975,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
     initTab: function(tab, index) {
         Ext.ux.panel.DDTabPanel.superclass.initTab.call(this, tab, index);
 
-        var id = this.id + '__' + tab.id;
+        const id = this.id + '__' + tab.id;
         // Hotfix 3.2.0
         Ext.fly(id).on('click', function() { tab.ownerCt.setActiveTab(tab.id); });
         // Enable dragging on all tabs by default
@@ -996,12 +994,11 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
                 , onStartDrag: function() {
                     if (this.dropEl.iconCls) {
 
-                        var el = this.getProxy().getGhost().select(".x-tab-strip-text");
+                        const el = this.getProxy().getGhost().select(".x-tab-strip-text");
                         el.addClass('x-panel-inline-icon');
 
-                        var proxyText = el.elements[0].innerHTML;
-                        proxyText = Ext.util.Format.stripTags(proxyText);
-                        el.elements[0].innerHTML = proxyText;
+                        const proxyText = el.elements[0].innerHTML;
+                        el.elements[0].innerHTML = Ext.util.Format.stripTags(proxyText);
 
                         el.applyStyles({
                             paddingLeft: "20px"
@@ -1046,7 +1043,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
 
     /** @private */
     , onRemove: function(c) {
-        var te = Ext.get(c.tabEl);
+        const te = Ext.get(c.tabEl);
         // check if the tabEl exists, it won't if the tab isn't rendered
         if (te) {
             // DragSource cleanup on removed tabs
@@ -1069,7 +1066,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
         // if this.move, the active tab stays the active one
         if (c == this.activeTab) {
             if (!this.move) {
-                var next = this.stack.next();
+                const next = this.stack.next();
                 if (next) {
                     this.setActiveTab(next);
                 } else if (this.items.getCount() > 0) {
@@ -1107,31 +1104,30 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
     }
 
     ,notifyOver: function(dd, e){
-        var tabs = this.tabpanel.items;
-        var last = tabs.length;
+        const tabs = this.tabpanel.items;
+        const last = tabs.length;
 
         if(!e.within(this.getEl()) || dd.dropEl == this.tabpanel){
             return 'x-dd-drop-nodrop';
         }
 
-        var larrow = this.tabpanel.arrow;
+        const larrow = this.tabpanel.arrow;
 
         // Getting the absolute Y coordinate of the tabpanel
-        var tabPanelTop = this.el.getY();
+        const tabPanelTop = this.el.getY();
 
-        var left, prevTab, tab;
-        var eventPosX = e.getPageX();
+        let left, prevTab, tab;
+        const eventPosX = e.getPageX();
 
-        for(var i = 0; i < last; i++){
+        for(let i = 0; i < last; i++){
             prevTab = tab;
             tab    = tabs.itemAt(i);
             // Is this tab target of the drop operation?
-            var tabEl = tab.ds.dropElHeader;
+            const tabEl = tab.ds.dropElHeader;
             // Getting the absolute X coordinate of the tab
-            var tabLeft = tabEl.getX();
+            const tabLeft = tabEl.getX();
             // Get the middle of the tab
-            var tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
-
+            const tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
             if(eventPosX <= tabMiddle){
                 left = tabLeft;
                 break;
@@ -1139,9 +1135,9 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
         }
         
         if(typeof left == 'undefined'){
-            var lastTab = tabs.itemAt(last - 1);
+            const lastTab = tabs.itemAt(last - 1);
             if(lastTab == dd.dropEl)return 'x-dd-drop-nodrop';
-            var dom = lastTab.ds.dropElHeader.dom;
+            const dom = lastTab.ds.dropElHeader.dom;
             left = (new Ext.Element(dom).getX() + dom.clientWidth) + 3;
         }
         
@@ -1162,17 +1158,18 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
         if(dd.dropEl == this.tabpanel){
             return false;
         }
-        var tabs      = this.tabpanel.items;
-        var eventPosX = e.getPageX();
-
-        for(var i = 0; i < tabs.length; i++){
-            var tab = tabs.itemAt(i);
+        const tabs      = this.tabpanel.items;
+        const eventPosX = e.getPageX();
+        let tab = null;
+        let i  = 0;
+        for(i = 0; i < tabs.length; i++){
+            tab = tabs.itemAt(i);
             // Is this tab target of the drop operation?
-            var tabEl = tab.ds.dropElHeader;
+            const tabEl = tab.ds.dropElHeader;
             // Getting the absolute X coordinate of the tab
-            var tabLeft = tabEl.getX();
+            const tabLeft = tabEl.getX();
             // Get the middle of the tab
-            var tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
+            const tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
             if(eventPosX <= tabMiddle) break;
         }
 
@@ -1189,7 +1186,7 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
         }
 
         this.tabpanel.move = true;
-        var dropEl = dd.dropEl.ownerCt.remove(dd.dropEl, false);
+        const dropEl = dd.dropEl.ownerCt.remove(dd.dropEl, false);
         
         this.tabpanel.insert(i, dropEl);
         // Event drop
@@ -1214,7 +1211,7 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
     split : true,
         enableTabScroll: true,
     initComponent : function() {
-        var config = {
+        const config = {
 
         };
         Ext.apply(this, Ext.apply(this.initialConfig, config));
@@ -1242,7 +1239,7 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         }));
     },
     addMUC : function(barejid, handle, anonymous){
-        var mcp = new Application.MUCChatPanel({
+        const mcp = new Application.MUCChatPanel({
             title : Strophe.getNodeFromJid(barejid),
             barejid : barejid,
             handle : handle,
@@ -1257,11 +1254,11 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         this.remove( this.getMUC(barejid) );
     },
     addChat : function(jid){
-        var title = Strophe.getNodeFromJid(jid);
+        let title = Strophe.getNodeFromJid(jid);
         if (Strophe.getDomainFromJid(jid) == Application.XMPPMUCHOST){
             title = Strophe.getResourceFromJid(jid);
         }
-        var cp = new Application.ChatPanel({
+        const cp = new Application.ChatPanel({
             title : title,
             handle : Application.USERNAME,
             barejid : jid
@@ -1275,4 +1272,3 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         this.remove( this.getChat(jid) );
     }
 });
-
