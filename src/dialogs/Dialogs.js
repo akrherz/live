@@ -34,7 +34,10 @@ Application.saveViews = function () {
 
 export function saveBookmarks() {
     /* Save bookmarks to the server, please */
-    const root = Ext.getCmp("bookmarks").root;
+    const bookmarksTree = Ext.getCmp("bookmarks");
+    const root = bookmarksTree ? bookmarksTree.getRootNode() : null;
+    if (!root) return;
+
     const stanza = $iq({
         type: "set",
         id: "_set1",
@@ -47,12 +50,12 @@ export function saveBookmarks() {
         });
     root.eachChild(function (n) {
         this.c("conference", {
-            name: n.attributes.alias,
-            anonymous: n.attributes.anonymous ? "true" : "false",
-            autojoin: n.attributes.autojoin ? "true" : "false",
-            jid: n.attributes.jid,
+            name: n.data.alias,
+            anonymous: n.data.anonymous ? "true" : "false",
+            autojoin: n.data.autojoin ? "true" : "false",
+            jid: n.data.jid,
         })
-            .c("nick", n.attributes.handle)
+            .c("nick", n.data.handle)
             .up()
             .up();
     }, stanza);
@@ -138,7 +141,7 @@ Application.soundPrefs = new Ext.Window({
             },
             fieldLabel: "Volume",
         },
-        new Ext.grid.EditorGridPanel({
+        new Ext.grid.Panel({
             store: new Ext.data.ArrayStore({
                 data: [
                     [
@@ -180,37 +183,35 @@ Application.soundPrefs = new Ext.Window({
                     direction: "ASC",
                 },
             }),
-            cm: new Ext.grid.ColumnModel({
-                columns: [
-                    {
-                        dataIndex: "enabled",
-                        id: "enabled",
-                        header: "Enable",
-                        xtype: "checkcolumn",
-                    },
-                    {
-                        dataIndex: "label",
-                        id: "label",
-                        sortable: true,
-                        header: "Event Type",
-                    },
-                    {
-                        dataIndex: "sound",
-                        id: "sound",
-                        header: "Sound",
-                        renderer: Ext.util.Format.comboRenderer(combo),
-                        editor: combo,
-                    },
-                ],
-            }),
+            columns: [
+                {
+                    dataIndex: "enabled",
+                    text: "Enable",
+                    xtype: "checkcolumn",
+                },
+                {
+                    dataIndex: "label",
+                    text: "Event Type",
+                    sortable: true,
+                    flex: 1,
+                },
+                {
+                    dataIndex: "sound",
+                    text: "Sound",
+                    renderer: Ext.util.Format.comboRenderer(combo),
+                    editor: combo,
+                },
+            ],
             id: "soundpanel",
             title: "Sound Events",
             frame: true,
-            clicksToEdit: 1,
             stripeRows: true,
-            autoExpandColumn: "label",
             height: 200,
             autoScroll: true,
+            plugins: {
+                ptype: 'cellediting',
+                clicksToEdit: 1
+            },
         }),
     ],
 });
@@ -522,7 +523,9 @@ Application.JoinChatroomDialog = new Ext.Window({
                         alias = roomname;
                     }
                     /* Add to bookmarks widget */
-                    Ext.getCmp("bookmarks").root.appendChild({
+                    const bookmarksTree = Ext.getCmp("bookmarks");
+                    if (bookmarksTree && bookmarksTree.getRootNode()) {
+                        bookmarksTree.getRootNode().appendChild({
                         text: alias + " (" + roomname + ")",
                         jid: room,
                         alias: alias,
@@ -531,7 +534,8 @@ Application.JoinChatroomDialog = new Ext.Window({
                         icon: "/icons/chat.png",
                         handle: handle,
                         leaf: true,
-                    });
+                        });
+                    }
                 }
                 Application.MsgBus.fireEvent(
                     "joinchat",

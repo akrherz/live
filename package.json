@@ -22,8 +22,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@geoext/geoext": "^7.0.1",
+    "extjs-gpl": "^6.2.0",
     "iemjs": "^0.0.7",
+    "ol": "^10.7.0",
     "strophe.js": "^4.0.0-rc0"
   },
   "devDependencies": {

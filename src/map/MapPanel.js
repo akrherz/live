@@ -1,1307 +1,645 @@
 /**
- * MapPanel Module
- * Map layers, styles, stores, and GeoExt components for the weather mapping interface
+ * MapPanel Module - OpenLayers 8 Version
+ * Modern OpenLayers 8 map with ExtJS 6 integration (no GeoExt)
  */
 
-import { lsrStyles } from "./lsr-styles.js";
+import Map from 'ol/Map';
+import View from 'ol/View';
+import {fromLonLat, transformExtent} from 'ol/proj';
+import {defaults as defaultControls} from 'ol/control';
+import TileLayer from 'ol/layer/Tile';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import OSM from 'ol/source/OSM';
+import KML from 'ol/format/KML';
+import GeoJSON from 'ol/format/GeoJSON';
+import {Style, Fill, Stroke, Circle as CircleStyle} from 'ol/style';
+import {createLSRStore, createSBWStore} from './feature-stores.js';
 
-// SPC Convective Outlook Styles
-const spcConvStyles = {
-    "General Thunder": {
-        fillColor: "#c0e8c0",
-        strokeColor: "#3c783c",
-        graphicZIndex: 2,
-    },
-    "Marginal Risk": {
-        fillColor: "#7fc57f",
-        strokeColor: "#3c783c",
-        graphicZIndex: 3,
-    },
-    "Slight Risk": {
-        fillColor: "#f6f67f",
-        strokeColor: "#ff9600",
-        graphicZIndex: 4,
-    },
-    "Enhanced Risk": {
-        fillColor: "#e6c27f",
-        strokeColor: "#ff7f00",
-        graphicZIndex: 5,
-    },
-    "Moderate Risk": {
-        fillColor: "#e67f7f",
-        strokeColor: "#cd0000",
-        graphicZIndex: 6,
-    },
-    "High Risk": {
-        fillColor: "#ff00ff",
-        strokeColor: "#000000",
-        graphicZIndex: 7,
-    },
-};
+// Global reference to the OpenLayers map
+let olMap = null;
 
-const spcConvStyleMap = new OpenLayers.StyleMap({
-    default: {
-        fillColor: "#000000",
-        strokeWidth: 3,
-        strokeOpacity: 1,
-        fillOpacity: 0.8,
-    },
-});
-spcConvStyleMap.addUniqueValueRules("default", "name", spcConvStyles);
+/**
+ * Get the OpenLayers map instance
+ */
+export function getMap() {
+    return olMap;
+}
 
-const sigcStyleMap = new OpenLayers.StyleMap({
-    default: {
-        strokeColor: "#ff0000",
-        graphicZIndex: 4,
-        strokeWidth: 3,
-        strokeOpacity: 1,
-        fillOpacity: 0.8,
-    },
-});
+/**
+ * Style function for SPC Convective Outlook
+ */
+function spcConvStyleFunction(feature) {
+    const name = feature.get('name');
+    const styles = {
+        "General Thunder": { fill: "#c0e8c0", stroke: "#3c783c" },
+        "Marginal Risk": { fill: "#7fc57f", stroke: "#3c783c" },
+        "Slight Risk": { fill: "#f6f67f", stroke: "#ff9600" },
+        "Enhanced Risk": { fill: "#e6c27f", stroke: "#ff7f00" },
+        "Moderate Risk": { fill: "#e67f7f", stroke: "#cd0000" },
+        "High Risk": { fill: "#ff00ff", stroke: "#000000" },
+    };
 
-const sbwStyleMap = new OpenLayers.StyleMap({
-    default: {
-        graphicZIndex: 1,
-        strokeWidth: 3,
-        fillOpacity: 0.4,
-        strokeOpacity: 1,
-    },
-    select: {
-        fillOpacity: 1,
-    },
-});
+    const styleConfig = styles[name] || { fill: "#000000", stroke: "#000000" };
 
-const sbwStyles = {
-    TO: { strokeColor: "red", graphicZIndex: 9 },
-    MA: { strokeColor: "purple", graphicZIndex: 7 },
-    FF: { strokeColor: "green", graphicZIndex: 7 },
-    EW: { strokeColor: "green", graphicZIndex: 6 },
-    FA: { strokeColor: "green", graphicZIndex: 6 },
-    FL: { strokeColor: "green", graphicZIndex: 6 },
-    SQ: { strokeColor: "yellow", graphicZIndex: 8 },
-    SV: { strokeColor: "yellow", graphicZIndex: 8 },
-};
-
-const lsrStyleMap = new OpenLayers.StyleMap({
-    default: {
-        pointRadius: 10,
-        fillOpacity: 1,
-        graphicZIndex: 6,
-    },
-    select: {
-        fillOpacity: 1,
-    },
-});
-
-// Import shared LSR styles
-// const lsrStyles defined in lsr-styles.js
-
-lsrStyleMap.addUniqueValueRules("default", "ptype", lsrStyles);
-sbwStyleMap.addUniqueValueRules("default", "ptype", sbwStyles);
-
-// Vector Layers
-const sigc = new OpenLayers.Layer.Vector("Convective Sigmets", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "Aviation Weather Center Products",
-    sphericalMercator: true,
-    styleMap: sigcStyleMap,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://mesonet.agron.iastate.edu/geojson/convective_sigmet.php",
-        format: new OpenLayers.Format.GeoJSON({
-            projection: new OpenLayers.Projection("EPSG:4326"),
-            internalProjection: new OpenLayers.Projection("EPSG:900913"),
-            extractAttributes: true,
+    return new Style({
+        fill: new Fill({
+            color: styleConfig.fill + 'cc', // Add alpha
         }),
-    }),
-});
-
-const qpf1 = new OpenLayers.Layer.Vector("Day 1 QPF", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "HPC Precipitation Forecasts",
-    sphericalMercator: true,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day1_latest_netlink.kml",
-        format: new OpenLayers.Format.KML({
-            extractStyles: true,
-            extractAttributes: true,
-            maxDepth: 2,
+        stroke: new Stroke({
+            color: styleConfig.stroke,
+            width: 3,
         }),
-    }),
-});
-
-const qpf2 = new OpenLayers.Layer.Vector("Day 2 QPF", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "HPC Precipitation Forecasts",
-    sphericalMercator: true,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day2_latest_netlink.kml",
-        format: new OpenLayers.Format.KML({
-            extractStyles: true,
-            extractAttributes: true,
-            maxDepth: 2,
-        }),
-    }),
-});
-
-const spc1 = new OpenLayers.Layer.Vector("Day 1 Convective Outlook", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "Storm Prediction Center Products",
-    sphericalMercator: true,
-    styleMap: spcConvStyleMap,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://www.spc.noaa.gov/products/outlook/day1otlk.kml",
-        format: new OpenLayers.Format.KML({
-            extractStyles: false,
-            extractAttributes: true,
-            maxDepth: 2,
-        }),
-    }),
-});
-
-const spc2 = new OpenLayers.Layer.Vector("Day 2 Convective Outlook", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "Storm Prediction Center Products",
-    sphericalMercator: true,
-    styleMap: spcConvStyleMap,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://www.spc.noaa.gov/products/outlook/day2otlk.kml",
-        format: new OpenLayers.Format.KML({
-            extractStyles: false,
-            extractAttributes: true,
-            maxDepth: 2,
-        }),
-    }),
-});
-
-const spc3 = new OpenLayers.Layer.Vector("Day 3 Convective Outlook", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "Storm Prediction Center Products",
-    sphericalMercator: true,
-    styleMap: spcConvStyleMap,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://www.spc.noaa.gov/products/outlook/day3otlk.kml",
-        format: new OpenLayers.Format.KML({
-            extractStyles: false,
-            extractAttributes: true,
-            maxDepth: 2,
-        }),
-    }),
-});
-
-const qpf15 = new OpenLayers.Layer.Vector("Day 1-5 QPF", {
-    strategies: [new OpenLayers.Strategy.Fixed()],
-    checkedGroup: "HPC Precipitation Forecasts",
-    sphericalMercator: true,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    visibility: false,
-    protocol: new OpenLayers.Protocol.HTTP({
-        url: "https://www.wpc.ncep.noaa.gov/kml/qpf/QPF120hr_Day1-5_latest_netlink.kml",
-        format: new OpenLayers.Format.KML({
-            extractStyles: true,
-            extractAttributes: true,
-            maxDepth: 2,
-        }),
-    }),
-});
-
-const lsrs = new OpenLayers.Layer.Vector("Local Storm Reports", {
-    styleMap: lsrStyleMap,
-    checkedGroup: "Chatroom Products",
-    sphericalMercator: true,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-});
-
-const sbws = new OpenLayers.Layer.Vector("Storm Based Warnings", {
-    styleMap: sbwStyleMap,
-    checkedGroup: "Chatroom Products",
-    sphericalMercator: true,
-    rendererOptions: { zIndexing: true },
-    projection: new OpenLayers.Projection("EPSG:4326"),
-});
-
-// Feature Stores
-if (typeof window !== "undefined") {
-    Application.lsrStore = new GeoExt.data.FeatureStore({
-        layer: lsrs,
-        sortInfo: {
-            field: "valid",
-            direction: "DESC",
-        },
-        fields: [
-            {
-                name: "message",
-            },
-            {
-                name: "valid",
-                type: "date",
-            },
-        ],
-    });
-
-    Application.sbwStore = new GeoExt.data.FeatureStore({
-        layer: sbws,
-        id: "vtec",
-        sortInfo: {
-            field: "expire",
-            direction: "ASC",
-        },
-        fields: [
-            {
-                name: "message",
-            },
-            {
-                name: "expire",
-                type: "date",
-            },
-            {
-                name: "vtec",
-            },
-        ],
     });
 }
 
-// Link Interceptor for opening links in new tabs
-const LinkInterceptor = {
-    render: function (p) {
-        p.body.on({
-            mousedown: function (e, t) {
-                t.target = "_blank";
-            },
-            click: function (e, t) {
-                if (String(t.target).toLowerCase() != "_blank") {
-                    e.stopEvent();
-                    window.open(t.href);
-                }
-            },
-            delegate: "a",
-        });
-    },
-};
+/**
+ * Style function for Storm Based Warnings
+ */
+function sbwStyleFunction(feature) {
+    const ptype = feature.get('ptype');
+    const styles = {
+        TO: { stroke: "red" },
+        MA: { stroke: "purple" },
+        FF: { stroke: "green" },
+        EW: { stroke: "green" },
+        FA: { stroke: "green" },
+        FL: { stroke: "green" },
+        SQ: { stroke: "yellow" },
+        SV: { stroke: "yellow" },
+    };
 
-// LSR Grid Window
-if (typeof window !== "undefined") {
-    Application.LSRGrid = Ext.extend(Ext.Window, {
-        title: "Local Storm Reports",
-        closeAction: "hide",
-        width: 500,
-        height: 300,
-        layout: "fit",
-        constrain: true,
-        hidden: true,
-        initComponent: function () {
-            this.items = [
-                {
-                    xtype: "grid",
-                    sm: new Ext.grid.RowSelectionModel({
-                        singleSelect: true,
-                        listeners: {
-                            rowselect: function (sm, rowIdx, record) {
-                                const lonlat = new OpenLayers.LonLat(
-                                    record.data.feature.geometry.x,
-                                    record.data.feature.geometry.y
-                                );
-                                Ext.getCmp("map").map.panTo(lonlat, 5);
-                            },
-                        },
-                    }),
-                    store: Application.lsrStore,
-                    stripeRows: true,
-                    listeners: LinkInterceptor,
-                    autoExpandColumn: "message",
-                    autoScroll: true,
-                    columns: [
-                        {
-                            dataIndex: "valid",
-                            header: "Valid",
-                            width: 100,
-                            sortable: true,
-                            renderer: function (value) {
-                                return value.fromUTC().format("j M g:i A");
-                            },
-                        },
-                        {
-                            id: "message",
-                            dataIndex: "message",
-                            header: "Message",
-                        },
-                    ],
-                },
-            ];
-            Application.LSRGrid.superclass.initComponent.apply(this, arguments);
-        },
-    });
+    const styleConfig = styles[ptype] || { stroke: "#000000" };
 
-    Application.SBWGrid = Ext.extend(Ext.Window, {
-        title: "Storm Based Warnings",
-        closeAction: "hide",
-        width: 500,
-        height: 300,
-        layout: "fit",
-        constrain: true,
-        hidden: true,
-        initComponent: function () {
-            this.items = [
-                {
-                    xtype: "grid",
-                    sm: new Ext.grid.RowSelectionModel({
-                        singleSelect: true,
-                        listeners: {
-                            rowselect: function (sm, rowIdx, record) {
-                                Ext.getCmp("map").map.zoomToExtent(
-                                    record.data.feature.geometry.getBounds()
-                                );
-                            },
-                        },
-                    }),
-                    store: Application.sbwStore,
-                    stripeRows: true,
-                    listeners: LinkInterceptor,
-                    autoExpandColumn: "message",
-                    autoScroll: true,
-                    columns: [
-                        {
-                            dataIndex: "expire",
-                            header: "Expires",
-                            width: 100,
-                            sortable: true,
-                            renderer: function (value) {
-                                return value.fromUTC().format("j M g:i A");
-                            },
-                        },
-                        {
-                            id: "message",
-                            dataIndex: "message",
-                            header: "Message",
-                        },
-                    ],
-                },
-            ];
-            Application.SBWGrid.superclass.initComponent.apply(this, arguments);
-        },
+    return new Style({
+        fill: new Fill({
+            color: 'rgba(0, 0, 0, 0.4)',
+        }),
+        stroke: new Stroke({
+            color: styleConfig.stroke,
+            width: 3,
+        }),
     });
 }
 
-// Feature selection handlers
-sbws.events.on({
-    featureselected: function (e) {
-        const html = e.feature.attributes.message;
-        const popup = new GeoExt.Popup({
-            map: this.map,
-            location: e.feature,
-            feature: e.feature,
-            title: "Event",
-            width: 200,
-            html: html,
-            listeners: LinkInterceptor,
-            collapsible: true,
-        });
-        popup.on({
-            close: function () {
-                if (
-                    OpenLayers.Util.indexOf(
-                        sbws.selectedFeatures,
-                        this.feature
-                    ) > -1
-                ) {
-                    Ext.getCmp("map").map.controls[3].unselect(this.feature);
-                }
-            },
-        });
-        popup.show();
-    },
-});
-
-lsrs.events.on({
-    featureselected: function (e) {
-        const html = e.feature.attributes.message;
-        const popup = new GeoExt.Popup({
-            map: this.map,
-            location: e.feature,
-            feature: e.feature,
-            title: "Event",
-            width: 200,
-            html: html,
-            listeners: LinkInterceptor,
-            collapsible: true,
-        });
-        popup.on({
-            close: function () {
-                if (
-                    OpenLayers.Util.indexOf(
-                        lsrs.selectedFeatures,
-                        this.feature
-                    ) > -1
-                ) {
-                    Ext.getCmp("map").map.controls[3].unselect(this.feature);
-                }
-            },
-        });
-        popup.show();
-    },
-});
-
-// TMS Layer URL generator
-function get_my_url(bounds) {
-    const res = this.map.getResolution();
-    const x = Math.round(
-        (bounds.left - this.maxExtent.left) / (res * this.tileSize.w)
-    );
-    const y = Math.round(
-        (this.maxExtent.top - bounds.top) / (res * this.tileSize.h)
-    );
-    const z = this.map.getZoom();
-    const path =
-        z +
-        "/" +
-        x +
-        "/" +
-        y +
-        "." +
-        this.type +
-        "?" +
-        parseInt(Math.random() * 9999);
-    let url = this.url;
-    if (url instanceof Array) {
-        url = this.selectUrl(path, url);
-    }
-    return url + this.service + "/" + this.layername + "/" + path;
+/**
+ * Style function for Local Storm Reports
+ * Uses the imported lsrStyles configuration
+ */
+function lsrStyleFunction() {
+    // TODO: Import and use lsrStyles from lsr-styles.js
+    // For now, using a simple circle
+    return new Style({
+        image: new CircleStyle({
+            radius: 10,
+            fill: new Fill({
+                color: '#ff0000',
+            }),
+        }),
+    });
 }
 
-// NEXRAD and Weather Layers
-const ridgeII = new OpenLayers.Layer.TMS(
-    "NEXRAD Base Reflectivity",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "nexrad-n0q-900913",
-        service: "1.0.0",
-        type: "png",
-        checkedGroup: "Precip",
-        visibility: false,
-        refreshable: true,
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+/**
+ * Create vector layers for the map
+ */
+function createVectorLayers() {
+    // Local Storm Reports layer
+    const lsrsLayer = new VectorLayer({
+        source: new VectorSource(),
+        style: lsrStyleFunction,
+        visible: true,
+        properties: {
+            name: 'Local Storm Reports',
+            checkedGroup: 'Chatroom Products',
+        },
+    });
 
-const q2hsr = new OpenLayers.Layer.TMS(
-    "NMQ Hybrid Scan Reflectivity",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "q2-hsr-900913",
-        service: "1.0.0",
-        type: "png",
-        checkedGroup: "Precip",
-        opacity: 0.8,
-        visibility: false,
-        refreshable: true,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    // Storm Based Warnings layer
+    const sbwsLayer = new VectorLayer({
+        source: new VectorSource(),
+        style: sbwStyleFunction,
+        visible: true,
+        properties: {
+            name: 'Storm Based Warnings',
+            checkedGroup: 'Chatroom Products',
+        },
+    });
 
-const q21h = new OpenLayers.Layer.TMS(
-    "NMQ Q2 1 Hour Precip",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "q2-n1p-900913",
-        service: "1.0.0",
-        type: "png",
-        checkedGroup: "Precip",
-        opacity: 0.8,
-        visibility: false,
-        refreshable: true,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    // Convective Sigmets layer
+    const sigcLayer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://mesonet.agron.iastate.edu/geojson/convective_sigmet.php',
+            format: new GeoJSON(),
+        }),
+        style: new Style({
+            stroke: new Stroke({
+                color: '#ff0000',
+                width: 3,
+            }),
+            fill: new Fill({
+                color: 'rgba(255, 0, 0, 0.8)',
+            }),
+        }),
+        visible: false,
+        properties: {
+            name: 'Convective Sigmets',
+            checkedGroup: 'Aviation Weather Center Products',
+        },
+    });
 
-const q21d = new OpenLayers.Layer.TMS(
-    "NMQ Q2 1 Day Precip",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "q2-p24h-900913",
-        service: "1.0.0",
-        type: "png",
-        checkedGroup: "Precip",
-        visibility: false,
-        refreshable: true,
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    // SPC Day 1 Outlook
+    const spc1Layer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://www.spc.noaa.gov/products/outlook/day1otlk.kml',
+            format: new KML({ extractStyles: false }),
+        }),
+        style: spcConvStyleFunction,
+        visible: false,
+        properties: {
+            name: 'Day 1 Convective Outlook',
+            checkedGroup: 'Storm Prediction Center Products',
+        },
+    });
 
-const q22d = new OpenLayers.Layer.TMS(
-    "NMQ Q2 2 Day Precip",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "q2-p48h-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Precip",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    // SPC Day 2 Outlook
+    const spc2Layer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://www.spc.noaa.gov/products/outlook/day2otlk.kml',
+            format: new KML({ extractStyles: false }),
+        }),
+        style: spcConvStyleFunction,
+        visible: false,
+        properties: {
+            name: 'Day 2 Convective Outlook',
+            checkedGroup: 'Storm Prediction Center Products',
+        },
+    });
 
-const q23d = new OpenLayers.Layer.TMS(
-    "NMQ Q2 3 Day Precip",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "q2-p72h-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Precip",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    // SPC Day 3 Outlook
+    const spc3Layer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://www.spc.noaa.gov/products/outlook/day3otlk.kml',
+            format: new KML({ extractStyles: false }),
+        }),
+        style: spcConvStyleFunction,
+        visible: false,
+        properties: {
+            name: 'Day 3 Convective Outlook',
+            checkedGroup: 'Storm Prediction Center Products',
+        },
+    });
 
-// GOES Satellite Layers
-const goesEastM1VIS = new OpenLayers.Layer.TMS(
-    "GOES East Mesoscale1 Visible",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "goes_east_mesoscale-1_ch02",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Satellite",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    // QPF Layers
+    const qpf1Layer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day1_latest_netlink.kml',
+            format: new KML({ extractStyles: true }),
+        }),
+        visible: false,
+        properties: {
+            name: 'Day 1 QPF',
+            checkedGroup: 'HPC Precipitation Forecasts',
+        },
+    });
 
-const goesWestM1VIS = new OpenLayers.Layer.TMS(
-    "GOES West Mesoscale1 Visible",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "goes_west_mesoscale-1_ch02",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Satellite",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    const qpf2Layer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://www.wpc.ncep.noaa.gov/kml/qpf/QPF24hr_Day2_latest_netlink.kml',
+            format: new KML({ extractStyles: true }),
+        }),
+        visible: false,
+        properties: {
+            name: 'Day 2 QPF',
+            checkedGroup: 'HPC Precipitation Forecasts',
+        },
+    });
 
-const goesWestVIS = new OpenLayers.Layer.TMS(
-    "GOES West Visible",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "goes_west_conus_ch02",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Satellite",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    const qpf15Layer = new VectorLayer({
+        source: new VectorSource({
+            url: 'https://www.wpc.ncep.noaa.gov/kml/qpf/QPF120hr_Day1-5_latest_netlink.kml',
+            format: new KML({ extractStyles: true }),
+        }),
+        visible: false,
+        properties: {
+            name: 'Day 1-5 QPF',
+            checkedGroup: 'HPC Precipitation Forecasts',
+        },
+    });
 
-const goesEastVIS = new OpenLayers.Layer.TMS(
-    "GOES East Visible",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "goes_west_conus_ch13",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Satellite",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
+    return {
+        lsrsLayer,
+        sbwsLayer,
+        sigcLayer,
+        spc1Layer,
+        spc2Layer,
+        spc3Layer,
+        qpf1Layer,
+        qpf2Layer,
+        qpf15Layer,
+    };
+}
 
-const goesEastWV = new OpenLayers.Layer.TMS(
-    "GOES East Water Vapor",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "goes_east_conus_ch09",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Satellite",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const goesWestWV = new OpenLayers.Layer.TMS(
-    "GOES West Water Vapor",
-    "https://mesonet.agron.iastate.edu/cache/tile.py/",
-    {
-        layername: "goes_west_conus_ch09",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        refreshable: true,
-        checkedGroup: "Satellite",
-        opacity: 0.8,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-// Political Boundary Layers
-const firezones = new OpenLayers.Layer.TMS(
-    "NWS Fire Zones",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "fz-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const counties = new OpenLayers.Layer.TMS(
-    "US Counties",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "uscounties",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const states = new OpenLayers.Layer.TMS(
-    "US States",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "usstates",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const wfo = new OpenLayers.Layer.TMS(
-    "NWS WFO CWA",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "wfo-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const cwsu = new OpenLayers.Layer.TMS(
-    "NWS CWSU",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "cwsu-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const tribal = new OpenLayers.Layer.TMS(
-    "Tribal Boundaries",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "tribal-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-const rfc = new OpenLayers.Layer.TMS(
-    "NWS RFC HSA",
-    "https://mesonet.agron.iastate.edu/c/c.py/",
-    {
-        layername: "rfc-900913",
-        service: "1.0.0",
-        type: "png",
-        visibility: false,
-        checkedGroup: "Political Boundaries",
-        opacity: 1,
-        getURL: get_my_url,
-        isBaseLayer: false,
-    }
-);
-
-// Set the time display above the map
-function setAppTime() {
+/**
+ * Set the app time display in the toolbar
+ */
+export function setAppTime() {
     const now = new Date();
-    const now5 = now.add(Date.MINUTE, 0 - (parseInt(now.format("i")) % 5));
-    if (Ext.getCmp("appTime")) {
-        Ext.getCmp("appTime").setText("Map Valid: " + now5.format("g:i A"));
+    const minutes = now.getMinutes();
+    const roundedMinutes = minutes - (minutes % 5);
+    now.setMinutes(roundedMinutes);
+    now.setSeconds(0);
+
+    const timeStr = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+
+    const appTime = Ext.getCmp('appTime');
+    if (appTime) {
+        appTime.setText('Map Valid: ' + timeStr);
     }
 }
 
-// ESRI Base Layer (long layerInfo definition)
-const baseESRILayer = new OpenLayers.Layer.ArcGISCache(
-    "ESRI Topo",
-    "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",
-    {
-        layerInfo: {
-            currentVersion: 10.2,
-            serviceDescription:
-                "This map is designed to be used as a basemap by GIS professionals and as a reference map by anyone.",
-            mapName: "Layers",
-            copyrightText: "Sources: Esri, HERE, DeLorme, TomTom, and others",
-            supportsDynamicLayers: false,
-            layers: [
+/**
+ * Setup click handlers for feature info popups
+ */
+function setupFeatureClickHandlers() {
+    if (!olMap) return;
+
+    olMap.on('click', function(evt) {
+        const features = [];
+        olMap.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+            features.push({feature, layer});
+        });
+
+        if (features.length > 0) {
+            const {feature, layer} = features[0];
+            const props = feature.getProperties();
+            const layerName = layer.get('name') || 'Feature';
+
+            // Build HTML content for popup
+            let html = `<h3>${layerName}</h3><table>`;
+            for (const [key, value] of Object.entries(props)) {
+                if (key !== 'geometry') {
+                    html += `<tr><td><b>${key}:</b></td><td>${value}</td></tr>`;
+                }
+            }
+            html += '</table>';
+
+            // Create ExtJS window as popup
+            const popup = new Ext.Window({
+                title: `${layerName} Information`,
+                width: 400,
+                maxHeight: 500,
+                autoScroll: true,
+                html: html,
+                closable: true,
+                closeAction: 'destroy',
+            });
+            popup.show();
+        }
+    });
+}
+
+/**
+ * Create the OpenLayers 8 map
+ */
+export function createOLMap(targetDiv) {
+    const vectorLayers = createVectorLayers();
+
+    // Store references for backward compatibility
+    Application.lsrsLayer = vectorLayers.lsrsLayer;
+    Application.sbwsLayer = vectorLayers.sbwsLayer;
+
+    // Create feature stores that sync with vector layers
+    Application.lsrStore = createLSRStore(vectorLayers.lsrsLayer);
+    Application.sbwStore = createSBWStore(vectorLayers.sbwsLayer);
+
+    // Create a simple layer store for backward compatibility
+    Application.layerstore = {
+        data: {
+            each: function(callback, scope) {
+                if (!window.olMap) return;
+                window.olMap.getLayers().forEach(layer => {
+                    const record = {
+                        getLayer: () => layer,
+                        get: (key) => layer.get(key),
+                    };
+                    callback.call(scope, record);
+                });
+            }
+        },
+        find: function(field, value) {
+            let index = -1;
+            if (!window.olMap) return index;
+            window.olMap.getLayers().forEach((layer, idx) => {
+                if (layer.get(field) === value || layer.get('name') === value) {
+                    index = idx;
+                }
+            });
+            return index;
+        },
+        getAt: function(index) {
+            if (!window.olMap) return null;
+            const layer = window.olMap.getLayers().item(index);
+            return layer ? {
+                getLayer: () => layer,
+                get: (key) => layer.get(key),
+            } : null;
+        }
+    };
+
+    olMap = new Map({
+        target: targetDiv,
+        layers: [
+            new TileLayer({
+                source: new OSM(),
+                properties: {
+                    name: 'OpenStreetMap',
+                    type: 'base',
+                },
+            }),
+            ...Object.values(vectorLayers),
+        ],
+        view: new View({
+            center: fromLonLat([-95.0, 42.0]),
+            zoom: 5,
+            extent: transformExtent([-130, 20, -65, 50], 'EPSG:4326', 'EPSG:3857'),
+        }),
+        controls: defaultControls(),
+    });
+
+    return olMap;
+}
+
+/**
+ * Custom ExtJS panel that hosts an OpenLayers 8 map
+ */
+export function createMapPanel() {
+    return {
+        xtype: 'panel',
+        region: 'center',
+        id: 'map',
+        layout: 'fit',
+        height: 600,
+        split: true,
+        html: '<div id="ol-map" style="width:100%; height:100%;"></div>',
+        listeners: {
+            afterrender: function() {
+                // Create the OpenLayers map after the panel renders
+                // Use a short delay to ensure the container has proper dimensions
+                setTimeout(() => {
+                    const mapDiv = document.getElementById('ol-map');
+                    if (mapDiv) {
+                        createOLMap(mapDiv);
+                        setAppTime();
+                        setupFeatureClickHandlers();
+
+                        // Store map reference on the panel
+                        this.map = window.olMap;
+                    }
+                }, 100);
+            },
+            resize: function() {
+                // Update map size when panel resizes
+                if (olMap) {
+                    olMap.updateSize();
+                }
+            },
+        },
+        tbar: [
+            {
+                xtype: 'splitbutton',
+                text: 'Favorites',
+                handler: function() {
+                    // TODO: Implement favorites
+                    console.log('Favorites clicked');
+                },
+            },
+            {
+                xtype: 'tbtext',
+                text: 'Map Valid: 12:00 AM',
+                id: 'appTime',
+            },
+            '-',
+            {
+                text: 'Tools',
+                menu: {
+                    items: [
+                        {
+                            text: 'LSR Grid',
+                            handler: function() {
+                                if (!Ext.getCmp('lsrgrid')) {
+                                    new Application.LSRGrid({ id: 'lsrgrid' });
+                                }
+                                Ext.getCmp('lsrgrid').show();
+                            },
+                        },
+                        {
+                            text: 'SBW Grid',
+                            handler: function() {
+                                if (!Ext.getCmp('sbwgrid')) {
+                                    new Application.SBWGrid({ id: 'sbwgrid' });
+                                }
+                                Ext.getCmp('sbwgrid').show();
+                            },
+                        },
+                        {
+                            text: 'Show Legend',
+                            handler: function() {
+                                if (!Ext.getCmp('maplegend')) {
+                                    new Application.MapLegend({
+                                        id: 'maplegend',
+                                        contentEl: 'legends',
+                                    });
+                                }
+                                Ext.getCmp('maplegend').show();
+                            },
+                        },
+                    ],
+                },
+            },
+            '-',
+            'Opacity',
+            {
+                xtype: 'slider',
+                width: 100,
+                value: 100,
+                minValue: 0,
+                maxValue: 100,
+                increment: 5,
+                plugins: new Ext.slider.Tip({
+                    getText: function(thumb) {
+                        return String(thumb.value) + '%';
+                    }
+                }),
+                listeners: {
+                    change: function(slider, value) {
+                        // Update opacity for all vector layers
+                        const opacity = value / 100;
+                        if (window.olMap) {
+                            window.olMap.getLayers().forEach(layer => {
+                                if (layer instanceof VectorLayer) {
+                                    layer.setOpacity(opacity);
+                                }
+                            });
+                        }
+                    }
+                }
+            },
+        ],
+    };
+}
+
+/**
+ * Create layer tree panel that controls map layers
+ */
+export function createLayerTree() {
+    return {
+        xtype: 'treepanel',
+        region: 'east',
+        width: 150,
+        collapsible: true,
+        split: true,
+        title: 'Layers Control',
+        autoScroll: true,
+        rootVisible: false,
+        root: {
+            nodeType: 'async',
+            children: [
                 {
-                    id: 0,
-                    name: "Citations",
-                    parentLayerId: -1,
-                    defaultVisibility: false,
-                    subLayerIds: null,
-                    minScale: 0,
-                    maxScale: 0,
+                    text: 'Base Layers',
+                    expanded: true,
+                    children: [
+                        {
+                            text: 'OpenStreetMap',
+                            checked: true,
+                            leaf: true,
+                        },
+                    ],
+                },
+                {
+                    text: 'Chatroom Products',
+                    expanded: true,
+                    children: [
+                        {
+                            text: 'Local Storm Reports',
+                            checked: true,
+                            leaf: true,
+                            layerName: 'Local Storm Reports',
+                        },
+                        {
+                            text: 'Storm Based Warnings',
+                            checked: true,
+                            leaf: true,
+                            layerName: 'Storm Based Warnings',
+                        },
+                    ],
+                },
+                {
+                    text: 'Storm Prediction Center Products',
+                    children: [
+                        {
+                            text: 'Day 1 Convective Outlook',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Day 1 Convective Outlook',
+                        },
+                        {
+                            text: 'Day 2 Convective Outlook',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Day 2 Convective Outlook',
+                        },
+                        {
+                            text: 'Day 3 Convective Outlook',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Day 3 Convective Outlook',
+                        },
+                    ],
+                },
+                {
+                    text: 'HPC Precipitation Forecasts',
+                    children: [
+                        {
+                            text: 'Day 1 QPF',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Day 1 QPF',
+                        },
+                        {
+                            text: 'Day 2 QPF',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Day 2 QPF',
+                        },
+                        {
+                            text: 'Day 1-5 QPF',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Day 1-5 QPF',
+                        },
+                    ],
+                },
+                {
+                    text: 'Aviation Weather Center Products',
+                    children: [
+                        {
+                            text: 'Convective Sigmets',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Convective Sigmets',
+                        },
+                    ],
                 },
             ],
-            tables: [],
-            spatialReference: { wkid: 102100, latestWkid: 3857 },
-            singleFusedMapCache: true,
-            tileInfo: {
-                rows: 256,
-                cols: 256,
-                dpi: 96,
-                format: "JPEG",
-                compressionQuality: 90,
-                origin: { x: -2.0037508342787e7, y: 2.0037508342787e7 },
-                spatialReference: { wkid: 102100, latestWkid: 3857 },
-                lods: [
-                    {
-                        level: 0,
-                        resolution: 156543.03392800014,
-                        scale: 5.91657527591555e8,
-                    },
-                    {
-                        level: 1,
-                        resolution: 78271.51696399994,
-                        scale: 2.95828763795777e8,
-                    },
-                    {
-                        level: 2,
-                        resolution: 39135.75848200009,
-                        scale: 1.47914381897889e8,
-                    },
-                    {
-                        level: 3,
-                        resolution: 19567.87924099992,
-                        scale: 7.3957190948944e7,
-                    },
-                    {
-                        level: 4,
-                        resolution: 9783.93962049996,
-                        scale: 3.6978595474472e7,
-                    },
-                    {
-                        level: 5,
-                        resolution: 4891.96981024998,
-                        scale: 1.8489297737236e7,
-                    },
-                    {
-                        level: 6,
-                        resolution: 2445.98490512499,
-                        scale: 9244648.868618,
-                    },
-                    {
-                        level: 7,
-                        resolution: 1222.992452562495,
-                        scale: 4622324.434309,
-                    },
-                    {
-                        level: 8,
-                        resolution: 611.4962262813797,
-                        scale: 2311162.217155,
-                    },
-                    {
-                        level: 9,
-                        resolution: 305.74811314055756,
-                        scale: 1155581.108577,
-                    },
-                    {
-                        level: 10,
-                        resolution: 152.87405657041106,
-                        scale: 577790.554289,
-                    },
-                    {
-                        level: 11,
-                        resolution: 76.43702828507324,
-                        scale: 288895.277144,
-                    },
-                    {
-                        level: 12,
-                        resolution: 38.21851414253662,
-                        scale: 144447.638572,
-                    },
-                    {
-                        level: 13,
-                        resolution: 19.10925707126831,
-                        scale: 72223.819286,
-                    },
-                    {
-                        level: 14,
-                        resolution: 9.554628535634155,
-                        scale: 36111.909643,
-                    },
-                    {
-                        level: 15,
-                        resolution: 4.77731426794937,
-                        scale: 18055.954822,
-                    },
-                    {
-                        level: 16,
-                        resolution: 2.388657133974685,
-                        scale: 9027.977411,
-                    },
-                    {
-                        level: 17,
-                        resolution: 1.1943285668550503,
-                        scale: 4513.988705,
-                    },
-                    {
-                        level: 18,
-                        resolution: 0.5971642835598172,
-                        scale: 2256.994353,
-                    },
-                    {
-                        level: 19,
-                        resolution: 0.29858214164761665,
-                        scale: 1128.497176,
-                    },
-                ],
-            },
-            initialExtent: {
-                xmin: -1.9003965069419548e7,
-                ymin: -236074.10024122056,
-                xmax: 1.9003965069419548e7,
-                ymax: 1.458937939490844e7,
-                spatialReference: { cs: "pcs", wkid: 102100 },
-            },
-            fullExtent: {
-                xmin: -2.0037507067161843e7,
-                ymin: -1.9971868880408604e7,
-                xmax: 2.0037507067161843e7,
-                ymax: 1.997186888040863e7,
-                spatialReference: { cs: "pcs", wkid: 102100 },
-            },
-            minScale: 5.91657527591555e8,
-            maxScale: 1128.497176,
-            units: "esriMeters",
         },
-    }
-);
-
-// Layer Store
-Application.layerstore = new GeoExt.data.LayerStore({
-    layers: [
-        baseESRILayer,
-        new OpenLayers.Layer("No Overlay", {
-            checkedGroup: "Precip",
-            isBaseLayer: false,
-            visibility: true,
-        }),
-        q2hsr,
-        ridgeII,
-        goesEastVIS,
-        goesEastWV,
-        goesEastM1VIS,
-        goesWestVIS,
-        goesWestWV,
-        goesWestM1VIS,
-        q21h,
-        q21d,
-        q22d,
-        q23d,
-        sbws,
-        lsrs,
-        sigc,
-        qpf15,
-        qpf2,
-        qpf1,
-        spc3,
-        spc2,
-        spc1,
-        new OpenLayers.Layer("Blank", {
-            isBaseLayer: true,
-            visibility: false,
-        }),
-        counties,
-        states,
-        tribal,
-        cwsu,
-        firezones,
-        rfc,
-        wfo,
-    ],
-});
-
-// Map refresh task
-Application.MapTask = {
-    skipFirst: true,
-    run: function () {
-        if (this.skipFirst) {
-            this.skipFirst = false;
-            return;
-        }
-        Application.layerstore.data.each(function (record) {
-            const layer = record.getLayer();
-            if (layer.refreshable && layer.getVisibility()) {
-                layer.redraw(true);
-            }
-            setAppTime();
-        });
-    },
-    interval: 300000,
-};
-
-// Layer Tree Configuration
-const layerRoot = new Ext.tree.TreeNode({
-    text: "All Layers",
-    expanded: true,
-});
-
-layerRoot.appendChild(
-    new GeoExt.tree.BaseLayerContainer({
-        text: "Base Layer",
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-layerRoot.appendChild(
-    new GeoExt.tree.LayerContainer({
-        text: "Satellite",
-        loader: {
-            filter: function (record) {
-                const layer = record.getLayer();
-                return layer.checkedGroup === "Satellite";
-            },
-            baseAttrs: {
-                iconCls: "gx-tree-baselayer-icon",
-                checkedGroup: "rasters",
-            },
-        },
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-layerRoot.appendChild(
-    new GeoExt.tree.LayerContainer({
-        text: "Precip/RADAR",
-        loader: {
-            filter: function (record) {
-                const layer = record.getLayer();
-                if (layer.isBaseLayer) return false;
-                return layer.checkedGroup === "Precip";
-            },
-            baseAttrs: {
-                iconCls: "gx-tree-baselayer-icon",
-                checkedGroup: "rasters",
-            },
-        },
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-layerRoot.appendChild(
-    new GeoExt.tree.LayerContainer({
-        text: "Chatroom Products",
-        loader: {
-            filter: function (record) {
-                const layer = record.getLayer();
-                if (layer.isBaseLayer) return false;
-                return layer.checkedGroup === "Chatroom Products";
-            },
-        },
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-layerRoot.appendChild(
-    new GeoExt.tree.LayerContainer({
-        text: "HPC Precipitation Forecasts",
-        loader: {
-            filter: function (record) {
-                const layer = record.getLayer();
-                if (layer.isBaseLayer) return false;
-                return layer.checkedGroup === "HPC Precipitation Forecasts";
-            },
-        },
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-layerRoot.appendChild(
-    new GeoExt.tree.LayerContainer({
-        text: "Storm Prediction Center Products",
-        loader: {
-            filter: function (record) {
-                const layer = record.getLayer();
-                if (layer.isBaseLayer) return false;
-                return (
-                    layer.checkedGroup === "Storm Prediction Center Products"
-                );
-            },
-        },
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-layerRoot.appendChild(
-    new GeoExt.tree.LayerContainer({
-        text: "Political Boundaries",
-        loader: {
-            filter: function (record) {
-                const layer = record.getLayer();
-                if (layer.isBaseLayer) return false;
-                return layer.checkedGroup === "Political Boundaries";
-            },
-        },
-        layerstore: Application.layerstore,
-        expanded: true,
-    })
-);
-
-// Layer controls
-Application.LayerSlider = {
-    xtype: "gx_opacityslider",
-    id: "layerslider",
-    width: 200,
-    value: 80,
-    layer: ridgeII,
-};
-
-Application.LayerTree = {
-    region: "east",
-    xtype: "treepanel",
-    root: layerRoot,
-    autoScroll: true,
-    rootVisible: false,
-    width: 150,
-    collapsible: true,
-    split: true,
-    title: "Layers Control",
-    listeners: {
-        click: function (n) {
-            Ext.getCmp("layerslider").setLayer(n.attributes.layer);
-        },
-    },
-};
-
-// MapPanel Configuration
-export const MapPanel = {
-    region: "center",
-    height: 600,
-    split: true,
-    xtype: "gx_mappanel",
-    id: "map",
-    listeners: {
-        afterrender: () => {
-            setAppTime();
-        },
-    },
-    map: {
-        projection: new OpenLayers.Projection("EPSG:900913"),
-        units: "m",
-        numZoomLevels: 18,
-        maxResolution: 156543.0339,
-        controls: [
-            new OpenLayers.Control.Navigation(),
-            new OpenLayers.Control.PanZoom(),
-            new OpenLayers.Control.ArgParser(),
-        ],
-        maxExtent: new OpenLayers.Bounds(
-            -20037508,
-            -20037508,
-            20037508,
-            20037508.34
-        ),
-    },
-    layers: Application.layerstore,
-    extent: new OpenLayers.Bounds(-14427682, 1423562, -7197350, 8673462),
-    tbar: [
-        {
-            xtype: "splitbutton",
-            icon: "icons/favorites.png",
-            handler: function () {
-                const bnds = Ext.getCmp("mfv1").bounds;
-                if (bnds) {
-                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
+        listeners: {
+            checkchange: (node, checked) => {
+                if (node.data && node.data.layerName && olMap) {
+                    const layers = olMap.getLayers().getArray();
+                    const layer = layers.find(l =>
+                        l.get('name') === node.data.layerName
+                    );
+                    if (layer) {
+                        layer.setVisible(checked);
+                    }
                 }
             },
-            menu: {
-                items: [
-                    {
-                        id: "fm1",
-                        text: "Favorite 1",
-                        handler: () => {
-                            const bnds = Ext.getCmp("mfv1").bounds;
-                            if (bnds)
-                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                        },
-                    },
-                    {
-                        id: "fm2",
-                        text: "Favorite 2",
-                        handler: () => {
-                            const bnds = Ext.getCmp("mfv2").bounds;
-                            if (bnds)
-                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                        },
-                    },
-                    {
-                        id: "fm3",
-                        text: "Favorite 3",
-                        handler: () => {
-                            const bnds = Ext.getCmp("mfv3").bounds;
-                            if (bnds)
-                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                        },
-                    },
-                    {
-                        id: "fm4",
-                        text: "Favorite 4",
-                        handler: () => {
-                            const bnds = Ext.getCmp("mfv4").bounds;
-                            if (bnds)
-                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                        },
-                    },
-                    {
-                        id: "fm5",
-                        text: "Favorite 5",
-                        handler: () => {
-                            const bnds = Ext.getCmp("mfv5").bounds;
-                            if (bnds)
-                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                        },
-                    },
-                    {
-                        text: "Edit Favorites",
-                        handler: () => {
-                            Application.boundsFavorites.show();
-                        },
-                    },
-                ],
-            },
         },
-        {
-            xtype: "tbtext",
-            text: "Map Valid: 12:00 AM",
-            id: "appTime",
-        },
-        "-",
-        {
-            text: "Tools",
-            menu: {
-                items: [
-                    {
-                        text: "LSR Grid",
-                        icon: "icons/prop.gif",
-                        handler: function () {
-                            if (!Ext.getCmp("lsrgrid")) {
-                                new Application.LSRGrid({ id: "lsrgrid" });
-                            }
-                            Ext.getCmp("lsrgrid").show();
-                        },
-                    },
-                    {
-                        text: "SBW Grid",
-                        icon: "icons/prop.gif",
-                        handler: function () {
-                            if (!Ext.getCmp("sbwgrid")) {
-                                new Application.SBWGrid({ id: "sbwgrid" });
-                            }
-                            Ext.getCmp("sbwgrid").show();
-                        },
-                    },
-                    {
-                        text: "Show Legend",
-                        handler: function () {
-                            if (!Ext.getCmp("maplegend")) {
-                                new Application.MapLegend({
-                                    id: "maplegend",
-                                    contentEl: "legends",
-                                });
-                            }
-                            Ext.getCmp("maplegend").show();
-                        },
-                    },
-                ],
-            },
-        },
-        "-",
-        "Opacity",
-        Application.LayerSlider,
-    ],
-};
+    };
+}
 
-export { setAppTime };
+// Map refresh task - periodically reloads visible layers
+if (typeof window !== 'undefined' && window.Application) {
+    window.Application.MapTask = {
+        skipFirst: true,
+        run: function () {
+            if (this.skipFirst) {
+                this.skipFirst = false;
+                return;
+            }
+            // Reload all vector layers to get fresh data
+            const map = window.olMap;
+            if (map) {
+                map.getLayers().forEach(layer => {
+                    const source = layer.getSource();
+                    if (source && source.refresh && layer.getVisible()) {
+                        source.refresh();
+                    }
+                });
+                setAppTime();
+            }
+        },
+        interval: 300000, // 5 minutes
+    };
+}
+
+// Export Application.LayerTree for backward compatibility
+if (typeof window !== 'undefined' && window.Application) {
+    window.Application.LayerTree = createLayerTree();
+}
+
+export default createMapPanel();

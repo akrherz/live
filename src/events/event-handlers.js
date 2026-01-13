@@ -15,9 +15,10 @@ export function UTCStringToDate(dtStr, format) {
 }
 
 Application.MsgBus = new Ext.util.Observable();
-Application.MsgBus.addEvents("message");
-Application.MsgBus.addEvents("loggedin");
-Application.MsgBus.addEvents("loggedout");
+// In ExtJS 6, addEvents is not needed - Observable automatically supports any event
+// Application.MsgBus.addEvents("message");
+// Application.MsgBus.addEvents("loggedin");
+// Application.MsgBus.addEvents("loggedout");
 
 // Audio cache for reusing Audio objects
 const audioCache = {};
@@ -76,14 +77,24 @@ Application.MsgBus.on("loggingout", function () {
         }
     });
     /* Remove buddies */
-    Ext.getCmp("buddies").root.removeAll();
+    const buddiesTree = Ext.getCmp("buddies");
+    if (buddiesTree && buddiesTree.getRootNode()) {
+        buddiesTree.getRootNode().removeAll();
+    }
     /* Remove bookmarks */
-    Ext.getCmp("bookmarks").root.suspendEvents(false);
-    Ext.getCmp("bookmarks").root.removeAll();
-    Ext.getCmp("bookmarks").root.resumeEvents();
-    Ext.getCmp("bookmarks").root.initalLoad = false;
+    const bookmarksTree = Ext.getCmp("bookmarks");
+    if (bookmarksTree && bookmarksTree.getRootNode()) {
+        const bookmarksRoot = bookmarksTree.getRootNode();
+        bookmarksRoot.suspendEvents(false);
+        bookmarksRoot.removeAll();
+        bookmarksRoot.resumeEvents();
+        bookmarksRoot.initalLoad = false;
+    }
     /* Remove chatrooms */
-    Ext.getCmp("chatrooms").root.removeAll();
+    const chatroomsTree = Ext.getCmp("chatrooms");
+    if (chatroomsTree && chatroomsTree.getRootNode()) {
+        chatroomsTree.getRootNode().removeAll();
+    }
 });
 
 Application.MsgBus.on("loggedout", function () {

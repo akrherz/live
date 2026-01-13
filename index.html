@@ -4,8 +4,9 @@
  <meta charset="UTF-8">
  <title>Weather.IM Live</title>
  <link rel="icon" type="image/x-icon" href="/favicon.ico">
- <link rel="stylesheet" type="text/css" href="https://mesonet.agron.iastate.edu/vendor/ext/3.4.1/resources/css/ext-all.css"/>
+ <link rel="stylesheet" type="text/css" href="node_modules/extjs-gpl/build/classic/theme-neptune/resources/theme-neptune-all.css"/>
  <link rel="stylesheet" type="text/css" href="src/live.css"/>
+ <script type="text/javascript" src="node_modules/extjs-gpl/build/ext-all.js"></script>
 </head>
 <body>
 
@@ -31,24 +32,24 @@ Welcome to ... please log in with your user account.
 
 <p><h4>Most Recent Changes</h4>
 <ul>
- <li>12 Jun 2014: Fix bug where warnings and local storm reports were not 
+ <li>12 Jun 2014: Fix bug where warnings and local storm reports were not
  clickable on the map.</li>
  <li>25 Feb 2014: Improve stability</li>
 </ul>
 
 <p style="margin-top: 5px;">"..." is a pure web browser
-instant messaging client 
-for WeatherIM.  The purpose of the application is to provide users 
+instant messaging client
+for WeatherIM.  The purpose of the application is to provide users
 with a painless means to join the WeatherIM conversation without
 installing third party software or worrying about local network
-firewalls.  Since this application runs purely over HTTPS 
-(port 443) and without third party browser plugins, almost all users 
+firewalls.  Since this application runs purely over HTTPS
+(port 443) and without third party browser plugins, almost all users
 should be able to run this application without local modifications.
 The only requirement is for a modern web browser that supports
 javascript.</p>
 
-<p style="margin-top: 5px;">This application is under rapid development 
-and may contain bugs.  Please report bugs and suggestions to 
+<p style="margin-top: 5px;">This application is under rapid development
+and may contain bugs.  Please report bugs and suggestions to
 <a target="_new" href="mailto:...">...</a>.
 Please be sure to mention the version and brand of web browser
 you use.</p>
@@ -64,9 +65,6 @@ you use.</p>
 
 </div>
 
-<script type="text/javascript" src="https://mesonet.agron.iastate.edu/vendor/ext/3.4.1/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" src="https://mesonet.agron.iastate.edu/vendor/ext/3.4.1/ext-all.js"></script>
-<script type="text/javascript" src="https://mesonet.agron.iastate.edu/vendor/live/OpenLayers_GeoExt.js"></script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

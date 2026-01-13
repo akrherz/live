@@ -1,9 +1,16 @@
 /**
  * Weather.IM Live - Main Entry Point
- * 
+ *
  * This file now serves as the minimal bootstrap for the application.
  * All functionality has been extracted into separate modules.
  */
+
+// ExtJS 6 loaded via script tag in HTML (UMD module, not ES module compatible)
+
+// Import OpenLayers 8
+import 'ol/ol.css';
+
+// GeoExt removed - using pure OpenLayers 8 + ExtJS 6
 
 // Import configuration
 import './config.js';
@@ -15,8 +22,9 @@ import './lib/strophe-disco-plugin.js';
 // Import ExtJS utilities and extensions
 import './lib/extjs-utilities.js';
 
-// Import map layers and components
-import './map/layers.js';
+// Import map layers and components - NEW OpenLayers 8 version!
+// import './map/layers.js';
+// import './map/MapPanel.js';
 import './map/MapPanel.js';
 
 // Import chat components
@@ -50,21 +58,12 @@ function initializeApp() {
     setTimeout(initializeApp, 50);
     return;
   }
-  
-  if (!window.OpenLayers) {
-    console.warn('OpenLayers not loaded yet, retrying...');
-    setTimeout(initializeApp, 50);
-    return;
-  }
-  
-  if (!window.GeoExt) {
-    console.warn('GeoExt not loaded yet, retrying...');
-    setTimeout(initializeApp, 50);
-    return;
-  }
-  
+
+  // OpenLayers 8 is loaded via ES modules, no window check needed
+  // GeoExt has been removed - we're using pure OpenLayers 8 + ExtJS 6
+
   console.log('All dependencies loaded, initializing app...');
-  
+
   // Configure Strophe logging
   Strophe.log = function(level, msg) {
     if (Application.log) {
@@ -77,10 +76,10 @@ function initializeApp() {
 
   // ExtJS configuration
   Ext.BLANK_IMAGE_URL = '/vendor/ext/3.4.1/resources/images/default/s.gif';
-  
+
   Ext.onReady(function() {
     console.log('Ext.onReady fired');
-    
+
     try {
       // Cleanup on window close
       Ext.EventManager.on(window, 'beforeunload', function() {
@@ -89,28 +88,23 @@ function initializeApp() {
           Application.XMPPConn.disconnect();
         }
       });
-      
+
       Ext.QuickTips.init();
-      
+
       console.log('Creating LiveViewport...');
       (new Application.LiveViewport({
         renderTo: Ext.getBody(),
         enableMap: true
       })).show();
       console.log('LiveViewport created and shown');
-      
-      Ext.TaskMgr.start(Application.ServiceGuard);
-      Ext.TaskMgr.start(Application.MapTask);
-      
-      // Activate map feature selection controls
-      if (window.OpenLayers && window.lsrs && window.sbws) {
-        const lsrs = window.lsrs;
-        const sbws = window.sbws;
-        const ctrl = new OpenLayers.Control.SelectFeature([lsrs, sbws]);
-        Ext.getCmp('map').map.addControl(ctrl);
-        ctrl.activate();
-        console.log('Map controls activated');
+
+      // Start ServiceGuard task
+      if (Application.ServiceGuard) {
+        Ext.TaskManager.start(Application.ServiceGuard);
       }
+      // MapTask is started in doStuff() after map is ready
+
+      console.log('Application initialization complete');
     } catch (e) {
       console.error('Error during initialization:', e);
     }

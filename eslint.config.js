@@ -17,15 +17,14 @@ module.exports = [
             globals: {
                 // ExtJS
                 "Ext": "readonly",
-                
+
                 // OpenLayers
                 "ol": "readonly",
                 "OpenLayers": "readonly",
-                "GeoExt": "readonly",
-                
+
                 // Application namespace
                 "Application": "writable",
-                
+
                 // Other globals
                 "iemdata": "readonly",
                 "moment": "readonly",
@@ -36,7 +35,7 @@ module.exports = [
                 "showHtmlVersion": "readonly",
                 "saveBookmarks": "readonly",
                 "encode64": "readonly",
-                
+
                 // Browser globals
                 "window": "readonly",
                 "document": "readonly",

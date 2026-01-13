@@ -38,11 +38,11 @@ Application.Control = {
                     text : 'Show Offline Buddies',
                     checkHandler : function(item, checked) {
 
-                        Ext.getCmp('buddies').root.cascade(function(n) {
+                        Ext.getCmp('buddies').getRootNode().cascade(function(n) {
                                     if (checked) {
                                         n.ui.show();
                                     } else {
-                                        if (n.attributes.presence == 'offline') {
+                                        if (n.data.presence == 'offline') {
                                             n.ui.hide();
                                         }
                                     }
@@ -101,7 +101,7 @@ Application.Control = {
                     text : 'Show Debug Window',
                     handler : function() {
                         Ext.getCmp("debug").show();
-                        
+
                     }
                 },{
                     xtype : 'menuitem',
@@ -183,15 +183,16 @@ Application.Control = {
                     )
                 }),
                 listeners : {
-                    click : function(n) {
-                        let cp = Ext.getCmp("chatpanel").getChat( n.attributes.barejid );
+                    // In ExtJS 6, itemclick event for tree panels
+                    itemclick : (_view, record) => {
+                        let cp = Ext.getCmp("chatpanel").getChat( record.data.barejid );
                         if (! cp){
-                            cp = Ext.getCmp("chatpanel").addChat( n.attributes.barejid );
+                            cp = Ext.getCmp("chatpanel").addChat( record.data.barejid );
                         }
                         Ext.getCmp("chatpanel").setActiveTab(cp);
                     }
                 },
-                root : new Ext.tree.TreeNode()
+                root : {}
             }, {
                 flex : 1,
                 xtype : 'treepanel',
@@ -236,19 +237,19 @@ Application.Control = {
                     movenode: function(){
                         saveBookmarks();
                     },
-                    click : function(n) {
+                    itemclick : function(_view, record) {  // this
                         Application.JoinChatroomDialog.show(null, function(){
                             const form = this.items.items[0].getForm();
-                            form.findField("roomname").setValue(Strophe.getNodeFromJid(n.attributes.jid));
-                            form.findField("roomhandle").setValue(n.attributes.handle);
+                            form.findField("roomname").setValue(Strophe.getNodeFromJid(record.data.jid));
+                            form.findField("roomhandle").setValue(record.data.handle);
                             form.findField("bookmark").enable();
-                            form.findField("anonymous").setValue(n.attributes.anonymous);
-                            form.findField("autojoin").setValue(n.attributes.autojoin);
-                            form.findField("roomalias").setValue(n.attributes.alias);
+                            form.findField("anonymous").setValue(record.data.anonymous);
+                            form.findField("autojoin").setValue(record.data.autojoin);
+                            form.findField("roomalias").setValue(record.data.alias);
                             });
                         }
                 },
-                root : new Ext.tree.TreeNode({
+                root : {
                             initialLoad : false,
                             listeners : {
                                 beforeappend : function(_tree, root, node) {
@@ -256,9 +257,9 @@ Application.Control = {
                                      * Ensure that we are appending an unique
                                      * node
                                      */
-                                    const oldnode = root.findChild('jid', node.attributes.jid);
+                                    const oldnode = root.findChild('jid', node.data.jid);
                                     if (oldnode) {
-                                        Application.log("Replacing MUC bookmark: "+ node.attributes.jid );
+                                        Application.log("Replacing MUC bookmark: "+ node.data.jid );
                                         root.removeChild(oldnode, true);
                                     }
                                     return true; /* lets be safe */
@@ -269,7 +270,7 @@ Application.Control = {
                                     }
                                 }
                             }
-                        })
+                        }
             }, {
                 flex : 2,
                 xtype : 'treepanel',
@@ -281,19 +282,19 @@ Application.Control = {
                 autoScroll : true,
                 containerScroll: true,
                 listeners : {
-                    click : function(n) {
+                    itemclick : function(_view, record) {  // this
                         Application.JoinChatroomDialog.show(null, function(){
                             const form = this.items.items[0].getForm();
-                            form.findField("roomname").setValue(Strophe.getNodeFromJid(n.attributes.jid));
+                            form.findField("roomname").setValue(Strophe.getNodeFromJid(record.data.jid));
                             form.findField("roomhandle").setValue(Application.USERNAME);
                             form.findField("bookmark").enable();
                             form.findField("anonymous").setValue(false);
                             form.findField("autojoin").setValue(false);
-                            form.findField("roomalias").setValue(Strophe.getNodeFromJid(n.attributes.jid));
+                            form.findField("roomalias").setValue(Strophe.getNodeFromJid(record.data.jid));
                             });
                     }
                 },
-                root : new Ext.tree.TreeNode()
+                root : {}
             }]
 };
 
@@ -304,21 +305,21 @@ Application.doLogin = function() {
         Application.log("Application Login Limit Reached!");
         return;
     }
-    
+
     // Get username from HTML input or ExtJS component
     const usernameField = Ext.getCmp('username') || document.getElementById('username');
     let username = usernameField.getValue ? usernameField.getValue() : usernameField.value;
-    
+
     if (username.indexOf("@") > 0) {
         username = Strophe.getNodeFromJid(username);
     }
     username = username.toLowerCase();
     username = username.replace(/^\s+|\s+$/g, '');
-    
+
     // Get password from HTML input or ExtJS component
     const passwordField = Ext.getCmp('password') || document.getElementById('password');
     const password = passwordField.getValue ? passwordField.getValue() : passwordField.value;
-    
+
     if (username == "") {
         Application.log("Invalid Username");
         return;

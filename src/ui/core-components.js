@@ -4,7 +4,7 @@
  */
 
 import { LoginPanel } from "../auth/LoginPanel.js";
-import { MapPanel } from "../map/MapPanel.js";
+import MapPanel from "../map/MapPanel.js";
 
 Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
@@ -117,27 +117,39 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
         this.doStuff();
     },
     doStuff: function () {
-        const mp = Ext.getCmp("map");
-        if (mp && mp.map && mp.map.events) {
-            mp.map.events.register("changelayer", null, function () {
-                const myobj = { lstring: "" };
-                Application.layerstore.data.each(function (record) {
-                    const layer = record.getLayer();
-                    if (layer.getVisibility()) {
-                        this.lstring += "||" + layer.name;
-                    }
-                }, myobj);
-                Application.setPreference("layers", myobj.lstring);
-            });
-            Ext.TaskMgr.start(Application.MapTask);
-        } else {
-            console.warn("Map component or map.events is not ready in doStuff");
-        }
-
+        // Create non-map components immediately
         new Application.DebugWindow({
             id: "debug",
             renderTo: Ext.getBody(),
         });
+
+        // Wait for map to be ready before setting up map-related functionality
+        const initMapStuff = () => {
+            const mp = Ext.getCmp("map");
+            if (mp && window.olMap) {
+                // Listen for layer visibility changes in OpenLayers 10
+                window.olMap.getLayers().on('propertychange', function() {
+                    const myobj = { lstring: "" };
+                    Application.layerstore.data.each(function (record) {
+                        const layer = record.getLayer();
+                        if (layer.getVisible && layer.getVisible()) {
+                            const name = layer.get('name') || layer.get('title');
+                            if (name) {
+                                this.lstring += "||" + name;
+                            }
+                        }
+                    }, myobj);
+                    Application.setPreference("layers", myobj.lstring);
+                });
+                if (Application.MapTask) {
+                    Ext.TaskManager.start(Application.MapTask);
+                }
+            } else {
+                // Retry after a short delay
+                setTimeout(initMapStuff, 200);
+            }
+        };
+        initMapStuff();
 
         new Ext.Window({
             id: "loginwindow",
