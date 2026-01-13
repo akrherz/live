@@ -4,6 +4,7 @@
  */
 
 import { createLoginPanel } from "../auth/LoginPanel.js";
+import { MapPanel } from "../map/MapPanel.js";
 
 Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
@@ -89,7 +90,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
                 title: "Map Panel",
                 height: 300,
                 split: true,
-                items: [Application.MapPanel, Application.LayerTree],
+                items: [MapPanel, Application.LayerTree],
             };
         }
         this.items = [

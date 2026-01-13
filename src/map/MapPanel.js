@@ -955,372 +955,353 @@ const baseESRILayer = new OpenLayers.Layer.ArcGISCache(
 );
 
 // Layer Store
-if (typeof window !== "undefined") {
-    Application.layerstore = new GeoExt.data.LayerStore({
-        layers: [
-            baseESRILayer,
-            new OpenLayers.Layer("No Overlay", {
-                checkedGroup: "Precip",
-                isBaseLayer: false,
-                visibility: true,
-            }),
-            q2hsr,
-            ridgeII,
-            goesEastVIS,
-            goesEastWV,
-            goesEastM1VIS,
-            goesWestVIS,
-            goesWestWV,
-            goesWestM1VIS,
-            q21h,
-            q21d,
-            q22d,
-            q23d,
-            sbws,
-            lsrs,
-            sigc,
-            qpf15,
-            qpf2,
-            qpf1,
-            spc3,
-            spc2,
-            spc1,
-            new OpenLayers.Layer("Blank", {
-                isBaseLayer: true,
-                visibility: false,
-            }),
-            counties,
-            states,
-            tribal,
-            cwsu,
-            firezones,
-            rfc,
-            wfo,
-        ],
-    });
+Application.layerstore = new GeoExt.data.LayerStore({
+    layers: [
+        baseESRILayer,
+        new OpenLayers.Layer("No Overlay", {
+            checkedGroup: "Precip",
+            isBaseLayer: false,
+            visibility: true,
+        }),
+        q2hsr,
+        ridgeII,
+        goesEastVIS,
+        goesEastWV,
+        goesEastM1VIS,
+        goesWestVIS,
+        goesWestWV,
+        goesWestM1VIS,
+        q21h,
+        q21d,
+        q22d,
+        q23d,
+        sbws,
+        lsrs,
+        sigc,
+        qpf15,
+        qpf2,
+        qpf1,
+        spc3,
+        spc2,
+        spc1,
+        new OpenLayers.Layer("Blank", {
+            isBaseLayer: true,
+            visibility: false,
+        }),
+        counties,
+        states,
+        tribal,
+        cwsu,
+        firezones,
+        rfc,
+        wfo,
+    ],
+});
 
-    // Map refresh task
-    Application.MapTask = {
-        skipFirst: true,
-        run: function () {
-            if (this.skipFirst) {
-                this.skipFirst = false;
-                return;
+// Map refresh task
+Application.MapTask = {
+    skipFirst: true,
+    run: function () {
+        if (this.skipFirst) {
+            this.skipFirst = false;
+            return;
+        }
+        Application.layerstore.data.each(function (record) {
+            const layer = record.getLayer();
+            if (layer.refreshable && layer.getVisibility()) {
+                layer.redraw(true);
             }
-            Application.layerstore.data.each(function (record) {
-                const layer = record.getLayer();
-                if (layer.refreshable && layer.getVisibility()) {
-                    layer.redraw(true);
-                }
-                setAppTime();
-            });
-        },
-        interval: 300000,
-    };
+            setAppTime();
+        });
+    },
+    interval: 300000,
+};
 
-    // Layer Tree Configuration
-    const layerRoot = new Ext.tree.TreeNode({
-        text: "All Layers",
+// Layer Tree Configuration
+const layerRoot = new Ext.tree.TreeNode({
+    text: "All Layers",
+    expanded: true,
+});
+
+layerRoot.appendChild(
+    new GeoExt.tree.BaseLayerContainer({
+        text: "Base Layer",
+        layerstore: Application.layerstore,
         expanded: true,
-    });
+    })
+);
 
-    layerRoot.appendChild(
-        new GeoExt.tree.BaseLayerContainer({
-            text: "Base Layer",
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    layerRoot.appendChild(
-        new GeoExt.tree.LayerContainer({
-            text: "Satellite",
-            loader: {
-                filter: function (record) {
-                    const layer = record.getLayer();
-                    return layer.checkedGroup === "Satellite";
-                },
-                baseAttrs: {
-                    iconCls: "gx-tree-baselayer-icon",
-                    checkedGroup: "rasters",
-                },
+layerRoot.appendChild(
+    new GeoExt.tree.LayerContainer({
+        text: "Satellite",
+        loader: {
+            filter: function (record) {
+                const layer = record.getLayer();
+                return layer.checkedGroup === "Satellite";
             },
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    layerRoot.appendChild(
-        new GeoExt.tree.LayerContainer({
-            text: "Precip/RADAR",
-            loader: {
-                filter: function (record) {
-                    const layer = record.getLayer();
-                    if (layer.isBaseLayer) return false;
-                    return layer.checkedGroup === "Precip";
-                },
-                baseAttrs: {
-                    iconCls: "gx-tree-baselayer-icon",
-                    checkedGroup: "rasters",
-                },
-            },
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    layerRoot.appendChild(
-        new GeoExt.tree.LayerContainer({
-            text: "Chatroom Products",
-            loader: {
-                filter: function (record) {
-                    const layer = record.getLayer();
-                    if (layer.isBaseLayer) return false;
-                    return layer.checkedGroup === "Chatroom Products";
-                },
-            },
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    layerRoot.appendChild(
-        new GeoExt.tree.LayerContainer({
-            text: "HPC Precipitation Forecasts",
-            loader: {
-                filter: function (record) {
-                    const layer = record.getLayer();
-                    if (layer.isBaseLayer) return false;
-                    return layer.checkedGroup === "HPC Precipitation Forecasts";
-                },
-            },
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    layerRoot.appendChild(
-        new GeoExt.tree.LayerContainer({
-            text: "Storm Prediction Center Products",
-            loader: {
-                filter: function (record) {
-                    const layer = record.getLayer();
-                    if (layer.isBaseLayer) return false;
-                    return (
-                        layer.checkedGroup ===
-                        "Storm Prediction Center Products"
-                    );
-                },
-            },
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    layerRoot.appendChild(
-        new GeoExt.tree.LayerContainer({
-            text: "Political Boundaries",
-            loader: {
-                filter: function (record) {
-                    const layer = record.getLayer();
-                    if (layer.isBaseLayer) return false;
-                    return layer.checkedGroup === "Political Boundaries";
-                },
-            },
-            layerstore: Application.layerstore,
-            expanded: true,
-        })
-    );
-
-    // Layer controls
-    Application.LayerSlider = {
-        xtype: "gx_opacityslider",
-        id: "layerslider",
-        width: 200,
-        value: 80,
-        layer: ridgeII,
-    };
-
-    Application.LayerTree = {
-        region: "east",
-        xtype: "treepanel",
-        root: layerRoot,
-        autoScroll: true,
-        rootVisible: false,
-        width: 150,
-        collapsible: true,
-        split: true,
-        title: "Layers Control",
-        listeners: {
-            click: function (n) {
-                Ext.getCmp("layerslider").setLayer(n.attributes.layer);
+            baseAttrs: {
+                iconCls: "gx-tree-baselayer-icon",
+                checkedGroup: "rasters",
             },
         },
-    };
+        layerstore: Application.layerstore,
+        expanded: true,
+    })
+);
 
-    // MapPanel Configuration
-    Application.MapPanel = {
-        region: "center",
-        height: 600,
-        split: true,
-        xtype: "gx_mappanel",
-        id: "map",
-        listeners: {
-            afterrender: () => {
-                setAppTime();
+layerRoot.appendChild(
+    new GeoExt.tree.LayerContainer({
+        text: "Precip/RADAR",
+        loader: {
+            filter: function (record) {
+                const layer = record.getLayer();
+                if (layer.isBaseLayer) return false;
+                return layer.checkedGroup === "Precip";
+            },
+            baseAttrs: {
+                iconCls: "gx-tree-baselayer-icon",
+                checkedGroup: "rasters",
             },
         },
-        map: {
-            projection: new OpenLayers.Projection("EPSG:900913"),
-            units: "m",
-            numZoomLevels: 18,
-            maxResolution: 156543.0339,
-            controls: [
-                new OpenLayers.Control.Navigation(),
-                new OpenLayers.Control.PanZoom(),
-                new OpenLayers.Control.ArgParser(),
-            ],
-            maxExtent: new OpenLayers.Bounds(
-                -20037508,
-                -20037508,
-                20037508,
-                20037508.34
-            ),
+        layerstore: Application.layerstore,
+        expanded: true,
+    })
+);
+
+layerRoot.appendChild(
+    new GeoExt.tree.LayerContainer({
+        text: "Chatroom Products",
+        loader: {
+            filter: function (record) {
+                const layer = record.getLayer();
+                if (layer.isBaseLayer) return false;
+                return layer.checkedGroup === "Chatroom Products";
+            },
         },
-        layers: Application.layerstore,
-        extent: new OpenLayers.Bounds(-14427682, 1423562, -7197350, 8673462),
-        tbar: [
-            {
-                xtype: "splitbutton",
-                icon: "icons/favorites.png",
-                handler: function () {
-                    const bnds = Ext.getCmp("mfv1").bounds;
-                    if (bnds) {
-                        Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                    }
-                },
-                menu: {
-                    items: [
-                        {
-                            id: "fm1",
-                            text: "Favorite 1",
-                            handler: () => {
-                                const bnds = Ext.getCmp("mfv1").bounds;
-                                if (bnds)
-                                    Ext.getCmp("map").map.zoomToExtent(
-                                        bnds,
-                                        true
-                                    );
-                            },
-                        },
-                        {
-                            id: "fm2",
-                            text: "Favorite 2",
-                            handler: () => {
-                                const bnds = Ext.getCmp("mfv2").bounds;
-                                if (bnds)
-                                    Ext.getCmp("map").map.zoomToExtent(
-                                        bnds,
-                                        true
-                                    );
-                            },
-                        },
-                        {
-                            id: "fm3",
-                            text: "Favorite 3",
-                            handler: () => {
-                                const bnds = Ext.getCmp("mfv3").bounds;
-                                if (bnds)
-                                    Ext.getCmp("map").map.zoomToExtent(
-                                        bnds,
-                                        true
-                                    );
-                            },
-                        },
-                        {
-                            id: "fm4",
-                            text: "Favorite 4",
-                            handler: () => {
-                                const bnds = Ext.getCmp("mfv4").bounds;
-                                if (bnds)
-                                    Ext.getCmp("map").map.zoomToExtent(
-                                        bnds,
-                                        true
-                                    );
-                            },
-                        },
-                        {
-                            id: "fm5",
-                            text: "Favorite 5",
-                            handler: () => {
-                                const bnds = Ext.getCmp("mfv5").bounds;
-                                if (bnds)
-                                    Ext.getCmp("map").map.zoomToExtent(
-                                        bnds,
-                                        true
-                                    );
-                            },
-                        },
-                        {
-                            text: "Edit Favorites",
-                            handler: () => {
-                                Application.boundsFavorites.show();
-                            },
-                        },
-                    ],
-                },
+        layerstore: Application.layerstore,
+        expanded: true,
+    })
+);
+
+layerRoot.appendChild(
+    new GeoExt.tree.LayerContainer({
+        text: "HPC Precipitation Forecasts",
+        loader: {
+            filter: function (record) {
+                const layer = record.getLayer();
+                if (layer.isBaseLayer) return false;
+                return layer.checkedGroup === "HPC Precipitation Forecasts";
             },
-            {
-                xtype: "tbtext",
-                text: "Map Valid: 12:00 AM",
-                id: "appTime",
+        },
+        layerstore: Application.layerstore,
+        expanded: true,
+    })
+);
+
+layerRoot.appendChild(
+    new GeoExt.tree.LayerContainer({
+        text: "Storm Prediction Center Products",
+        loader: {
+            filter: function (record) {
+                const layer = record.getLayer();
+                if (layer.isBaseLayer) return false;
+                return (
+                    layer.checkedGroup === "Storm Prediction Center Products"
+                );
             },
-            "-",
-            {
-                text: "Tools",
-                menu: {
-                    items: [
-                        {
-                            text: "LSR Grid",
-                            icon: "icons/prop.gif",
-                            handler: function () {
-                                if (!Ext.getCmp("lsrgrid")) {
-                                    new Application.LSRGrid({ id: "lsrgrid" });
-                                }
-                                Ext.getCmp("lsrgrid").show();
-                            },
-                        },
-                        {
-                            text: "SBW Grid",
-                            icon: "icons/prop.gif",
-                            handler: function () {
-                                if (!Ext.getCmp("sbwgrid")) {
-                                    new Application.SBWGrid({ id: "sbwgrid" });
-                                }
-                                Ext.getCmp("sbwgrid").show();
-                            },
-                        },
-                        {
-                            text: "Show Legend",
-                            handler: function () {
-                                if (!Ext.getCmp("maplegend")) {
-                                    new Application.MapLegend({
-                                        id: "maplegend",
-                                        contentEl: "legends",
-                                    });
-                                }
-                                Ext.getCmp("maplegend").show();
-                            },
-                        },
-                    ],
-                },
+        },
+        layerstore: Application.layerstore,
+        expanded: true,
+    })
+);
+
+layerRoot.appendChild(
+    new GeoExt.tree.LayerContainer({
+        text: "Political Boundaries",
+        loader: {
+            filter: function (record) {
+                const layer = record.getLayer();
+                if (layer.isBaseLayer) return false;
+                return layer.checkedGroup === "Political Boundaries";
             },
-            "-",
-            "Opacity",
-            Application.LayerSlider,
+        },
+        layerstore: Application.layerstore,
+        expanded: true,
+    })
+);
+
+// Layer controls
+Application.LayerSlider = {
+    xtype: "gx_opacityslider",
+    id: "layerslider",
+    width: 200,
+    value: 80,
+    layer: ridgeII,
+};
+
+Application.LayerTree = {
+    region: "east",
+    xtype: "treepanel",
+    root: layerRoot,
+    autoScroll: true,
+    rootVisible: false,
+    width: 150,
+    collapsible: true,
+    split: true,
+    title: "Layers Control",
+    listeners: {
+        click: function (n) {
+            Ext.getCmp("layerslider").setLayer(n.attributes.layer);
+        },
+    },
+};
+
+// MapPanel Configuration
+export const MapPanel = {
+    region: "center",
+    height: 600,
+    split: true,
+    xtype: "gx_mappanel",
+    id: "map",
+    listeners: {
+        afterrender: () => {
+            setAppTime();
+        },
+    },
+    map: {
+        projection: new OpenLayers.Projection("EPSG:900913"),
+        units: "m",
+        numZoomLevels: 18,
+        maxResolution: 156543.0339,
+        controls: [
+            new OpenLayers.Control.Navigation(),
+            new OpenLayers.Control.PanZoom(),
+            new OpenLayers.Control.ArgParser(),
         ],
-    };
-}
+        maxExtent: new OpenLayers.Bounds(
+            -20037508,
+            -20037508,
+            20037508,
+            20037508.34
+        ),
+    },
+    layers: Application.layerstore,
+    extent: new OpenLayers.Bounds(-14427682, 1423562, -7197350, 8673462),
+    tbar: [
+        {
+            xtype: "splitbutton",
+            icon: "icons/favorites.png",
+            handler: function () {
+                const bnds = Ext.getCmp("mfv1").bounds;
+                if (bnds) {
+                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
+                }
+            },
+            menu: {
+                items: [
+                    {
+                        id: "fm1",
+                        text: "Favorite 1",
+                        handler: () => {
+                            const bnds = Ext.getCmp("mfv1").bounds;
+                            if (bnds)
+                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
+                        },
+                    },
+                    {
+                        id: "fm2",
+                        text: "Favorite 2",
+                        handler: () => {
+                            const bnds = Ext.getCmp("mfv2").bounds;
+                            if (bnds)
+                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
+                        },
+                    },
+                    {
+                        id: "fm3",
+                        text: "Favorite 3",
+                        handler: () => {
+                            const bnds = Ext.getCmp("mfv3").bounds;
+                            if (bnds)
+                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
+                        },
+                    },
+                    {
+                        id: "fm4",
+                        text: "Favorite 4",
+                        handler: () => {
+                            const bnds = Ext.getCmp("mfv4").bounds;
+                            if (bnds)
+                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
+                        },
+                    },
+                    {
+                        id: "fm5",
+                        text: "Favorite 5",
+                        handler: () => {
+                            const bnds = Ext.getCmp("mfv5").bounds;
+                            if (bnds)
+                                Ext.getCmp("map").map.zoomToExtent(bnds, true);
+                        },
+                    },
+                    {
+                        text: "Edit Favorites",
+                        handler: () => {
+                            Application.boundsFavorites.show();
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            xtype: "tbtext",
+            text: "Map Valid: 12:00 AM",
+            id: "appTime",
+        },
+        "-",
+        {
+            text: "Tools",
+            menu: {
+                items: [
+                    {
+                        text: "LSR Grid",
+                        icon: "icons/prop.gif",
+                        handler: function () {
+                            if (!Ext.getCmp("lsrgrid")) {
+                                new Application.LSRGrid({ id: "lsrgrid" });
+                            }
+                            Ext.getCmp("lsrgrid").show();
+                        },
+                    },
+                    {
+                        text: "SBW Grid",
+                        icon: "icons/prop.gif",
+                        handler: function () {
+                            if (!Ext.getCmp("sbwgrid")) {
+                                new Application.SBWGrid({ id: "sbwgrid" });
+                            }
+                            Ext.getCmp("sbwgrid").show();
+                        },
+                    },
+                    {
+                        text: "Show Legend",
+                        handler: function () {
+                            if (!Ext.getCmp("maplegend")) {
+                                new Application.MapLegend({
+                                    id: "maplegend",
+                                    contentEl: "legends",
+                                });
+                            }
+                            Ext.getCmp("maplegend").show();
+                        },
+                    },
+                ],
+            },
+        },
+        "-",
+        "Opacity",
+        Application.LayerSlider,
+    ],
+};
 
 export { setAppTime };
-export default Application.MapPanel;
