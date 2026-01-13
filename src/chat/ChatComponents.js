@@ -142,10 +142,10 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
         const config = {
             listeners : {
                 activate : function(self) {
-                    self.setIconCls('tabno');
+                    self.setIconClass('tabno');
                 },
                 deactivate : function(self) {
-                    self.setIconCls('tabno');
+                    self.setIconClass('tabno');
                 },
                 beforedestroy : function(self){
                     if (self.te.chatstate){
@@ -598,12 +598,12 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             }
             if (nonIEMBot) {
                 // Make this tab show the new icon for the new message
-                this.ownerCt.setIconCls('new-tab');
+                this.ownerCt.setIconClass('new-tab');
                 Application.MsgBus.fireEvent("soundevent", "new_message");
             } else {
                 // If iembot is muted, lets stop the events
                 if (! this.iembotHide){
-                    this.ownerCt.setIconCls('new-tab');
+                    this.ownerCt.setIconClass('new-tab');
                     Application.MsgBus.fireEvent("soundevent", "iembot");
                 }
             }
@@ -880,9 +880,9 @@ function onBuddyPresence(msg) {
                     }
                     if (!msg.getAttribute('type')) {
                         if (msg.getElementsByTagName('show').length > 0) {
-                            leaf.setIconCls('buddy-away');
+                            leaf.setIconClass('buddy-away');
                         } else {
-                            leaf.setIconCls('buddy-online');
+                            leaf.setIconClass('buddy-online');
                         }
                         leaf.attributes.presence = 'online';
                         leaf.ui.show();
@@ -894,7 +894,7 @@ function onBuddyPresence(msg) {
                     } else if (msg.getAttribute('type') == 'unavailable'){
                         if (leaf.attributes.resources.length == 1){
                             leaf.attributes.presence = 'offline';
-                            leaf.setIconCls('buddy-offline');
+                            leaf.setIconClass('buddy-offline');
                             leaf.ui.hide();
                         }
                         leaf.attributes.resources.remove(resource);

@@ -679,7 +679,7 @@ function messageParser(msg) {
         var composing = msg.getElementsByTagName("composing");
         if (composing.length > 0) {
             if (cp) {
-                cp.setIconCls("typing-tab");
+                cp.setIconClass("typing-tab");
             }
         } /*
              * var active = $(msg).find("active"); if (active.length > 0){
@@ -691,7 +691,7 @@ function messageParser(msg) {
         var paused = msg.getElementsByTagName("paused");
         if (paused.length > 0) {
             if (cp) {
-                cp.setIconCls("paused-tab");
+                cp.setIconClass("paused-tab");
             }
         }
 
