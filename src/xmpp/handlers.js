@@ -4,8 +4,10 @@
  */
 
 import { $iq, $pres, Strophe } from "strophe.js";
+import WKT from "ol/format/WKT";
 import { UTCStringToDate } from "../events/event-handlers.js";
 import { onBuddyPresence } from "../chat/ChatComponents.js";
+import { iembotFilter } from "../utils/grid-utilities.js";
 
 function buildXMPP() {
     Application.log("Initializing XMPPConn Obj");
@@ -323,14 +325,14 @@ function parseViews(msg) {
             Ext.getCmp("mfv" + (i + 1)).setValue(label);
             Ext.getCmp("fm" + (i + 1)).setText(label);
         }
-        Ext.getCmp("mfv" + (i + 1)).bounds = OpenLayers.Bounds.fromArray(
-            bounds.split(",")
-        );
+        const extent = bounds.split(",").map(Number);
+        Ext.getCmp("mfv" + (i + 1)).bounds = extent;
         if (i == 0) {
-            Ext.getCmp("map").map.zoomToExtent(
-                OpenLayers.Bounds.fromArray(bounds.split(",")),
-                true
-            );
+            const mapPanel = Ext.getCmp("map");
+            const map = mapPanel ? mapPanel.map : window.olMap;
+            if (map && map.getView) {
+                map.getView().fit(extent, { size: map.getSize() });
+            }
         }
     }
 }
@@ -409,26 +411,33 @@ function iqParser(msg) {
         const tree = Ext.getCmp("chatrooms");
         const rootNode = tree ? tree.getRootNode() : null;
 
-        for (let i = 0; i < items.length; i++) {
-            if (rootNode) {
-                rootNode.appendChild({
-                    text:
-                        items[i].getAttribute("name") +
-                        " (" +
-                        Strophe.getNodeFromJid(items[i].getAttribute("jid")) +
-                        ")",
+        if (rootNode) {
+            const rooms = [];
+            for (let i = 0; i < items.length; i++) {
+                const name = items[i].getAttribute("name") || "";
+                const room = Strophe.getNodeFromJid(
+                    items[i].getAttribute("jid")
+                );
+                rooms.push({
+                    text: name + " (" + room + ")",
+                    name: name,
+                    room: room,
                     jid: items[i].getAttribute("jid"),
                     iconCls: "chatroom-icon",
                     leaf: true,
                 });
             }
-        }
 
-        // In ExtJS 6, tree sorting is handled differently
-        if (rootNode) {
-            rootNode.sort(function (a, b) {
-                return a.get("text").localeCompare(b.get("text"));
+            rooms.sort(function (a, b) {
+                const left = (a.name || a.room || "").toLowerCase();
+                const right = (b.name || b.room || "").toLowerCase();
+                if (left < right) return -1;
+                if (left > right) return 1;
+                return 0;
             });
+
+            rootNode.removeAll();
+            rootNode.appendChild(rooms);
         }
     }
 }
@@ -538,16 +547,40 @@ function presenceParser(msg) {
             );
             return;
         }
+        function showRoomError(message, cleanupFn) {
+            Ext.Msg.show({
+                title: "Status",
+                message: message,
+                buttons: Ext.Msg.OK,
+                icon: Ext.Msg.INFO,
+                fn: function () {
+                    // Defer cleanup to avoid layout invalidation during modal teardown
+                    Ext.defer(function () {
+                        if (cleanupFn) {
+                            cleanupFn();
+                        }
+                        if (Ext.resumeLayouts) {
+                            Ext.resumeLayouts(true);
+                        }
+                    }, 10);
+                },
+            });
+        }
+
         /* Look to see if we got a 201 status */
         let error = null;
         if (msg.getElementsByTagName("status").length > 0) {
             error = msg.getElementsByTagName("status");
             if (error[0].getAttribute("code") == "201") {
-                Ext.Msg.alert(
-                    "Status",
-                    "Sorry, chatroom [" + room + "] does not exist."
+                showRoomError(
+                    "Sorry, chatroom [" + room + "] does not exist.",
+                    function () {
+                        const chatPanel = Ext.getCmp("chatpanel");
+                        if (chatPanel && chatPanel.getMUC(room)) {
+                            chatPanel.removeMUC(room);
+                        }
+                    }
                 );
-                Ext.getCmp("chatpanel").removeMUC(room);
                 return;
             }
         }
@@ -555,13 +588,17 @@ function presenceParser(msg) {
         if (msg.getElementsByTagName("error").length > 0) {
             error = msg.getElementsByTagName("error");
             if (error[0].getAttribute("code") == "407") {
-                Ext.Msg.alert(
-                    "Status",
+                showRoomError(
                     "Sorry, your account is not authorized to access chatroom [" +
                         room +
-                        "]"
+                        "]",
+                    function () {
+                        const chatPanel = Ext.getCmp("chatpanel");
+                        if (chatPanel && chatPanel.getMUC(room)) {
+                            chatPanel.removeMUC(room);
+                        }
+                    }
                 );
-                Ext.getCmp("chatpanel").removeMUC(room);
                 return;
             }
         }
@@ -569,13 +606,17 @@ function presenceParser(msg) {
         if (msg.getElementsByTagName("error").length > 0) {
             error = msg.getElementsByTagName("error");
             if (error[0].getAttribute("code") == "409") {
-                Ext.Msg.alert(
-                    "Status",
+                showRoomError(
                     "Sorry, your requested chatroom handle is already in use by room [" +
                         room +
-                        "]"
+                        "]",
+                    function () {
+                        const chatPanel = Ext.getCmp("chatpanel");
+                        if (chatPanel && chatPanel.getMUC(room)) {
+                            chatPanel.removeMUC(room);
+                        }
+                    }
                 );
-                Ext.getCmp("chatpanel").removeMUC(room);
                 return;
             }
         }
@@ -583,14 +624,18 @@ function presenceParser(msg) {
         if (msg.getElementsByTagName("status").length > 0) {
             error = msg.getElementsByTagName("status");
             if (error[0].getAttribute("code") == "307") {
-                Ext.Msg.alert(
-                    "Status",
+                showRoomError(
                     "Your account signed into this chatroom [" +
                         room +
-                        "] with the same handle from another location. Please use unique handles."
+                        "] with the same handle from another location. Please use unique handles.",
+                    function () {
+                        mcp.joinedChat = false;
+                        const chatPanel = Ext.getCmp("chatpanel");
+                        if (chatPanel && chatPanel.getMUC(room)) {
+                            chatPanel.removeMUC(room);
+                        }
+                    }
                 );
-                mcp.joinedChat = false;
-                Ext.getCmp("chatpanel").removeMUC(room);
                 return;
             }
         }
@@ -660,8 +705,13 @@ function presenceParser(msg) {
             }
         }
         if (msg.getAttribute("type") == "unavailable") {
-            if (child && roomUsersRoot) {
-                roomUsersRoot.removeChild(child);
+            if (child) {
+                if (child.parentNode) {
+                    child.parentNode.removeChild(child, true);
+                } else if (roomUsersRoot) {
+                    // Fallback if parent is missing but root is known
+                    roomUsersRoot.removeChild(child, true);
+                }
             }
         }
     } else {
@@ -881,13 +931,13 @@ function geomParser(msg, isDelayed) {
             continue;
         }
         const geom = x[i].getAttribute("geometry");
-        const wkt = new OpenLayers.Format.WKT();
-        let collection = wkt.read(geom);
-        if (collection) {
-            if (collection.constructor != Array) {
-                collection = [collection];
-            }
-            const vect = collection[0];
+        const wkt = new WKT();
+        const features = wkt.readFeatures(geom, {
+            dataProjection: "EPSG:4326",
+            featureProjection: "EPSG:3857",
+        });
+        if (features && features.length > 0) {
+            const feature = features[0];
             /* Now we figure out when to remove this display */
             /* Our default duration is 2 hours, for LSRs */
             let delayed = 60 * 60 * 1000;
@@ -900,7 +950,7 @@ function geomParser(msg, isDelayed) {
                     x[i].getAttribute("expire"),
                     "Ymd\\Th:i:s"
                 );
-                vect.attributes.expire = d.toUTC();
+                feature.set("expire", d.toUTC());
                 const diff = d - new Date();
                 // console.log("Product Time Diff:"+ diff);
                 if (diff <= 0) {
@@ -915,43 +965,38 @@ function geomParser(msg, isDelayed) {
                     x[i].getAttribute("valid"),
                     "Ymd\\Th:i:s"
                 );
-                vect.attributes.valid = d.toUTC();
+                feature.set("valid", d.toUTC());
             }
             // console.log("Product Time Delayed:"+ delayed);
-            vect.attributes.ptype = x[i].getAttribute("ptype");
-            vect.attributes.message = txt;
-            vect.geometry.transform(
-                new OpenLayers.Projection("EPSG:4326"),
-                new OpenLayers.Projection("EPSG:900913")
-            );
+            feature.set("ptype", x[i].getAttribute("ptype"));
+            feature.set("message", txt);
+            const valid = feature.get("valid");
             if (
                 (x[i].getAttribute("category") == "LSR" ||
                     x[i].getAttribute("category") == "PIREP") &&
-                vect.attributes.valid
+                valid
             ) {
                 if (
                     !isDelayed ||
-                    (isDelayed && new Date() - vect.attributes.valid < 7200000)
+                    (isDelayed && new Date() - valid < 7200000)
                 ) {
                     const lsrs = Application.lsrStore.layer;
-                    lsrs.addFeatures([vect]);
+                    lsrs.addFeatures([feature]);
                     new Ext.util.DelayedTask(function () {
-                        lsrs.removeFeatures([vect]);
+                        lsrs.removeFeatures([feature]);
                     }).delay(delayed);
                     const sstate = Application.lsrStore.getSortState();
                     Application.lsrStore.sort(sstate.field, sstate.direction);
                 }
             }
             if (x[i].getAttribute("category") == "SBW") {
-                vect.attributes.vtec = x[i].getAttribute("vtec");
-                const recordID = Application.sbwStore.find(
-                    "vtec",
-                    vect.attributes.vtec
-                );
+                feature.set("vtec", x[i].getAttribute("vtec"));
+                const vtec = feature.get("vtec");
+                const recordID = Application.sbwStore.find("vtec", vtec);
                 if (x[i].getAttribute("status") == "CAN") {
                     if (recordID > -1) {
                         Application.log(
-                            "Removing SBW vtec [" + vect.attributes.vtec + "]"
+                            "Removing SBW vtec [" + vtec + "]"
                         );
                         Application.sbwStore.removeAt(recordID);
                     }
@@ -959,21 +1004,21 @@ function geomParser(msg, isDelayed) {
                 }
                 if (recordID > -1) {
                     Application.log(
-                        "Old SBW vtec [" + vect.attributes.vtec + "]"
+                        "Old SBW vtec [" + vtec + "]"
                     );
                     Application.sbwStore.removeAt(recordID);
                 }
                 Application.log(
                     "Adding SBW vtec [" +
-                        vect.attributes.vtec +
+                        vtec +
                         "] delay [" +
                         delayed +
                         "]"
                 );
                 const sbws = Application.sbwStore.layer;
-                sbws.addFeatures([vect]);
+                sbws.addFeatures([feature]);
                 new Ext.util.DelayedTask(function () {
-                    sbws.removeFeatures([vect]);
+                    sbws.removeFeatures([feature]);
                 }).delay(delayed);
                 const sstate = Application.sbwStore.getSortState();
                 Application.sbwStore.sort(sstate.field, sstate.direction);

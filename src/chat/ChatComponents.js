@@ -1,4 +1,6 @@
 import { $msg, $pres, Strophe } from "strophe.js";
+import { loadTextWindow, hideTextWindow } from "../ui/text-window.js";
+import { iembotFilter, showHtmlVersion } from "../utils/grid-utilities.js";
 
 Application.MUCChatPanel = Ext.extend(Ext.Panel, {
     hideMode: "offsets",
@@ -644,7 +646,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function () {
         // Store reference to parent for use in renderer
         const parentPanel = this.ownerCt;
-        
+
         this.columns = [
             {
                 header: "Author",
@@ -764,15 +766,13 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 listeners: {
                     select: function (sm, record) {
                         if (record.data.product_id) {
-                            Application.TextWindow.show();
-                            Application.TextWindow.load({
+                            loadTextWindow({
                                 params: {
                                     pid: record.data.product_id,
                                     bypass: 1,
                                 },
                                 text: "Loading...",
                                 method: "GET",
-                                url: "../p.php",
                             });
                         }
                     },
@@ -799,7 +799,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             // way
                             //console.log("Daryl2:"+ t.tagName);
                             t.target = "_blank";
-                            Application.TextWindow.hide();
+                            hideTextWindow();
                         },
                         click: function (e, t) {
                             // if they tab +
@@ -811,7 +811,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                                 e.stopEvent();
                                 window.open(t.href);
                             }
-                            Application.TextWindow.hide();
+                            hideTextWindow();
                         },
                         delegate: "a",
                     });
@@ -1232,17 +1232,8 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
 
     /** @private */
     onRemove: function (c) {
-        const te = Ext.get(c.tabEl);
-        // check if the tabEl exists, it won't if the tab isn't rendered
-        if (te) {
-            // DragSource cleanup on removed tabs
-            //Ext.destroy(c.ds.proxy, c.ds);
-            te.select("a").removeAllListeners();
-            Ext.destroy(te);
-        }
-
-        // ignore the remove-function of the TabPanel
-        Ext.TabPanel.superclass.onRemove.call(this, c);
+        // Let ExtJS handle DOM cleanup; manual destruction can break layouts in ExtJS 6
+        Ext.ux.panel.DDTabPanel.superclass.onRemove.call(this, c);
 
         if (this.stack) {
             this.stack.remove(c);
@@ -1447,7 +1438,29 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         return items.length > 0 ? items[0] : null;
     },
     removeMUC: function (barejid) {
-        this.remove(this.getMUC(barejid));
+        const mcp = this.getMUC(barejid);
+        if (!mcp || mcp.destroyed) {
+            return;
+        }
+        if (mcp.closable === false) {
+            return;
+        }
+        Ext.defer(
+            function () {
+                if (!mcp || mcp.destroyed || mcp.ownerCt !== this) {
+                    return;
+                }
+                if (mcp.close) {
+                    mcp.close();
+                    return;
+                }
+                Ext.suspendLayouts();
+                this.remove(mcp, true);
+                Ext.resumeLayouts(true);
+            },
+            50,
+            this
+        );
     },
     addChat: function (jid) {
         let title = Strophe.getNodeFromJid(jid);
@@ -1467,6 +1480,25 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         return items.length > 0 ? items[0] : null;
     },
     removeChat: function (jid) {
-        this.remove(this.getChat(jid));
+        const cp = this.getChat(jid);
+        if (!cp || cp.destroyed) {
+            return;
+        }
+        Ext.defer(
+            function () {
+                if (!cp || cp.destroyed || cp.ownerCt !== this) {
+                    return;
+                }
+                if (cp.close) {
+                    cp.close();
+                    return;
+                }
+                Ext.suspendLayouts();
+                this.remove(cp, true);
+                Ext.resumeLayouts(true);
+            },
+            50,
+            this
+        );
     },
 });

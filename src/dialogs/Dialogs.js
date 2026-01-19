@@ -560,17 +560,6 @@ Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
 );
 
-Application.TextWindow = new Ext.Window({
-    width: 550,
-    height: 300,
-    title: "Product Text",
-    closeAction: "hide",
-    constrain: true,
-    hidden: true,
-    autoScroll: true,
-    html: "Loading....",
-});
-
 Application.log = function (text) {
     Ext.getCmp("debug").addMessage(text);
 };

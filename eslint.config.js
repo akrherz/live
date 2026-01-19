@@ -20,7 +20,6 @@ module.exports = [
 
                 // OpenLayers
                 "ol": "readonly",
-                "OpenLayers": "readonly",
 
                 // Application namespace
                 "Application": "writable",
