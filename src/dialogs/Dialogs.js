@@ -2,6 +2,8 @@ import { msgBus } from "../events/MsgBus.js";
 import { $iq } from "strophe.js";
 import { LiveConfig } from "../config.js";
 import { syncPreferences } from "../xmpp/handlers.js";
+import { playSound } from '../events/event-handlers.js';
+
 
 Application.saveViews = function () {
     const stanza = $iq({
@@ -95,7 +97,7 @@ const combo = new Ext.form.ComboBox({
     store: Application.SoundStore,
     listeners: {
         change: function (_field, newVal) {
-            Application.playSound(newVal);
+            playSound(newVal);
         },
     },
     valueField: "id",

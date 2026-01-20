@@ -24,7 +24,7 @@ export function UTCStringToDate(dtStr, format) {
 // Audio cache for reusing Audio objects
 const audioCache = {};
 
-Application.playSound = function (sidx) {
+function playSound(sidx) {
     // Check if audio is muted
     if (Application.audioMuted) {
         return;
@@ -54,19 +54,19 @@ Application.playSound = function (sidx) {
     });
 };
 
-msgBus.on("soundevent", function (sevent) {
+msgBus.on("soundevent", (sevent) => {
     const enable = Application.getPreference(
-        "sound::" + sevent + "::enabled",
+        `sound::${sevent}::enabled`,
         "true"
     );
     if (enable === "false") {
         return;
     }
     const sidx = Application.getPreference(
-        "sound::" + sevent + "::sound",
+        `sound::${sevent}::sound`,
         "default"
     );
-    Application.playSound(sidx);
+    playSound(sidx);
 });
 
 msgBus.on("loggingout", function () {
@@ -150,3 +150,5 @@ msgBus.on("joinchat", function (room, handle, anonymous) {
     }
     Ext.getCmp("chatpanel").setActiveTab(mcp);
 });
+
+export { playSound };
