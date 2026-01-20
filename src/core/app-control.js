@@ -1,6 +1,5 @@
 /**
  * Application Core
- * Application.Control, doLogin, ServiceGuard
  */
 
 import { $pres, Strophe } from 'strophe.js';
@@ -298,7 +297,7 @@ Application.Control = {
             }]
 };
 
-Application.doLogin = function() {
+function doLogin() {
     Application.RECONNECT = true;
     Application.ATTEMPTS += 1;
     if (Application.ATTEMPTS > 11){
@@ -360,3 +359,4 @@ Application.ServiceGuard = {
     interval : 120000
 };
 
+export { doLogin };
