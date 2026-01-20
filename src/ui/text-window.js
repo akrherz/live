@@ -16,34 +16,35 @@ function getTextWindow() {
     return textWindow;
 }
 
-function loadTextWindow(config) {
+function loadTextProductInWindow(product_id) {
     const win = getTextWindow();
     win.show();
     if (win.setLoading) {
-        win.setLoading(config && config.text ? config.text : "Loading...");
+        win.setLoading("Loading...");
     } else {
-        win.update(config && config.text ? config.text : "Loading...");
+        win.update("Loading...");
     }
 
-    Ext.Ajax.request({
-        url: "https://mesonet.agron.iastate.edu/p.php",
-        method: config && config.method ? config.method : "GET",
-        params: config && config.params ? config.params : {},
-        success: function (response) {
+    const url = `https://mesonet.agron.iastate.edu/api/1/nwstext/${product_id}`;
+
+    fetch(url)
+        .then(async (response) => {
             if (win.setLoading) {
                 win.setLoading(false);
             }
-            win.update(response.responseText);
-        },
-        failure: function (response) {
+            if (!response.ok) {
+                win.update("Failed to load content. Status: " + response.status);
+                return;
+            }
+            const text = await response.text();
+            win.update(`<pre>${text}</pre>`);
+        })
+        .catch((err) => {
             if (win.setLoading) {
                 win.setLoading(false);
             }
-            win.update(
-                "Failed to load content. Status: " + response.status
-            );
-        },
-    });
+            win.update("Failed to load content. Error: " + err);
+        });
 }
 
 function hideTextWindow() {
@@ -52,4 +53,4 @@ function hideTextWindow() {
     }
 }
 
-export { getTextWindow, loadTextWindow, hideTextWindow };
+export { getTextWindow, loadTextProductInWindow, hideTextWindow };

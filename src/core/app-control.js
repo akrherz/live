@@ -1,3 +1,4 @@
+import { msgBus } from "../events/MsgBus.js";
 /**
  * Application Core
  */
@@ -153,7 +154,7 @@ Application.Control = {
                 btn.setIcon('icons/volume.png');
                 Application.audioMuted = false;
                 btn.soundOn = true;
-                Application.MsgBus.fireEvent("soundevent", "default");
+                msgBus.fire("soundevent", "default");
             }
         },
         arrowHandler : function() {
@@ -344,7 +345,7 @@ Application.ServiceGuard = {
         }
         // if (!Application.XMPPConn.authenticated &&
         // Application.log("Encountered Unaccounted for disconnect!");
-        // Application.MsgBus.fireEvent('loggingout');
+        // msgBus.fire('loggingout');
         // }
         if (Application.XMPPConn.authenticated) {
             if (Application.XMPPConn.errors === 0) {
