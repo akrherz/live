@@ -4,7 +4,7 @@
  */
 
 import { $msg, $pres, $iq, Strophe } from 'strophe.js';
-import { LiveConfig } from "../src/config.js";
+import { LiveConfig } from "../../src/config.js";
 
 Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
     title : 'Where to send this message?',
