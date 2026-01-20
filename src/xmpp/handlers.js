@@ -526,9 +526,12 @@ function onPresence(msg) {
 }
 
 function getMUCIcon(affiliation) {
-    if (affiliation == "owner") return "icons/owner.png";
-    if (affiliation == "admin") return "icons/admin.png";
-
+    if (affiliation === "owner") {
+        return "icons/owner.png";
+    }
+    if (affiliation === "admin") {
+        return "icons/admin.png";
+    }
     return "icons/participant.png";
 }
 
@@ -691,13 +694,13 @@ function presenceParser(msg) {
             // affiliation='none' role='none' <-- Leave Room
             // affiliation='owner' role='moderator'
 
-            if (!child && role != "visitor") {
+            if (!child && role !== "visitor") {
                 mcp.joinedChat = true;
                 if (roomUsersRoot) {
                     roomUsersRoot.appendChild({
                         affiliation: affiliation,
                         role: role,
-                        icon: getMUCIcon(affiliation, role),
+                        icon: getMUCIcon(affiliation),
                         text: Strophe.getResourceFromJid(from),
                         jid: jid,
                         leaf: true,
@@ -981,7 +984,7 @@ function geomParser(msg, isDelayed) {
             ) {
                 if (
                     !isDelayed ||
-                    (isDelayed && new Date() - valid < 7200000)
+                    (new Date() - valid < 7200000)
                 ) {
                     const lsrs = Application.lsrStore.layer;
                     lsrs.addFeatures([feature]);
