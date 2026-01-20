@@ -1,3 +1,4 @@
+import { msgBus } from "../events/MsgBus.js";
 /**
  * XMPP Protocol Handlers
  * Connection, message, presence, roster, and IQ handlers
@@ -108,7 +109,7 @@ function onConnect(status) {
         Application.log("Strophe.Status.CONNECTING...");
     } else if (status === Strophe.Status.ERROR) {
         Application.log("Strophe.Status.ERROR...");
-        // Application.MsgBus.fireEvent("loggedout");
+        // msgBus.fire("loggedout");
     } else if (status === Strophe.Status.AUTHFAIL) {
         Application.log("Strophe.Status.AUTHFAIL...");
         Application.RECONNECT = false;
@@ -118,16 +119,16 @@ function onConnect(status) {
         Application.XMPPConn.disconnect();
     } else if (status === Strophe.Status.CONNFAIL) {
         Application.log("Strophe.Status.CONNFAIL...");
-        // Application.MsgBus.fireEvent("loggedout");
+        // msgBus.fire("loggedout");
     } else if (status === Strophe.Status.DISCONNECTED) {
         Application.log("Strophe.Status.DISCONNECTED...");
-        Application.MsgBus.fireEvent("loggingout");
+        msgBus.fire("loggingout");
         if (Application.RECONNECT) {
             /* Lets wait 5 seconds before trying to reconnect */
             Application.log("Relogging in after 3 seconds delay");
             Ext.defer(doLogin, 3000, this);
         } else {
-            Application.MsgBus.fireEvent("loggedout");
+            msgBus.fire("loggedout");
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
@@ -232,7 +233,7 @@ function onConnect(status) {
             .tree();
         Application.XMPPConn.sendIQ(stanza, parseViews);
 
-        Application.MsgBus.fireEvent("loggedin");
+        msgBus.fire("loggedin");
     }
 }
 /*
@@ -373,7 +374,7 @@ function parseBookmarks(msg) {
              */
             Application.log("Autojoining MUC: " + jid);
             Ext.defer(function () {
-                Application.MsgBus.fireEvent(
+                msgBus.fire(
                     "joinchat",
                     this.jid,
                     this.nick,
@@ -869,7 +870,7 @@ function messageParser(msg) {
         let cp = Ext.getCmp("chatpanel").getChat(jid);
         if (!cp) {
             cp = Ext.getCmp("chatpanel").addChat(jid);
-            Application.MsgBus.fireEvent("soundevent", "new_conversation");
+            msgBus.fire("soundevent", "new_conversation");
         }
         cp.gp.store.add({
             ts: stamp,

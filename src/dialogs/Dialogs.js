@@ -1,3 +1,4 @@
+import { msgBus } from "../events/MsgBus.js";
 import { $iq } from "strophe.js";
 import { LiveConfig } from "../config.js";
 import { syncPreferences } from "../xmpp/handlers.js";
@@ -140,7 +141,7 @@ Application.soundPrefs = new Ext.Window({
             listeners: {
                 changecomplete: function (_slider, newval) {
                     Application.setPreference("volume", newval);
-                    Application.MsgBus.fireEvent("soundevent", "default");
+                    msgBus.fire("soundevent", "default");
                 },
             },
             fieldLabel: "Volume",
@@ -541,7 +542,7 @@ Application.JoinChatroomDialog = new Ext.Window({
                         });
                     }
                 }
-                Application.MsgBus.fireEvent(
+                msgBus.fire(
                     "joinchat",
                     room,
                     handle,

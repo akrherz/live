@@ -3,8 +3,10 @@
  * MsgBus events, sound system, chat events
  */
 
+
 import { LiveConfig } from "../config.js";
 import { $iq, $pres } from "strophe.js";
+import { msgBus } from "./MsgBus.js";
 
 export function UTCStringToDate(dtStr, format) {
     const dt = Date.parseDate(dtStr, format);
@@ -17,11 +19,7 @@ export function UTCStringToDate(dtStr, format) {
     return dt;
 }
 
-Application.MsgBus = new Ext.util.Observable();
-// In ExtJS 6, addEvents is not needed - Observable automatically supports any event
-// Application.MsgBus.addEvents("message");
-// Application.MsgBus.addEvents("loggedin");
-// Application.MsgBus.addEvents("loggedout");
+
 
 // Audio cache for reusing Audio objects
 const audioCache = {};
@@ -56,7 +54,7 @@ Application.playSound = function (sidx) {
     });
 };
 
-Application.MsgBus.on("soundevent", function (sevent) {
+msgBus.on("soundevent", function (sevent) {
     const enable = Application.getPreference(
         "sound::" + sevent + "::enabled",
         "true"
@@ -71,7 +69,7 @@ Application.MsgBus.on("soundevent", function (sevent) {
     Application.playSound(sidx);
 });
 
-Application.MsgBus.on("loggingout", function () {
+msgBus.on("loggingout", function () {
     /* Remove chatrooms from view */
     Ext.getCmp("chatpanel").items.each(function (panel) {
         if (panel.chatType === "groupchat") {
@@ -100,11 +98,11 @@ Application.MsgBus.on("loggingout", function () {
     }
 });
 
-Application.MsgBus.on("loggedout", function () {
+msgBus.on("loggedout", function () {
     Ext.getCmp("loginwindow").show();
 });
 
-Application.MsgBus.on("loggedin", function () {
+msgBus.on("loggedin", function () {
     Ext.getCmp("loginwindow").hide();
 
     Application.XMPPConn.send(
@@ -118,7 +116,7 @@ Application.MsgBus.on("loggedin", function () {
     );
 });
 
-Application.MsgBus.on("joinchat", function (room, handle, anonymous) {
+msgBus.on("joinchat", function (room, handle, anonymous) {
     if (handle === null || handle === "") {
         handle = Application.USERNAME;
     }
