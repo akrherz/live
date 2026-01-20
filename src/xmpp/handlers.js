@@ -1055,7 +1055,7 @@ Application.updateColors = function () {
 /*
  * Sync application Preferences upstream!
  */
-Application.syncPreferences = function () {
+function syncPreferences() {
     Application.log("Saving preferences to server...");
     const stanza = $iq({
         type: "set",
@@ -1134,7 +1134,7 @@ Application.prefStore = new Ext.data.Store({
                 return true;
             }
             /* save preferences to xmpp private storage */
-            Application.syncPreferences();
+            syncPreferences();
         },
         update: (st, record) => {
             Application.log("prefStore update event fired...");
@@ -1143,7 +1143,7 @@ Application.prefStore = new Ext.data.Store({
                 return true;
             }
             /* save preferences to xmpp private storage */
-            Application.syncPreferences();
+            syncPreferences();
 
             if (
                 record.get("key") === "fgcolor" ||
@@ -1155,4 +1155,4 @@ Application.prefStore = new Ext.data.Store({
     },
 });
 
-export { login, doAnonymousLogin };
+export { login, doAnonymousLogin, syncPreferences };

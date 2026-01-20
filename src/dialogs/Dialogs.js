@@ -1,5 +1,6 @@
 import { $iq } from "strophe.js";
 import { LiveConfig } from "../config.js";
+import { syncPreferences } from "../xmpp/handlers.js";
 
 Application.saveViews = function () {
     const stanza = $iq({
@@ -124,7 +125,7 @@ Application.soundPrefs = new Ext.Window({
                         );
                     });
                 Application.soundPrefs.hide();
-                Application.syncPreferences();
+                syncPreferences();
             },
         },
     ],
