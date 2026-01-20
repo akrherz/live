@@ -4,6 +4,7 @@
  */
 import { requireElement } from "iemjs";
 import { doLogin } from "../core/app-control.js";
+import { doAnonymousLogin } from "../xmpp/handlers.js";
 
 /**
  * Creates a login panel with HTML content
@@ -72,7 +73,7 @@ export const LoginPanel = {
 
             const anonBtn = requireElement("anonymous-btn");
             anonBtn.addEventListener("click", () => {
-                Application.doAnonymousLogin();
+                doAnonymousLogin();
             });
         },
     },

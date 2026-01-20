@@ -43,7 +43,7 @@ function login(username, password) {
 };
 
 // Anonymous Login!
-Application.doAnonymousLogin = function () {
+function doAnonymousLogin() {
     if (typeof Application.XMPPConn === "undefined") {
         buildXMPP();
     }
@@ -1155,4 +1155,4 @@ Application.prefStore = new Ext.data.Store({
     },
 });
 
-export { login };
+export { login, doAnonymousLogin };
