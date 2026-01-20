@@ -746,21 +746,6 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             this
         );
         const config = {
-            // In ExtJS 6, use listeners to handle new records and scroll to them
-            listeners: {
-                add: function(store, records) {
-                    // Auto-scroll to the latest message after a short delay to ensure rendering
-                    Ext.defer(function() {
-                        const view = this.getView();
-                        if (view && records.length > 0) {
-                            const lastRecord = records[records.length - 1];
-                            view.focusRow(lastRecord);
-                        }
-                    }, 50, this);
-                },
-                scope: this
-            },
-
             selModel: {
                 type: "rowmodel",
                 listeners: {
@@ -779,6 +764,16 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
             listeners: {
+                add: function(store, records) {
+                    // Auto-scroll to the latest message after a short delay to ensure rendering
+                    Ext.defer(function() {
+                        const view = this.getView();
+                        if (view && records.length > 0) {
+                            const lastRecord = records[records.length - 1];
+                            view.focusRow(lastRecord);
+                        }
+                    }, 50, this);
+                },
                 render: function (p) {
                     // In ExtJS 6, access the grid view element directly
                     const viewEl = p.getView().getEl();
