@@ -24,8 +24,11 @@ function buildXMPP() {
 
 /*
  * Called when we wish to login!
+ *
+ * @param {string} username The username
+ * @param {string} password The password
  */
-Application.login = function (username, password) {
+function login(username, password) {
     const jid =
         username + "@" + Application.XMPPHOST + "/" + Application.XMPPRESOURCE;
     if (typeof Application.XMPPConn === "undefined") {
@@ -1170,3 +1173,5 @@ Application.prefStore = new Ext.data.Store({
         },
     },
 });
+
+export { login };
