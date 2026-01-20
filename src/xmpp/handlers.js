@@ -8,6 +8,7 @@ import WKT from "ol/format/WKT";
 import { UTCStringToDate } from "../events/event-handlers.js";
 import { onBuddyPresence } from "../chat/ChatComponents.js";
 import { iembotFilter } from "../utils/grid-utilities.js";
+import { doLogin } from "../core/app-control.js";
 
 function buildXMPP() {
     Application.log("Initializing XMPPConn Obj");
@@ -75,7 +76,7 @@ Application.register = function () {
             document.getElementById("password").value =
                 Application.XMPPConn.register.fields.password;
             Application.XMPPConn.disconnect();
-            Application.doLogin();
+            doLogin();
         } else if (status === Strophe.Status.CONFLICT) {
             Application.log("Contact already existed!");
         } else if (status === Strophe.Status.NOTACCEPTABLE) {
@@ -102,32 +103,32 @@ Application.register = function () {
  * 3. User wants to log out...
  */
 function onConnect(status) {
-    if (status == Strophe.Status.CONNECTING) {
+    if (status === Strophe.Status.CONNECTING) {
         Application.log("Strophe.Status.CONNECTING...");
-    } else if (status == Strophe.Status.ERROR) {
+    } else if (status === Strophe.Status.ERROR) {
         Application.log("Strophe.Status.ERROR...");
         // Application.MsgBus.fireEvent("loggedout");
-    } else if (status == Strophe.Status.AUTHFAIL) {
+    } else if (status === Strophe.Status.AUTHFAIL) {
         Application.log("Strophe.Status.AUTHFAIL...");
         Application.RECONNECT = false;
         Ext.getCmp("loginpanel").addMessage(
             "Authentication failed, please check username and password..."
         );
         Application.XMPPConn.disconnect();
-    } else if (status == Strophe.Status.CONNFAIL) {
+    } else if (status === Strophe.Status.CONNFAIL) {
         Application.log("Strophe.Status.CONNFAIL...");
         // Application.MsgBus.fireEvent("loggedout");
-    } else if (status == Strophe.Status.DISCONNECTED) {
+    } else if (status === Strophe.Status.DISCONNECTED) {
         Application.log("Strophe.Status.DISCONNECTED...");
         Application.MsgBus.fireEvent("loggingout");
         if (Application.RECONNECT) {
             /* Lets wait 5 seconds before trying to reconnect */
             Application.log("Relogging in after 3 seconds delay");
-            Ext.defer(Application.doLogin, 3000, this);
+            Ext.defer(doLogin, 3000, this);
         } else {
             Application.MsgBus.fireEvent("loggedout");
         }
-    } else if (status == Strophe.Status.AUTHENTICATING) {
+    } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
     } else if (status == Strophe.Status.DISCONNECTING) {
         Application.log("Strophe.Status.DISCONNECTING...");
@@ -735,8 +736,10 @@ function onMessage(msg) {
 // http://stackoverflow.com/questions/37684
 Application.replaceURLWithHTMLLinks = function (text) {
     const exp =
-        /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
-    if (text == null) return null;
+        /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
+    if (text === null) {
+        return null;
+    }
     return text.replace(exp, "<a href='$1'>$1</a>");
 };
 
@@ -745,12 +748,12 @@ function messageParser(msg) {
     const from = msg.getAttribute("from");
     const type = msg.getAttribute("type");
     const elems = msg.getElementsByTagName("body");
-    const x = msg.querySelectorAll("delay[xmlns='urn:xmpp:delay']");
+    let x = msg.querySelectorAll("delay[xmlns='urn:xmpp:delay']");
     const html = msg.getElementsByTagName("html");
     const body = elems[0];
     let txt = "";
     let isDelayed = false;
-    let stamp;
+    let stamp = null;
 
     /*
      * We need to simplify the message into something that
@@ -761,8 +764,8 @@ function messageParser(msg) {
             .getElementsByTagName("html")[0]
             .getElementsByTagName("body");
         txt = navigator.userAgent.match(/msie/i) ? v[0].xml : v[0].innerHTML;
-        txt = txt.replace(/\<p/g, "<span").replace(/\<\/p\>/g, "</span>");
-        if (txt == "") {
+        txt = txt.replace(/<p/g, "<span").replace(/<\/p>/g, "</span>");
+        if (txt === "") {
             Application.log("Message Failure:" + msg);
             txt = Application.replaceURLWithHTMLLinks(Strophe.getText(body));
         }
@@ -780,12 +783,12 @@ function messageParser(msg) {
         stamp = new Date();
     }
 
-    if (type == "groupchat") {
+    if (type === "groupchat") {
         console.log('[MUC] Received groupchat message from:', from);
         console.log('[MUC] Message text length:', txt ? txt.length : 0, 'text:', txt);
         /* Look to see if a product_id is embedded */
         let product_id = null;
-        const x = msg.getElementsByTagName("x");
+        x = msg.getElementsByTagName("x");
         for (let i = 0; i < x.length; i++) {
             if (x[i].getAttribute("product_id")) {
                 product_id = x[i].getAttribute("product_id");

@@ -1,6 +1,5 @@
 /**
  * Application Core
- * Application.Control, doLogin, ServiceGuard
  */
 
 import { $pres, Strophe } from 'strophe.js';
@@ -11,7 +10,7 @@ Application.log = function(text) {
 };
 
 function onPresenceCheck(item) {
-    if (item.xmpp == 'available') {
+    if (item.xmpp === 'available') {
         Application.XMPPConn.send($pres());
     } else {
         Application.XMPPConn.send($pres().c('show', 'away').up().c('status',
@@ -42,7 +41,7 @@ Application.Control = {
                                     if (checked) {
                                         n.ui.show();
                                     } else {
-                                        if (n.data.presence == 'offline') {
+                                        if (n.data.presence === 'offline') {
                                             n.ui.hide();
                                         }
                                     }
@@ -298,7 +297,7 @@ Application.Control = {
             }]
 };
 
-Application.doLogin = function() {
+function doLogin() {
     Application.RECONNECT = true;
     Application.ATTEMPTS += 1;
     if (Application.ATTEMPTS > 11){
@@ -320,11 +319,11 @@ Application.doLogin = function() {
     const passwordField = Ext.getCmp('password') || document.getElementById('password');
     const password = passwordField.getValue ? passwordField.getValue() : passwordField.value;
 
-    if (username == "") {
+    if (username === "") {
         Application.log("Invalid Username");
         return;
     }
-    if (password == "") {
+    if (password === "") {
         Application.log("Invalid Password");
         return;
     }
@@ -347,7 +346,7 @@ Application.ServiceGuard = {
         // Application.MsgBus.fireEvent('loggingout');
         // }
         if (Application.XMPPConn.authenticated) {
-            if (Application.XMPPConn.errors == 0) {
+            if (Application.XMPPConn.errors === 0) {
                 // punjab is pinging openfire for us, might as well remove
                 // Application.XMPPConn.send($iq({'type': 'get'}).c('ping', {
                 // xmlns: 'urn:xmpp:ping' } ));
@@ -360,3 +359,4 @@ Application.ServiceGuard = {
     interval : 120000
 };
 
+export { doLogin };

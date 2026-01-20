@@ -3,6 +3,7 @@
  * Simple panel with login content
  */
 import { requireElement } from "iemjs";
+import { doLogin } from "../core/app-control.js";
 
 /**
  * Creates a login panel with HTML content
@@ -61,7 +62,7 @@ export const LoginPanel = {
             const form = requireElement("login-form");
             form.addEventListener("submit", (e) => {
                 e.preventDefault();
-                Application.doLogin();
+                doLogin();
             });
 
             const debugBtn = requireElement("debug-btn");

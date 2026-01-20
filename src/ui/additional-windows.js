@@ -17,7 +17,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
         width : 450
     },
     initComponent : function(){
-        
+
         this.buttons = [{
             text : 'Send Message',
             scope : this,
@@ -45,7 +45,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
                 this.ownerCt.ownerCt.close();
             }
         }];
-        
+
         Application.AllChatMessageWindow.superclass.initComponent.apply(this,
                 arguments);
         this.buildItems(this.message);
@@ -53,12 +53,12 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
     },
     addAvailableRooms : function(){
         Ext.getCmp("chatpanel").items.each(function(panel) {
-            if (panel.chatType != 'groupchat') { return; }
+            if (panel.chatType !== 'groupchat') { return; }
             if (panel.anonymous) { return; }
             const room = Strophe.getNodeFromJid(panel.barejid);
-            if (this.items.items[1].find('name',room).length == 0){
+            if (this.items.items[1].find('name',room).length === 0){
                 const tbl = this.find('name', 'columns')[0];
-                var pos = (tbl.entries % 3) ;
+                const pos = (tbl.entries % 3) ;
                 //console.log("Adding room:"+ room +" at pos:"+pos);
                 tbl.items.items[pos].add({
                         xtype : 'checkbox',
@@ -111,7 +111,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
 
 Application.buildAddBuddy = function(user, alias, group){
     if (Ext.getCmp("addbuddy")){ return; }
-    var win = new Ext.Window({
+    const win = new Ext.Window({
         title : 'Add Buddy',
         layout : 'form',
         width : 300,
@@ -120,7 +120,7 @@ Application.buildAddBuddy = function(user, alias, group){
         items : [{
             xtype : 'textfield',
             fieldLabel : 'Weather.IM ID',
-            value : user        
+            value : user
         },{
             xtype : 'textfield',
             fieldLabel : 'Alias',
@@ -133,9 +133,9 @@ Application.buildAddBuddy = function(user, alias, group){
         buttons : [{
             text : 'Add Buddy',
             handler : function(btn){
-                var user = btn.ownerCt.ownerCt.items.items[0].getValue();
-                var alias = btn.ownerCt.ownerCt.items.items[1].getValue();
-                var group = btn.ownerCt.ownerCt.items.items[2].getValue();
+                user = btn.ownerCt.ownerCt.items.items[0].getValue();
+                alias = btn.ownerCt.ownerCt.items.items[1].getValue();
+                group = btn.ownerCt.ownerCt.items.items[2].getValue();
                 /* <iq from='juliet@example.com/balcony'
                        id='ph1xaz53'
                        type='set'>
@@ -146,10 +146,10 @@ Application.buildAddBuddy = function(user, alias, group){
                        </item>
                      </query>
                    </iq> */
-                var stanza = $pres({to: user +"@"+ Application.XMPPHOST,
+                let stanza = $pres({to: user +"@"+ Application.XMPPHOST,
                     type: 'subscribe'});
                 Application.XMPPConn.send(stanza.tree());
-                
+
                 stanza = $iq({
                     type : 'set'
                 }).c('query', {

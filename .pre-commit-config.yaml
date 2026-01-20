@@ -5,4 +5,8 @@ repos:
     rev: 'v10.0.0-rc.0'
     hooks:
       - id: eslint
+        additional_dependencies:
+            - "eslint@v9.27.0"
+            - "@eslint/js@v9.27.0"
+            - "globals"
 
