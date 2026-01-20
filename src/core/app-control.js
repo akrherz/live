@@ -4,6 +4,7 @@
 
 import { $pres, Strophe } from 'strophe.js';
 import { saveBookmarks } from '../dialogs/Dialogs.js';
+import { login } from "../xmpp/handlers.js";
 
 Application.log = function(text) {
     console.log("Application.log:", text);
@@ -327,7 +328,7 @@ function doLogin() {
         Application.log("Invalid Password");
         return;
     }
-    Application.login(username, password);
+    login(username, password);
 };
 
 

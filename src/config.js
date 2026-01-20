@@ -9,7 +9,7 @@ if (typeof window !== 'undefined') {
 }
 
 // User identity and connection settings
-export const config = {
+export const LiveConfig = {
   NAME: "Weather.IM Live",
   BOSH: "https://weather.im/http-bind/",
   RECONNECT: true,
@@ -17,19 +17,15 @@ export const config = {
   XMPPHOST: "weather.im",
   XMPPMUCHOST: "conference.weather.im",
   XMPPRESOURCE: "weatherim",
-  
+
   // Login options
   LOGIN_OPT_USER: "true",
-  LOGIN_OPT_ANONYMOUS: "true", 
-  LOGIN_OPT_REGISTER: "true",
-  
-  // Debug mode
-  DEBUGMODE: false
+  LOGIN_OPT_ANONYMOUS: "true",
+  LOGIN_OPT_REGISTER: "true"
+
 };
 
 // Apply config to global Application object for compatibility
 if (typeof window !== 'undefined' && window.Application) {
-  Object.assign(window.Application, config);
+  Object.assign(window.Application, LiveConfig);
 }
-
-export default config;

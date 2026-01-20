@@ -1,6 +1,7 @@
 import { $msg, $pres, Strophe } from "strophe.js";
 import { loadTextWindow, hideTextWindow } from "../ui/text-window.js";
 import { iembotFilter, showHtmlVersion } from "../utils/grid-utilities.js";
+import { LiveConfig } from "../config.js";
 
 Application.MUCChatPanel = Ext.extend(Ext.Panel, {
     hideMode: "offsets",
@@ -29,7 +30,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
 
         this.items = [gridPanel, textEntry];
 
-        if (this.initialConfig.chatType != "allchats") {
+        if (this.initialConfig.chatType !== "allchats") {
             const roomUsers = Ext.create('Application.MUCRoomUsers', {
                 region: "east",
                 width: 175,
@@ -42,7 +43,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
         } else {
             this.items[1].emptyText = "Type message here";
         }
-        const config = {
+        const iconfig = {
             listeners: {
                 activate: function (self) {
                     // In ExtJS 6, just update the icon class when tab becomes active
@@ -56,7 +57,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
                 },
             },
         };
-        Ext.apply(this, Ext.apply(this.initialConfig, config));
+        Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         Application.MUCChatPanel.superclass.initComponent.apply(
             this,
@@ -70,17 +71,19 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
     },
     getJidByHandle: function (handle) {
         const node = this.roomusers.getRootNode().findChild("text", handle);
-        if (node == null) return null;
-        if (
-            Strophe.getDomainFromJid(node.data.jid) ==
-            Application.XMPPMUCHOST
-        )
+        if (node === null) {
             return null;
+        }
+        if (
+            Strophe.getDomainFromJid(node.data.jid) === LiveConfig.XMPPMUCHOST
+        ) {
+            return null;
+        }
         return node.data.jid;
     },
     buildItems: function () {
         // References are already set in initComponent, now just configure them
-        if (this.chatType == "allchats") {
+        if (this.chatType === "allchats") {
             //this.gp.toolbars[0].items.items[4].setText("Sounds Off");
             const toolbar = this.gp.down("toolbar");
             if (toolbar && toolbar.items && toolbar.items.items[4]) {
@@ -161,7 +164,7 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
         this.te = textEntry;
         this.items = [gridPanel, textEntry];
 
-        const config = {
+        const iconfig = {
             listeners: {
                 activate: function (self) {
                     self.setIconCls("tabno");
@@ -184,7 +187,7 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
                 },
             },
         };
-        Ext.apply(this, Ext.apply(this.initialConfig, config));
+        Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         Application.ChatPanel.superclass.initComponent.apply(this, arguments);
         this.buildItems();
@@ -223,7 +226,7 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
                 },
             },
         };
-        const config = {
+        const iconfig = {
             plugins: new Ext.ux.DataTip({
                 tpl: "<div>JID: {jid}<br />Affiliation: {affiliation}<br />Role: {role}</div>",
                 constrainPosition: true,
@@ -239,8 +242,8 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
                     /* Now, we either talk with private or private via MUC */
                     let jid = n.data.jid;
                     if (
-                        Strophe.getDomainFromJid(n.data.jid) ==
-                        Application.XMPPHOST
+                        Strophe.getDomainFromJid(n.data.jid) ===
+                        LiveConfig.XMPPHOST
                     ) {
                         jid = Strophe.getBareJidFromJid(n.data.jid);
                     }
@@ -253,7 +256,7 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
                 },
             },
         };
-        Ext.apply(this, Ext.apply(this.initialConfig, config));
+        Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         Application.MUCRoomUsers.superclass.initComponent.apply(
             this,
@@ -745,7 +748,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
             this
         );
-        const config = {
+        const iconfig = {
             selModel: {
                 type: "rowmodel",
                 listeners: {
@@ -813,7 +816,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
         };
-        Ext.apply(this, config);
+        Ext.apply(this, iconfig);
 
         Application.ChatGridPanel.superclass.initComponent.apply(
             this,
@@ -1270,14 +1273,14 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
 // Implements the drop behavior of the tab panel
 /** @private */
 Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
-    constructor: function (tabpanel, config) {
+    constructor: function (tabpanel, iconfig) {
         this.tabpanel = tabpanel;
         // In ExtJS 6, get the tab bar element instead of stripWrap
         const targetEl = tabpanel.tabBar ? tabpanel.tabBar.el : tabpanel.el;
         Ext.ux.panel.DDTabPanel.DropTarget.superclass.constructor.call(
             this,
             targetEl,
-            config
+            iconfig
         );
     },
 
@@ -1389,8 +1392,8 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
     split: true,
     enableTabScroll: true,
     initComponent: function () {
-        const config = {};
-        Ext.apply(this, Ext.apply(this.initialConfig, config));
+        const iconfig = {};
+        Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         Application.ChatTabPanel.superclass.initComponent.apply(
             this,
