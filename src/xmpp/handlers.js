@@ -128,7 +128,7 @@ function onConnect(status) {
         } else {
             Application.MsgBus.fireEvent("loggedout");
         }
-    } else if (status == Strophe.Status.AUTHENTICATING) {
+    } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
     } else if (status == Strophe.Status.DISCONNECTING) {
         Application.log("Strophe.Status.DISCONNECTING...");
@@ -748,12 +748,12 @@ function messageParser(msg) {
     const from = msg.getAttribute("from");
     const type = msg.getAttribute("type");
     const elems = msg.getElementsByTagName("body");
-    const x = msg.querySelectorAll("delay[xmlns='urn:xmpp:delay']");
+    let x = msg.querySelectorAll("delay[xmlns='urn:xmpp:delay']");
     const html = msg.getElementsByTagName("html");
     const body = elems[0];
     let txt = "";
     let isDelayed = false;
-    let stamp;
+    let stamp = null;
 
     /*
      * We need to simplify the message into something that
@@ -765,7 +765,7 @@ function messageParser(msg) {
             .getElementsByTagName("body");
         txt = navigator.userAgent.match(/msie/i) ? v[0].xml : v[0].innerHTML;
         txt = txt.replace(/<p/g, "<span").replace(/<\/p>/g, "</span>");
-        if (txt == "") {
+        if (txt === "") {
             Application.log("Message Failure:" + msg);
             txt = Application.replaceURLWithHTMLLinks(Strophe.getText(body));
         }
@@ -783,12 +783,12 @@ function messageParser(msg) {
         stamp = new Date();
     }
 
-    if (type == "groupchat") {
+    if (type === "groupchat") {
         console.log('[MUC] Received groupchat message from:', from);
         console.log('[MUC] Message text length:', txt ? txt.length : 0, 'text:', txt);
         /* Look to see if a product_id is embedded */
         let product_id = null;
-        const x = msg.getElementsByTagName("x");
+        x = msg.getElementsByTagName("x");
         for (let i = 0; i < x.length; i++) {
             if (x[i].getAttribute("product_id")) {
                 product_id = x[i].getAttribute("product_id");

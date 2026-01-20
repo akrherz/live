@@ -62,9 +62,10 @@ Strophe.addConnectionPlugin('disco', {
      *   boolean
      */
     addFeature: function(var_name) {
-        for (var i = 0; i < this._features.length; i++) {
-            if (this._features[i] == var_name)
+        for (let i = 0; i < this._features.length; i++) {
+            if (this._features[i] === var_name) {
                 return false;
+            }
         }
         this._features.push(var_name);
         return true;

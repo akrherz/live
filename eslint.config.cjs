@@ -29,7 +29,9 @@ module.exports = [
             'no-eval': 'warn',
             'no-var': 'warn',
             'prefer-const': 'error',
+            'no-redeclare': 'error',
             semi: 'error',
+            'no-shadow': 'error',
         },
     },
 ];
