@@ -1,4 +1,5 @@
 import { $iq } from "strophe.js";
+import { LiveConfig } from "../config.js";
 
 Application.saveViews = function () {
     const stanza = $iq({
@@ -36,7 +37,9 @@ export function saveBookmarks() {
     /* Save bookmarks to the server, please */
     const bookmarksTree = Ext.getCmp("bookmarks");
     const root = bookmarksTree ? bookmarksTree.getRootNode() : null;
-    if (!root) return;
+    if (!root) {
+        return;
+    }
 
     const stanza = $iq({
         type: "set",
@@ -232,7 +235,7 @@ Application.boundsFavorites = new Ext.Window({
             handler: function () {
                 for (let i = 1; i < 6; i++) {
                     const nval = Ext.getCmp("mfv" + i).getValue();
-                    if (nval != "") {
+                    if (nval !== "") {
                         Ext.getCmp("fm" + i).setText(nval);
                     }
                 }
@@ -469,8 +472,8 @@ Application.CreatePrivateChat = new Ext.Window({
             scope: privform,
             handler: function () {
                 let barejid = this.getForm().findField("username").getValue();
-                if (barejid.indexOf("@") == -1) {
-                    barejid = barejid + "@" + Application.XMPPHOST;
+                if (barejid.indexOf("@") === -1) {
+                    barejid = barejid + "@" + LiveConfig.XMPPHOST;
                 }
                 Application.CreatePrivateChat.hide();
                 let cp = Ext.getCmp("chatpanel").getChat(barejid);
@@ -503,7 +506,7 @@ Application.JoinChatroomDialog = new Ext.Window({
                 const roomname = this.getForm()
                     .findField("roomname")
                     .getValue();
-                const room = roomname + "@conference." + Application.XMPPHOST;
+                const room = roomname + "@conference." + LiveConfig.XMPPHOST;
                 const handle = this.getForm()
                     .findField("roomhandle")
                     .getValue();
@@ -519,7 +522,7 @@ Application.JoinChatroomDialog = new Ext.Window({
                     let alias = this.getForm()
                         .findField("roomalias")
                         .getValue();
-                    if (alias == "") {
+                    if (alias === "") {
                         alias = roomname;
                     }
                     /* Add to bookmarks widget */

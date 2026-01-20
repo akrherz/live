@@ -4,6 +4,7 @@
  */
 
 import { $msg, $pres, $iq, Strophe } from 'strophe.js';
+import { LiveConfig } from "../src/config.js";
 
 Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
     title : 'Where to send this message?',
@@ -146,7 +147,7 @@ Application.buildAddBuddy = function(user, alias, group){
                        </item>
                      </query>
                    </iq> */
-                let stanza = $pres({to: user +"@"+ Application.XMPPHOST,
+                let stanza = $pres({to: user +"@"+ LiveConfig.XMPPHOST,
                     type: 'subscribe'});
                 Application.XMPPConn.send(stanza.tree());
 
@@ -155,7 +156,7 @@ Application.buildAddBuddy = function(user, alias, group){
                 }).c('query', {
                     xmlns : 'jabber:iq:roster'
                 }).c('item', {
-                    jid : user +"@"+ Application.XMPPHOST,
+                    jid : user +"@"+ LiveConfig.XMPPHOST,
                     name : alias
                 }).c('group', group);
                 Application.XMPPConn.send(stanza.tree());

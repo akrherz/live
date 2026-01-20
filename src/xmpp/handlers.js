@@ -9,17 +9,15 @@ import { UTCStringToDate } from "../events/event-handlers.js";
 import { onBuddyPresence } from "../chat/ChatComponents.js";
 import { iembotFilter } from "../utils/grid-utilities.js";
 import { doLogin } from "../core/app-control.js";
+import { LiveConfig } from "../config.js";
+
 
 function buildXMPP() {
     Application.log("Initializing XMPPConn Obj");
-    Application.XMPPConn = new Strophe.Connection(Application.BOSH);
+    Application.XMPPConn = new Strophe.Connection(LiveConfig.BOSH);
     Application.XMPPConn.disco.addFeature(
         "http://jabber.org/protocol/chatstates"
     );
-    if (Application.DEBUGMODE) {
-        Application.XMPPConn.rawInput = rawInput;
-        Application.XMPPConn.rawOutput = rawOutput;
-    }
 }
 
 /*
@@ -30,7 +28,7 @@ function buildXMPP() {
  */
 function login(username, password) {
     const jid =
-        username + "@" + Application.XMPPHOST + "/" + Application.XMPPRESOURCE;
+        username + "@" + LiveConfig.XMPPHOST + "/" + LiveConfig.XMPPRESOURCE;
     if (typeof Application.XMPPConn === "undefined") {
         buildXMPP();
     }
@@ -49,7 +47,7 @@ Application.doAnonymousLogin = function () {
     if (typeof Application.XMPPConn === "undefined") {
         buildXMPP();
     }
-    Application.XMPPConn.connect(Application.XMPPHOST, null, onConnect);
+    Application.XMPPConn.connect(LiveConfig.XMPPHOST, null, onConnect);
 };
 
 // Registration!
@@ -97,7 +95,7 @@ Application.register = function () {
             // Do other stuff
         }
     };
-    Application.XMPPConn.register.connect(Application.XMPPHOST, callback);
+    Application.XMPPConn.register.connect(LiveConfig.XMPPHOST, callback);
 };
 
 /*
@@ -133,13 +131,13 @@ function onConnect(status) {
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
-    } else if (status == Strophe.Status.DISCONNECTING) {
+    } else if (status === Strophe.Status.DISCONNECTING) {
         Application.log("Strophe.Status.DISCONNECTING...");
         Application.XMPPConn.flush();
         //Application.XMPPConn.disconnect();
-    } else if (status == Strophe.Status.ATTACHED) {
+    } else if (status === Strophe.Status.ATTACHED) {
         Application.log("Strophe.Status.ATTACHED...");
-    } else if (status == Strophe.Status.CONNECTED) {
+    } else if (status === Strophe.Status.CONNECTED) {
         Application.log("Strophe.Status.CONNECTED...");
         Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
         Application.RECONNECT = true;
@@ -185,7 +183,7 @@ function onConnect(status) {
         /* Attempt to re-establish already joined chatrooms */
         let rejoinedRooms = 0;
         Ext.getCmp("chatpanel").items.each(function (panel) {
-            if (panel.chatType == "groupchat") {
+            if (panel.chatType === "groupchat") {
                 Application.log("Attempting to rejoin MUC: " + panel.barejid);
                 const p = $pres({
                     to: panel.barejid + "/" + panel.handle,
@@ -242,16 +240,16 @@ function onConnect(status) {
  */
 function updateMap() {
     const lstring = Application.getPreference("layers");
-    if (lstring == null) {
+    if (lstring === null) {
         return;
     }
     const tokens = lstring.split("||");
     for (let i = 0; i < tokens.length; i++) {
-        if (tokens[i] == "") {
+        if (tokens[i] === "") {
             continue;
         }
         const idx = Application.layerstore.find("title", tokens[i]);
-        if (idx == -1) {
+        if (idx === -1) {
             continue;
         }
         Application.log("Setting Layer " + tokens[i] + " visable");
@@ -263,15 +261,15 @@ function updateMap() {
 function setSounds() {
     Application.prefStore.each(function (record) {
         const key = record.get("key");
-        if (key == "volume") {
+        if (key === "volume") {
             Ext.getCmp("volume").setValue(record.get("value"));
             return;
         }
-        if (key.indexOf("sound::") != 0) {
+        if (key.indexOf("sound::") !== 0) {
             return;
         }
         const tokens = key.split("::");
-        if (tokens.length != 3) {
+        if (tokens.length !== 3) {
             return;
         }
         const sidx = tokens[1];
@@ -281,15 +279,13 @@ function setSounds() {
         if (idx > -1) {
             const lrecord = store.getAt(idx);
             let val = record.get("value");
-            if (val == "true") {
+            if (val === "true") {
                 val = true;
             }
-            if (val == "false") {
+            if (val === "false") {
                 val = false;
             }
             lrecord.set(opt, val);
-            //console.log("Setting sound "+ sidx +"| Opt "+ opt
-            // +"| Value "+ val + "--"+ typeof(val));
         }
     });
 }
@@ -325,13 +321,13 @@ function parseViews(msg) {
     for (let i = 0; i < elem.length; i++) {
         const label = elem[i].getAttribute("label");
         const bounds = elem[i].getAttribute("bounds");
-        if (label != "") {
+        if (label !== "") {
             Ext.getCmp("mfv" + (i + 1)).setValue(label);
             Ext.getCmp("fm" + (i + 1)).setText(label);
         }
         const extent = bounds.split(",").map(Number);
         Ext.getCmp("mfv" + (i + 1)).bounds = extent;
-        if (i == 0) {
+        if (i === 0) {
             const mapPanel = Ext.getCmp("map");
             const map = mapPanel ? mapPanel.map : window.olMap;
             if (map && map.getView) {
@@ -350,11 +346,11 @@ function parseBookmarks(msg) {
         let nick = elem[i].getElementsByTagName("nick")[0]
             ? elem[i].getElementsByTagName("nick")[0].textContent
             : "";
-        if (nick == null || nick == "") {
+        if (nick === null || nick === "") {
             nick = Application.USERNAME;
         }
-        const anonymous = elem[i].getAttribute("anonymous") == "true";
-        const autojoin = elem[i].getAttribute("autojoin") == "true";
+        const anonymous = elem[i].getAttribute("anonymous") === "true";
+        const autojoin = elem[i].getAttribute("autojoin") === "true";
 
         const bookmarksTree = Ext.getCmp("bookmarks");
         if (bookmarksTree && bookmarksTree.getRootNode()) {
@@ -369,7 +365,7 @@ function parseBookmarks(msg) {
             leaf: true,
             });
         }
-        if (autojoin && Ext.getCmp("chatpanel").getMUC(jid) == null) {
+        if (autojoin && Ext.getCmp("chatpanel").getMUC(jid) === null) {
             /*
              * We need to slow down the loading of chatrooms as this can be
              * a very expensive browser operation, IE will complain about
@@ -410,7 +406,7 @@ function onIQ(msg) {
 }
 
 function iqParser(msg) {
-    if (msg.getAttribute("id") == "fetchrooms") {
+    if (msg.getAttribute("id") === "fetchrooms") {
         const items = msg.firstChild.getElementsByTagName("item");
         const tree = Ext.getCmp("chatrooms");
         const rootNode = tree ? tree.getRootNode() : null;
@@ -435,8 +431,12 @@ function iqParser(msg) {
             rooms.sort(function (a, b) {
                 const left = (a.name || a.room || "").toLowerCase();
                 const right = (b.name || b.room || "").toLowerCase();
-                if (left < right) return -1;
-                if (left > right) return 1;
+                if (left < right) {
+                    return -1;
+                }
+                if (left > right) {
+                    return 1;
+                }
                 return 0;
             });
 
@@ -543,12 +543,11 @@ function presenceParser(msg) {
 
     // Lets see if this is from a chatroom!
     if (
-        Strophe.getDomainFromJid(from) ==
-        "conference." + Application.XMPPHOST
+        Strophe.getDomainFromJid(from) === LiveConfig.XMPPMUCHOST
     ) {
         const room = Strophe.getBareJidFromJid(from);
         const mcp = Ext.getCmp("chatpanel").getMUC(room);
-        if (mcp == null) {
+        if (mcp === null) {
             Application.log(
                 "ERROR: got presence from non-existant room: " + room
             );
@@ -578,7 +577,7 @@ function presenceParser(msg) {
         let error = null;
         if (msg.getElementsByTagName("status").length > 0) {
             error = msg.getElementsByTagName("status");
-            if (error[0].getAttribute("code") == "201") {
+            if (error[0].getAttribute("code") === "201") {
                 showRoomError(
                     "Sorry, chatroom [" + room + "] does not exist.",
                     function () {
@@ -594,7 +593,7 @@ function presenceParser(msg) {
         /* Look to see if we got a 407 error */
         if (msg.getElementsByTagName("error").length > 0) {
             error = msg.getElementsByTagName("error");
-            if (error[0].getAttribute("code") == "407") {
+            if (error[0].getAttribute("code") === "407") {
                 showRoomError(
                     "Sorry, your account is not authorized to access chatroom [" +
                         room +
@@ -612,7 +611,7 @@ function presenceParser(msg) {
         /* Look to see if we got a 409 error */
         if (msg.getElementsByTagName("error").length > 0) {
             error = msg.getElementsByTagName("error");
-            if (error[0].getAttribute("code") == "409") {
+            if (error[0].getAttribute("code") === "409") {
                 showRoomError(
                     "Sorry, your requested chatroom handle is already in use by room [" +
                         room +
@@ -630,7 +629,7 @@ function presenceParser(msg) {
         /* Look to see if we got a 307 error */
         if (msg.getElementsByTagName("status").length > 0) {
             error = msg.getElementsByTagName("status");
-            if (error[0].getAttribute("code") == "307") {
+            if (error[0].getAttribute("code") === "307") {
                 showRoomError(
                     "Your account signed into this chatroom [" +
                         room +
@@ -655,8 +654,8 @@ function presenceParser(msg) {
         /* Look to see if we can see JIDs */
         const xitem = msg.getElementsByTagName("item");
         let jid = from;
-        let affiliation;
-        let role;
+        let affiliation = null;
+        let role = null;
         if (xitem.length > 0) {
             jid = xitem[0].getAttribute("jid") || jid;
             role = xitem[0].getAttribute("role");
@@ -692,7 +691,7 @@ function presenceParser(msg) {
             }
         }
 
-        if (msg.getAttribute("type") == null) {
+        if (msg.getAttribute("type") === null) {
             // affiliation='none' role='participant'
             // affiliation='none' role='none' <-- Leave Room
             // affiliation='owner' role='moderator'
@@ -711,7 +710,7 @@ function presenceParser(msg) {
                 }
             }
         }
-        if (msg.getAttribute("type") == "unavailable") {
+        if (msg.getAttribute("type") === "unavailable") {
             if (child) {
                 if (child.parentNode) {
                     child.parentNode.removeChild(child, true);
@@ -844,7 +843,7 @@ function messageParser(msg) {
                 }
             }
         }
-    } else if (type == "chat" && !txt && from != null) {
+    } else if (type === "chat" && !txt && from !== null) {
         const jid = Strophe.getBareJidFromJid(from);
         const cp = Ext.getCmp("chatpanel").getChat(jid);
         /* Chat states stuff! */
@@ -854,23 +853,16 @@ function messageParser(msg) {
                 cp.setIconCls("typing-tab");
             }
         }
-        /*
-         * var active = $(msg).find("active"); if (active.length > 0){
-         *  } var inactive = $(msg).find("inactive"); if (inactive.length >
-         * 0){
-         *  } var gone = $(msg).find("gone"); if (gone.length > 0){
-         *  }
-         */
         const paused = msg.getElementsByTagName("paused");
         if (paused.length > 0) {
             if (cp) {
                 cp.setIconCls("paused-tab");
             }
         }
-    } else if (type == "chat" && txt && from != null) {
+    } else if (type === "chat" && txt && from !== null) {
         let jid = Strophe.getBareJidFromJid(from);
         let username = Strophe.getNodeFromJid(from);
-        if (Strophe.getDomainFromJid(from) != Application.XMPPHOST) {
+        if (Strophe.getDomainFromJid(from) !== LiveConfig.XMPPHOST) {
             jid = from;
             username = Strophe.getResourceFromJid(from);
         }
@@ -879,7 +871,6 @@ function messageParser(msg) {
             cp = Ext.getCmp("chatpanel").addChat(jid);
             Application.MsgBus.fireEvent("soundevent", "new_conversation");
         }
-        // Ext.getCmp("chatpanel").setActiveTab(cp);
         cp.gp.store.add({
             ts: stamp,
             author: username,
@@ -887,9 +878,7 @@ function messageParser(msg) {
             xdelay: false,
             message: txt,
         });
-        // i = cp.gp.store.getCount() - 1;
-        // cp.gp.getView().getRow(i).scrollIntoView();
-    } else if (from == Application.XMPPHOST) {
+    } else if (from === LiveConfig.XMPPHOST) {
         /* Broadcast message! */
         new Ext.Window({
             width: 500,
@@ -932,11 +921,11 @@ function geomParser(msg, isDelayed) {
         txt = Strophe.getText(body);
     }
     const x = msg.getElementsByTagName("x");
-    if (x.length == 0) {
+    if (x.length === 0) {
         return;
     }
     for (let i = 0; i < x.length; i++) {
-        if (x[i].getAttribute("geometry") == null) {
+        if (x[i].getAttribute("geometry") === null) {
             continue;
         }
         const geom = x[i].getAttribute("geometry");
@@ -981,8 +970,8 @@ function geomParser(msg, isDelayed) {
             feature.set("message", txt);
             const valid = feature.get("valid");
             if (
-                (x[i].getAttribute("category") == "LSR" ||
-                    x[i].getAttribute("category") == "PIREP") &&
+                (x[i].getAttribute("category") === "LSR" ||
+                    x[i].getAttribute("category") === "PIREP") &&
                 valid
             ) {
                 if (
@@ -998,11 +987,11 @@ function geomParser(msg, isDelayed) {
                     Application.lsrStore.sort(sstate.field, sstate.direction);
                 }
             }
-            if (x[i].getAttribute("category") == "SBW") {
+            if (x[i].getAttribute("category") === "SBW") {
                 feature.set("vtec", x[i].getAttribute("vtec"));
                 const vtec = feature.get("vtec");
                 const recordID = Application.sbwStore.find("vtec", vtec);
-                if (x[i].getAttribute("status") == "CAN") {
+                if (x[i].getAttribute("status") === "CAN") {
                     if (recordID > -1) {
                         Application.log(
                             "Removing SBW vtec [" + vtec + "]"
@@ -1034,14 +1023,6 @@ function geomParser(msg, isDelayed) {
             }
         }
     }
-}
-
-function rawInput(data) {
-    Application.log("RECV: " + Strophe.xmlescape(data));
-}
-
-function rawOutput(data) {
-    Application.log("SENT: " + Strophe.xmlescape(data));
 }
 
 /*
@@ -1165,8 +1146,8 @@ Application.prefStore = new Ext.data.Store({
             Application.syncPreferences();
 
             if (
-                record.get("key") == "fgcolor" ||
-                record.get("key") == "bgcolor"
+                record.get("key") === "fgcolor" ||
+                record.get("key") === "bgcolor"
             ) {
                 Application.updateColors();
             }

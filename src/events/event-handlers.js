@@ -3,11 +3,14 @@
  * MsgBus events, sound system, chat events
  */
 
+import { LiveConfig } from "../config.js";
 import { $iq, $pres } from "strophe.js";
 
 export function UTCStringToDate(dtStr, format) {
     const dt = Date.parseDate(dtStr, format);
-    if (dt == undefined) return ""; // or whatever you want to do
+    if (dt === undefined) {
+        return "";
+    }
     if (typeof dt.fromUTC === "function") {
         return dt.fromUTC();
     }
@@ -30,7 +33,7 @@ Application.playSound = function (sidx) {
     }
 
     const idx = Application.SoundStore.find("id", sidx);
-    if (idx == -1) {
+    if (idx === -1) {
         Application.log("Could not find sound: " + sidx);
         return;
     }
@@ -58,7 +61,7 @@ Application.MsgBus.on("soundevent", function (sevent) {
         "sound::" + sevent + "::enabled",
         "true"
     );
-    if (enable == "false") {
+    if (enable === "false") {
         return;
     }
     const sidx = Application.getPreference(
@@ -71,7 +74,7 @@ Application.MsgBus.on("soundevent", function (sevent) {
 Application.MsgBus.on("loggingout", function () {
     /* Remove chatrooms from view */
     Ext.getCmp("chatpanel").items.each(function (panel) {
-        if (panel.chatType == "groupchat") {
+        if (panel.chatType === "groupchat") {
             //Ext.getCmp('chatpanel').remove(panel);
             panel.clearRoom();
         }
@@ -108,7 +111,7 @@ Application.MsgBus.on("loggedin", function () {
         $iq({
             type: "get",
             id: "fetchrooms",
-            to: "conference." + Application.XMPPHOST,
+            to: LiveConfig.XMPPMUCHOST,
         }).c("query", {
             xmlns: "http://jabber.org/protocol/disco#items",
         })
@@ -116,11 +119,11 @@ Application.MsgBus.on("loggedin", function () {
 });
 
 Application.MsgBus.on("joinchat", function (room, handle, anonymous) {
-    if (handle == null || handle == "") {
+    if (handle === null || handle === "") {
         handle = Application.USERNAME;
     }
     let mcp = Ext.getCmp("chatpanel").getMUC(room);
-    if (mcp == null) {
+    if (mcp === null) {
         Application.log("Creating chatroom:" + room);
         mcp = Ext.getCmp("chatpanel").addMUC(room, handle, anonymous);
         // Ext.getCmp("chatpanel").setActiveTab(mcp);
