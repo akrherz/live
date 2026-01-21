@@ -1,7 +1,7 @@
 import { msgBus } from "../events/MsgBus.js";
 import { $iq } from "strophe.js";
 import { LiveConfig } from "../config.js";
-import { syncPreferences } from "../xmpp/handlers.js";
+import { syncPreferences, setPreference } from "../xmpp/handlers.js";
 import { playSound } from '../events/event-handlers.js';
 
 
@@ -118,11 +118,11 @@ Application.soundPrefs = new Ext.Window({
                     .getStore()
                     .each(function (record) {
                         const eidx = record.get("id");
-                        Application.setPreference(
+                        setPreference(
                             "sound::" + eidx + "::enabled",
                             record.get("enabled") ? "true" : "false"
                         );
-                        Application.setPreference(
+                        setPreference(
                             "sound::" + eidx + "::sound",
                             record.get("sound")
                         );
@@ -142,7 +142,7 @@ Application.soundPrefs = new Ext.Window({
             width: 200,
             listeners: {
                 changecomplete: function (_slider, newval) {
-                    Application.setPreference("volume", newval);
+                    setPreference("volume", newval);
                     msgBus.fire("soundevent", "default");
                 },
             },

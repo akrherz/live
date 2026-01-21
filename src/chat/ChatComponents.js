@@ -3,6 +3,8 @@ import { $msg, $pres, Strophe } from "strophe.js";
 import { loadTextProductInWindow, hideTextWindow } from "../ui/text-window.js";
 import { iembotFilter, showHtmlVersion } from "../utils/grid-utilities.js";
 import { LiveConfig } from "../config.js";
+import { getPreference, setPreference } from "../xmpp/handlers.js";
+import { DataTip } from "../ui/data-tip.js";
 
 const MUCChatPanel = Ext.extend(Ext.Panel, {
     hideMode: "offsets",
@@ -16,10 +18,10 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
 
     initComponent: function () {
         // Create the child components with references immediately
-        const gridPanel = Ext.create("Application.ChatGridPanel", {
+        const gridPanel = new ChatGridPanel({
             region: "center",
         });
-        const textEntry = Ext.create("Application.ChatTextEntry", {
+        const textEntry = new ChatTextEntry({
             region: "south",
             height: 50,
             split: true,
@@ -114,7 +116,7 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
         }
 
         let pref = "muc::" + Strophe.getNodeFromJid(this.barejid) + "::mute";
-        if (Application.getPreference(pref, false)) {
+        if (getPreference(pref, false)) {
             /* hacky */
             const toolbar = this.gp.down("toolbar");
             if (toolbar && toolbar.items && toolbar.items.items[4]) {
@@ -126,7 +128,7 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
 
         pref =
             "muc::" + Strophe.getNodeFromJid(this.barejid) + "::iembothidden";
-        if (Application.getPreference(pref, false)) {
+        if (getPreference(pref, false)) {
             /* hacky */
             const toolbar = this.gp.down("toolbar");
             if (toolbar && toolbar.items && toolbar.items.items[3]) {
@@ -150,10 +152,10 @@ const ChatPanel = Ext.extend(Ext.Panel, {
 
     initComponent: function () {
         // Create components and store references immediately
-        const gridPanel = new Application.ChatGridPanel({
+        const gridPanel = new ChatGridPanel({
             region: "center",
         });
-        const textEntry = new Application.ChatTextEntry({
+        const textEntry = new ChatTextEntry({
             region: "south",
             height: 50,
             split: true,
@@ -216,7 +218,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             expanded: true
         };
         const iconfig = {
-            plugins: new Ext.ux.DataTip({
+            plugins: new DataTip({
                 tpl: "<div>JID: {jid}<br />Affiliation: {affiliation}<br />Role: {role}</div>",
                 constrainPosition: true,
             }),
@@ -281,8 +283,6 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     }
 });
 
-Ext.reg("mucroomusers", MUCRoomUsers);
-
 Application.colors = [
     "000000", //black
     "666666", //
@@ -322,7 +322,7 @@ Application.getUserColor = function (user) {
     return c;
 };
 
-Application.ChatTextEntry = Ext.extend(Ext.Panel, {
+const ChatTextEntry = Ext.extend(Ext.Panel, {
     layout: "hbox",
     layoutConfig: {
         align: "stretch",
@@ -342,8 +342,8 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                 },
                 style: {
                     background:
-                        "#" + Application.getPreference("bgcolor", "FFFFFF"),
-                    color: "#" + Application.getPreference("fgcolor", "000000"),
+                        "#" + getPreference("bgcolor", "FFFFFF"),
+                    color: "#" + getPreference("fgcolor", "000000"),
                 },
                 enableKeyEvents: true,
                 listeners: {
@@ -418,11 +418,11 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                         txt.focus();
                         return false;
                     }
-                    const bgcolor = Application.getPreference(
+                    const bgcolor = getPreference(
                         "bgcolor",
                         "FFFFFF",
                     );
-                    const fgcolor = Application.getPreference(
+                    const fgcolor = getPreference(
                         "fgcolor",
                         "000000",
                     );
@@ -500,14 +500,12 @@ Application.ChatTextEntry = Ext.extend(Ext.Panel, {
                 },
             },
         ];
-        Application.ChatTextEntry.superclass.initComponent.apply(
+        ChatTextEntry.superclass.initComponent.apply(
             this,
             arguments,
         );
     },
 });
-
-Ext.reg("chattextentry", Application.ChatTextEntry);
 
 Application.msgFormatter = new Ext.XTemplate(
     '<p class="mymessage">',
@@ -549,7 +547,7 @@ Application.msgFormatter = new Ext.XTemplate(
     },
 );
 
-Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
+const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
     region: "center",
     soundOn: true,
     iembotHide: false,
@@ -561,7 +559,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             text: "Clear Room Log",
             cls: "x-btn-text-icon",
             icon: "icons/close.png",
-            handler: function (btn) {
+            handler: (btn) => {
                 btn.ownerCt.ownerCt.getStore().removeAll();
             },
         },
@@ -569,7 +567,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             text: "Print Log",
             icon: "icons/print.png",
             cls: "x-btn-text-icon",
-            handler: function (btn) {
+            handler: (btn) => {
                 btn.ownerCt.ownerCt.getGridEl().print({
                     isGrid: true,
                 });
@@ -577,7 +575,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         },
         {
             text: "View As HTML",
-            handler: function (btn) {
+            handler: (btn) => {
                 showHtmlVersion(btn.ownerCt.ownerCt);
             },
             icon: "icons/text.png",
@@ -596,7 +594,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 const store = btn.ownerCt.ownerCt.getStore();
                 btn.ownerCt.ownerCt.iembotHide = toggled;
                 if (toggled) {
-                    Application.setPreference(pref, "true");
+                    setPreference(pref, "true");
                     store.filterBy(iembotFilter);
                     btn.setText("IEMBot Hidden");
                 } else {
@@ -618,7 +616,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     ) +
                     "::mute";
                 if (toggled) {
-                    Application.setPreference(pref, "true");
+                    setPreference(pref, "true");
                     btn.ownerCt.ownerCt.soundOn = false;
                     btn.setText("Sounds Muted");
                 } else {
@@ -632,8 +630,8 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             icon: "icons/font-less.png",
             handler: function () {
                 const size =
-                    parseInt(Application.getPreference("font-size", 14)) - 2;
-                Application.setPreference("font-size", size);
+                    parseInt(getPreference("font-size", 14)) - 2;
+                setPreference("font-size", size);
                 //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
                 const cssfmt = String.format("normal {0}px arial", size);
                 Ext.util.CSS.updateRule(
@@ -648,8 +646,8 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             icon: "icons/font-more.png",
             handler: function () {
                 const size =
-                    parseInt(Application.getPreference("font-size", 14)) + 2;
-                Application.setPreference("font-size", size);
+                    parseInt(getPreference("font-size", 14)) + 2;
+                setPreference("font-size", size);
                 const cssfmt = String.format("normal {0}px arial", size);
                 Ext.util.CSS.updateRule(
                     "td.x-grid3-td-message",
@@ -828,7 +826,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         };
         Ext.apply(this, iconfig);
 
-        Application.ChatGridPanel.superclass.initComponent.apply(
+        ChatGridPanel.superclass.initComponent.apply(
             this,
             arguments,
         );
@@ -841,141 +839,7 @@ Application.ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
     },
 });
 
-Ext.reg("chatgridpanel", Application.ChatGridPanel);
-/**
- * @class Ext.ux.DataTip
- * @extends Ext.ToolTip.
- * <p>This plugin implements automatic tooltip generation for an arbitrary number of child nodes <i>within</i> a Component.</p>
- * <p>This plugin is applied to a high level Component, which contains repeating elements, and depending on the host Component type,
- * it automatically selects a {@link Ext.ToolTip#delegate delegate} so that it appears when the mouse enters a sub-element.</p>
- * <p>When applied to a GridPanel, this ToolTip appears when over a row, and the Record's data is applied
- * using this object's {@link Ext.Component#tpl tpl} template.</p>
- * <p>When applied to a DataView, this ToolTip appears when over a view node, and the Record's data is applied
- * using this object's {@link Ext.Component#tpl tpl} template.</p>
- * <p>When applied to a TreePanel, this ToolTip appears when over a tree node, and the Node's {@link Ext.tree.TreeNode#attributes attributes} are applied
- * using this object's {@link Ext.Component#tpl tpl} template.</p>
- * <p>When applied to a FormPanel, this ToolTip appears when over a Field, and the Field's <code>tooltip</code> property is used is applied
- * using this object's {@link Ext.Component#tpl tpl} template, or if it is a string, used as HTML content.</p>
- * <p>If more complex logic is needed to determine content, then the {@link Ext.Component#beforeshow beforeshow} event may be used.<p>
- * <p>This class also publishes a <b><code>beforeshowtip</code></b> event through its host Component. The <i>host Component</i> fires the
- * <b><code>beforeshowtip</code></b> event.
- */
-Ext.ux.DataTip = Ext.extend(
-    Ext.ToolTip,
-    (function () {
-        //  Target the body (if the host is a Panel), or, if there is no body, the main Element.
-        function onHostRender() {
-            const e = this.body || this.el;
-            if (this.dataTip.renderToTarget) {
-                this.dataTip.render(e);
-            }
-            // In ExtJS 6, set the target element directly
-            if (this.dataTip.setTarget) {
-                this.dataTip.setTarget(e);
-            } else if (e) {
-                this.dataTip.target = e;
-            }
-        }
 
-        function updateTip(tip, data) {
-            if (tip.rendered) {
-                tip.update(data);
-            } else {
-                if (Ext.isString(data)) {
-                    tip.html = data;
-                } else {
-                    tip.data = data;
-                }
-            }
-        }
-
-        function beforeTreeTipShow(tip) {
-            const e = Ext.fly(tip.triggerElement).findParent(
-                    "div.x-tree-node-el",
-                    null,
-                    true,
-                ),
-                node = e
-                    ? tip.host.getNodeById(
-                          e.getAttribute("tree-node-id", "ext"),
-                      )
-                    : null;
-            if (node) {
-                updateTip(tip, node.data);
-            } else {
-                return false;
-            }
-        }
-
-        function beforeGridTipShow(tip) {
-            const rec = this.host
-                .getStore()
-                .getAt(this.host.getView().findRowIndex(tip.triggerElement));
-            if (rec) {
-                updateTip(tip, rec.data);
-            } else {
-                return false;
-            }
-        }
-
-        function beforeViewTipShow(tip) {
-            const rec = this.host.getRecord(tip.triggerElement);
-            if (rec) {
-                updateTip(tip, rec.data);
-            } else {
-                return false;
-            }
-        }
-
-        function beforeFormTipShow(tip) {
-            const el = Ext.fly(tip.triggerElement).child("input,textarea"),
-                field = el ? this.host.getForm().findField(el.id) : null;
-            if (field && (field.tooltip || tip.tpl)) {
-                updateTip(tip, field.tooltip || field);
-            } else {
-                return false;
-            }
-        }
-
-        function beforeComboTipShow(tip) {
-            const rec = this.host.store.getAt(this.host.selectedIndex);
-            if (rec) {
-                updateTip(tip, rec.data);
-            } else {
-                return false;
-            }
-        }
-
-        return {
-            init: function (host) {
-                host.dataTip = this;
-                this.host = host;
-                if (host instanceof Ext.tree.TreePanel) {
-                    this.delegate = this.delegate || "div.x-tree-node-el";
-                    this.on("beforeshow", beforeTreeTipShow);
-                } else if (host instanceof Ext.grid.GridPanel) {
-                    this.delegate = this.delegate || host.getView().rowSelector;
-                    this.on("beforeshow", beforeGridTipShow);
-                } else if (host instanceof Ext.DataView) {
-                    this.delegate = this.delegate || host.itemSelector;
-                    this.on("beforeshow", beforeViewTipShow);
-                } else if (host instanceof Ext.FormPanel) {
-                    this.delegate = "div.x-form-item";
-                    this.on("beforeshow", beforeFormTipShow);
-                } else if (host instanceof Ext.form.ComboBox) {
-                    this.delegate = this.delegate || host.itemSelector;
-                    this.on("beforeshow", beforeComboTipShow);
-                }
-                if (host.rendered) {
-                    onHostRender.call(host);
-                } else {
-                    // In ExtJS 6, use listeners instead of createSequence
-                    host.on("render", onHostRender, host, { single: true });
-                }
-            },
-        };
-    })(),
-);
 /*
  * Handles all of the ROSTER related activities
  */
@@ -1105,7 +969,7 @@ Ext.namespace("Ext.ux.panel");
  * @license Licensed under the terms of the Open Source <a href="http://www.gnu.org/licenses/lgpl.html">LGPL 3.0 license</a>. Commercial use is permitted to the extent that the code/component(s) do NOT become part of another Open Source or Commercially licensed development library or toolkit without explicit permission.
  * @version 2.0.0 (Feb 14, 2010)
  */
-Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
+const DDTabPanel = Ext.extend(Ext.TabPanel, {
     /**
      * @cfg {Number} arrowOffsetX The horizontal offset for the drop arrow indicator, in pixels (defaults to -9).
      */
@@ -1118,13 +982,13 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
     // Assign the drag and drop group id
     /** @private */
     initComponent: function () {
-        Ext.ux.panel.DDTabPanel.superclass.initComponent.call(this);
+        DDTabPanel.superclass.initComponent.call(this);
         // In ExtJS 6, addEvents is not needed - Observable automatically supports any event
         // this.addEvents('reorder');
         if (!this.ddGroupId) {
             this.ddGroupId =
                 "dd-tabpanel-group-" +
-                Ext.ux.panel.DDTabPanel.superclass.getId.call(this);
+                DDTabPanel.superclass.getId.call(this);
         }
         // Initialize stack for tracking tab history
         this.stack = new Ext.util.MixedCollection();
@@ -1138,7 +1002,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
     // Declare the tab panel as a drop target
     /** @private */
     afterRender: function () {
-        Ext.ux.panel.DDTabPanel.superclass.afterRender.call(this);
+        DDTabPanel.superclass.afterRender.call(this);
         // Create a drop arrow indicator
         this.arrow = Ext.DomHelper.append(
             Ext.getBody(),
@@ -1148,7 +1012,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
         this.arrow.hide();
         // Create a drop target for this tab panel
         const tabsDDGroup = this.ddGroupId;
-        this.dd = new Ext.ux.panel.DDTabPanel.DropTarget(this, {
+        this.dd = new DDTabPanel.DropTarget(this, {
             ddGroup: tabsDDGroup,
         });
 
@@ -1159,7 +1023,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
     // Init the drag source after (!) rendering the tab
     /** @private */
     initTab: function (tab, index) {
-        Ext.ux.panel.DDTabPanel.superclass.initTab.call(this, tab, index);
+        DDTabPanel.superclass.initTab.call(this, tab, index);
 
         // Add tab to stack for history tracking
         if (this.stack && !this.stack.containsKey(tab.id)) {
@@ -1242,7 +1106,7 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
     /** @private */
     onRemove: function (c) {
         // Let ExtJS handle DOM cleanup; manual destruction can break layouts in ExtJS 6
-        Ext.ux.panel.DDTabPanel.superclass.onRemove.call(this, c);
+        DDTabPanel.superclass.onRemove.call(this, c);
 
         if (this.stack) {
             this.stack.remove(c);
@@ -1275,19 +1139,19 @@ Ext.ux.panel.DDTabPanel = Ext.extend(Ext.TabPanel, {
     /** @private */
     onDestroy: function () {
         Ext.destroy(this.dd, this.arrow);
-        Ext.ux.panel.DDTabPanel.superclass.onDestroy.call(this);
+        DDTabPanel.superclass.onDestroy.call(this);
     },
 });
 
 // Ext.ux.panel.DDTabPanel.DropTarget
 // Implements the drop behavior of the tab panel
 /** @private */
-Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
+DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
     constructor: function (tabpanel, iconfig) {
         this.tabpanel = tabpanel;
         // In ExtJS 6, get the tab bar element instead of stripWrap
         const targetEl = tabpanel.tabBar ? tabpanel.tabBar.el : tabpanel.el;
-        Ext.ux.panel.DDTabPanel.DropTarget.superclass.constructor.call(
+        DDTabPanel.DropTarget.superclass.constructor.call(
             this,
             targetEl,
             iconfig,
@@ -1402,9 +1266,7 @@ Ext.ux.panel.DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
     },
 });
 
-Ext.reg("ddtabpanel", Ext.ux.panel.DDTabPanel);
-
-Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
+Application.ChatTabPanel = Ext.extend(DDTabPanel, {
     activeTab: 0,
     deferredRender: false,
     split: true,

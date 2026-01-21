@@ -1,16 +1,11 @@
 /**
  * Weather.IM Live - Main Entry Point
- *
- * This file now serves as the minimal bootstrap for the application.
- * All functionality has been extracted into separate modules.
  */
 
 // ExtJS 6 loaded via script tag in HTML (UMD module, not ES module compatible)
 
 // Import OpenLayers 8
 import 'ol/ol.css';
-
-// GeoExt removed - using pure OpenLayers 8 + ExtJS 6
 
 // Import configuration
 import './config.js';
@@ -19,16 +14,11 @@ import './config.js';
 import { Strophe } from 'strophe.js';
 import './lib/strophe-disco-plugin.js';
 
-// Import ExtJS utilities and extensions
-import './lib/extjs-utilities.js';
-
-// Import map layers and components - NEW OpenLayers 8 version!
-// import './map/layers.js';
-// import './map/MapPanel.js';
-import './map/MapPanel.js';
 
 // Import chat components
 import './chat/ChatComponents.js';
+
+import './map/MapPanel.js';
 
 // Import XMPP handlers
 import './xmpp/handlers.js';
@@ -82,8 +72,8 @@ function initializeApp() {
 
     try {
       // Cleanup on window close
-      Ext.EventManager.on(window, 'beforeunload', function() {
-        if (typeof Application.XMPPConn != 'undefined') {
+      Ext.EventManager.on(window, 'beforeunload', () => {
+        if (typeof Application.XMPPConn !== 'undefined') {
           Application.XMPPConn.flush();
           Application.XMPPConn.disconnect();
         }

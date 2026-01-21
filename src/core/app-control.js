@@ -1,11 +1,8 @@
 import { msgBus } from "../events/MsgBus.js";
-/**
- * Application Core
- */
-
 import { $pres, Strophe } from 'strophe.js';
 import { saveBookmarks } from '../dialogs/Dialogs.js';
-import { login } from "../xmpp/handlers.js";
+import { login, setPreference } from "../xmpp/handlers.js";
+import { DataTip } from "../ui/data-tip.js";
 
 Application.log = function(text) {
     console.log("Application.log:", text);
@@ -76,7 +73,7 @@ Application.Control = {
                                 value : '000000',
                                 listeners : {
                                     select : function(cp,color){
-                                        Application.setPreference('fgcolor', color);
+                                        setPreference('fgcolor', color);
                                     }
                                 }
                             })
@@ -91,7 +88,7 @@ Application.Control = {
                                 value : 'FFFFFF',
                                 listeners : {
                                     select : function(cp,color){
-                                        Application.setPreference('bgcolor', color);
+                                        setPreference('bgcolor', color);
                                     }
                                 }
                             })
@@ -172,7 +169,7 @@ Application.Control = {
                 lines : false,
                 autoScroll : true,
                 containerScroll: true,
-                plugins: new Ext.ux.DataTip({
+                plugins: new DataTip({
                     tpl: new Ext.XTemplate(
                     '<tpl if="typeof(resources) !== &quot;undefined&quot; && resources && resources.items">',
                     '<div>',
@@ -205,7 +202,7 @@ Application.Control = {
                 lines : false,
                 containerScroll: true,
                 autoScroll : true,
-                plugins: new Ext.ux.DataTip({
+                plugins: new DataTip({
                     tpl: '<div>Anonymous: {anonymous}<br />Autojoin: {autojoin}</div>'
                 }),
                 contextMenu : new Ext.menu.Menu({

@@ -5,6 +5,7 @@
 
 import { LoginPanel } from "../auth/LoginPanel.js";
 import MapPanel from "../map/MapPanel.js";
+import { setPreference } from "../xmpp/handlers.js";
 
 Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
@@ -139,7 +140,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
                             }
                         }
                     }, myobj);
-                    Application.setPreference("layers", myobj.lstring);
+                    setPreference("layers", myobj.lstring);
                 });
                 if (Application.MapTask) {
                     Ext.TaskManager.start(Application.MapTask);
