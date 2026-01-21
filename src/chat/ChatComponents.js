@@ -4,7 +4,7 @@ import { loadTextProductInWindow, hideTextWindow } from "../ui/text-window.js";
 import { iembotFilter, showHtmlVersion } from "../utils/grid-utilities.js";
 import { LiveConfig } from "../config.js";
 
-Application.MUCChatPanel = Ext.extend(Ext.Panel, {
+const MUCChatPanel = Ext.extend(Ext.Panel, {
     hideMode: "offsets",
     closable: true,
     layout: "border",
@@ -32,7 +32,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
         this.items = [gridPanel, textEntry];
 
         if (this.initialConfig.chatType !== "allchats") {
-            const roomUsers = Ext.create("Application.MUCRoomUsers", {
+            const roomUsers = new MUCRoomUsers({
                 region: "east",
                 width: 175,
                 collapsible: true,
@@ -60,7 +60,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        Application.MUCChatPanel.superclass.initComponent.apply(
+        MUCChatPanel.superclass.initComponent.apply(
             this,
             arguments,
         );
@@ -138,9 +138,7 @@ Application.MUCChatPanel = Ext.extend(Ext.Panel, {
     },
 });
 
-Ext.reg("mucchatpanel", Application.MUCChatPanel);
-
-Application.ChatPanel = Ext.extend(Ext.Panel, {
+const ChatPanel = Ext.extend(Ext.Panel, {
     hideMode: "offsets",
     closable: true,
     layout: "border",
@@ -190,7 +188,7 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        Application.ChatPanel.superclass.initComponent.apply(this, arguments);
+        ChatPanel.superclass.initComponent.apply(this, arguments);
         this.buildItems();
     },
     getJidByHandle: function () {
@@ -205,9 +203,8 @@ Application.ChatPanel = Ext.extend(Ext.Panel, {
     },
 });
 
-Ext.reg("chatpanel", Application.ChatPanel);
 
-Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
+const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     bodyStyle: { "margin-left": "-15px" },
     title: "0 people in room",
     rootVisible: false,
@@ -251,17 +248,17 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
                         jid = Strophe.getBareJidFromJid(n.data.jid);
                     }
                     Application.log("Wish to start chat with:" + jid);
-                    let cp = Ext.getCmp("chatpanel").getChat(jid);
+                    let cp = ChatPanel.getChat(jid);
                     if (!cp) {
-                        cp = Ext.getCmp("chatpanel").addChat(jid);
+                        cp = ChatPanel.addChat(jid);
                     }
-                    Ext.getCmp("chatpanel").setActiveTab(cp);
+                    ChatPanel.setActiveTab(cp);
                 },
             },
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        Application.MUCRoomUsers.superclass.initComponent.apply(
+        MUCRoomUsers.superclass.initComponent.apply(
             this,
             arguments,
         );
@@ -270,7 +267,7 @@ Application.MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     buildItems: function () {},
 });
 
-Ext.reg("mucroomusers", Application.MUCRoomUsers);
+Ext.reg("mucroomusers", MUCRoomUsers);
 
 Application.colors = [
     "000000", //black
@@ -1419,7 +1416,7 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
             autoScroll: true,
         });
         this.add(
-            new Application.MUCChatPanel({
+            new MUCChatPanel({
                 title: "All Chats",
                 closable: false,
                 chatType: "allchats",
@@ -1429,7 +1426,7 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         );
     },
     addMUC: function (barejid, handle, anonymous) {
-        const mcp = new Application.MUCChatPanel({
+        const mcp = new MUCChatPanel({
             title: Strophe.getNodeFromJid(barejid),
             barejid: barejid,
             handle: handle,
@@ -1472,7 +1469,7 @@ Application.ChatTabPanel = Ext.extend(Ext.ux.panel.DDTabPanel, {
         if (Strophe.getDomainFromJid(jid) === LiveConfig.XMPPMUCHOST) {
             title = Strophe.getResourceFromJid(jid);
         }
-        const cp = new Application.ChatPanel({
+        const cp = new ChatPanel({
             title: title,
             handle: Application.USERNAME,
             barejid: jid,
