@@ -212,17 +212,8 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     autoScroll: true,
     initComponent: function () {
         this.root = {
-            text: "test",
-            listeners: {
-                append: function (tree, node) {
-                    const sz = node.childNodes.length;
-                    tree.setTitle(sz + " people in room");
-                },
-                remove: function (tree, node) {
-                    const sz = node.childNodes.length;
-                    tree.setTitle(sz + " people in room");
-                },
-            },
+            text: "Room Users",
+            expanded: true
         };
         const iconfig = {
             plugins: new Ext.ux.DataTip({
@@ -262,9 +253,32 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             this,
             arguments,
         );
-        this.buildItems();
-    },
-    buildItems: function () {},
+
+        // Robustly update the title with the number of people in the room
+        const updateTitle = () => {
+            const root = this.getRootNode && this.getRootNode();
+            let count = 0;
+            if (root && root.childNodes) {
+                // Only count visible, non-placeholder nodes
+                count = root.childNodes.filter(function(n) {
+                    return n && n.data && n.data.jid;
+                }).length;
+            }
+            this.setTitle(`${count} people in room`);
+        };
+
+        // Listen for node and store events
+        const rootNode = this.getRootNode && this.getRootNode();
+        if (rootNode) {
+            rootNode.on("append", updateTitle, this);
+            rootNode.on("remove", updateTitle, this);
+        }
+        if (this.getStore && this.getStore()) {
+            this.getStore().on("add", updateTitle, this);
+            this.getStore().on("remove", updateTitle, this);
+        }
+        updateTitle();
+    }
 });
 
 Ext.reg("mucroomusers", MUCRoomUsers);
