@@ -7,6 +7,7 @@
 import { LiveConfig } from "../config.js";
 import { $iq, $pres } from "strophe.js";
 import { msgBus } from "./MsgBus.js";
+import { getPreference } from "../xmpp/handlers.js";
 
 export function UTCStringToDate(dtStr, format) {
     const dt = Date.parseDate(dtStr, format);
@@ -45,7 +46,7 @@ function playSound(sidx) {
     }
 
     const audio = audioCache[sidx];
-    audio.volume = Application.getPreference("volume", 100) / 100;
+    audio.volume = getPreference("volume", 100) / 100;
 
     // Reset to beginning if already playing
     audio.currentTime = 0;
@@ -55,14 +56,14 @@ function playSound(sidx) {
 };
 
 msgBus.on("soundevent", (sevent) => {
-    const enable = Application.getPreference(
+    const enable = getPreference(
         `sound::${sevent}::enabled`,
         "true"
     );
     if (enable === "false") {
         return;
     }
-    const sidx = Application.getPreference(
+    const sidx = getPreference(
         `sound::${sevent}::sound`,
         "default"
     );

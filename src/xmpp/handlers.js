@@ -240,7 +240,7 @@ function onConnect(status) {
  * Update the map layers based on our stored preferences
  */
 function updateMap() {
-    const lstring = Application.getPreference("layers");
+    const lstring = getPreference("layers");
     if (lstring === null) {
         return;
     }
@@ -300,11 +300,11 @@ function parsePrefs(msg) {
     for (let i = 0; i < elem.length; i++) {
         const key = elem[i].getAttribute("key");
         const value = elem[i].getAttribute("value");
-        Application.setPreference(key, value);
+        setPreference(key, value);
     }
     Application.prefStore.locked = true;
     setSounds();
-    const size = parseInt(Application.getPreference("font-size", 14)) + 2;
+    const size = parseInt(getPreference("font-size", 14)) + 2;
     // var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
     const cssfmt = String.format("normal {0}px arial", size);
     Ext.util.CSS.updateRule("td.x-grid3-td-message", "font", cssfmt);
@@ -1031,8 +1031,8 @@ function geomParser(msg, isDelayed) {
  * called after the preference is changed...
  */
 Application.updateColors = function () {
-    const bgcolor = Application.getPreference("bgcolor", "FFFFFF");
-    const fgcolor = Application.getPreference("fgcolor", "000000");
+    const bgcolor = getPreference("bgcolor", "FFFFFF");
+    const fgcolor = getPreference("fgcolor", "000000");
     Application.log(
         "Attempting style adjustment bgcolor:" +
             bgcolor +
@@ -1086,7 +1086,7 @@ Application.removePreference = function (key) {
     }
 };
 
-Application.getPreference = function (key, base) {
+function getPreference(key, base) {
     const idx = Application.prefStore.find("key", key);
     if (idx > -1) {
         const record = Application.prefStore.getAt(idx);
@@ -1095,7 +1095,7 @@ Application.getPreference = function (key, base) {
     return base;
 };
 
-Application.setPreference = function (key, value) {
+function setPreference(key, value) {
     const idx = Application.prefStore.find("key", key);
     if (idx > -1) {
         Application.log("Setting Preference: " + key + " Value: " + value);
@@ -1156,4 +1156,4 @@ Application.prefStore = new Ext.data.Store({
     },
 });
 
-export { login, doAnonymousLogin, syncPreferences };
+export { login, doAnonymousLogin, syncPreferences, setPreference, getPreference };

@@ -5,6 +5,7 @@
 
 import { $msg, $pres, $iq, Strophe } from 'strophe.js';
 import { LiveConfig } from "../../src/config.js";
+import { getPreference } from '../xmpp/handlers.js';
 
 Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
     title : 'Where to send this message?',
@@ -34,8 +35,8 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
                     }).c("body", {
                         xmlns : 'http://www.w3.org/1999/xhtml'
                     }).c("p").c("span", {
-                style : "color:#" + Application.getPreference('fgcolor', '000000') + ";background:#"
-                        + Application.getPreference('bgcolor', 'FFFFFF') + ";"
+                style : "color:#" + getPreference('fgcolor', '000000') + ";background:#"
+                        + getPreference('bgcolor', 'FFFFFF') + ";"
                     }).t(this.message));
                 }, this);
                 this.close();
