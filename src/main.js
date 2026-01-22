@@ -71,8 +71,8 @@ function initializeApp() {
     console.log('Ext.onReady fired');
 
     try {
-      // Cleanup on window close
-      Ext.EventManager.on(window, 'beforeunload', () => {
+      // Cleanup on window close (modern ExtJS: use Ext.get(window).on)
+      Ext.get(window).on('beforeunload', () => {
         if (typeof Application.XMPPConn !== 'undefined') {
           Application.XMPPConn.flush();
           Application.XMPPConn.disconnect();

@@ -528,7 +528,9 @@ Application.msgFormatter = new Ext.XTemplate(
     "{message}</p>",
     {
         isNotToday: function (ts) {
-            return new Date().format("md") !== ts.format("md");
+            // Use Ext.Date.format for date formatting
+            const today = new Date();
+            return Ext.Date.format(today, "md") !== Ext.Date.format(ts, "md");
         },
         getAuthorClass: function (jid) {
             //console.log("node: "+Strophe.getNodeFromJid(jid) );
@@ -670,7 +672,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 hidden: true,
             },
             {
-                id: "message",
+                // Removed id: "message" to avoid duplicate component id errors
                 header: "Message",
                 sortable: true,
                 dataIndex: "ts",
@@ -1112,20 +1114,39 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
             this.stack.remove(c);
         }
         delete c.tabEl;
-        c.un("disable", this.onItemDisabled, this);
-        c.un("enable", this.onItemEnabled, this);
-        c.un("titlechange", this.onItemTitleChanged, this);
-        c.un("iconchange", this.onItemIconChanged, this);
-        c.un("beforeshow", this.onBeforeShowItem, this);
+        // Removed c.un(...) calls for listeners that may not have been added, to prevent ExtJS errors
 
-        // if this.move, the active tab stays the active one
-        if (c === this.activeTab) {
+        // Only manage active tab if this panel is still rendered and not being destroyed
+        if (c === this.activeTab && !this.destroying && !this.destroyed) {
+            const isPanelInDom = this.el && this.el.dom && document.body.contains(this.el.dom);
+            const isTabBarInDom = this.tabBar && this.tabBar.el && this.tabBar.el.dom && document.body.contains(this.tabBar.el.dom);
+            if (!isPanelInDom || !isTabBarInDom) {
+                this.activeTab = null;
+                return;
+            }
             if (!this.move) {
                 const next = this.stack ? this.stack.next() : null;
                 if (next) {
-                    this.setActiveTab(next);
+                    Ext.defer(() => {
+                        try {
+                            if (!this.destroyed && this.items.contains(next) && this.el && this.el.dom && document.body.contains(this.el.dom)) {
+                                this.setActiveTab(next);
+                            }
+                        } catch {
+                            // Defensive: prevent UI lockup if ExtJS throws
+                            this.activeTab = null;
+                        }
+                    }, 1);
                 } else if (this.items.getCount() > 0) {
-                    this.setActiveTab(0);
+                    Ext.defer(() => {
+                        try {
+                            if (!this.destroyed && this.items.getCount() > 0 && this.el && this.el.dom && document.body.contains(this.el.dom)) {
+                                this.setActiveTab(0);
+                            }
+                        } catch {
+                            this.activeTab = null;
+                        }
+                    }, 1);
                 } else {
                     this.activeTab = null;
                 }
@@ -1323,22 +1344,14 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
         if (mcp.closable === false) {
             return;
         }
-        Ext.defer(
-            function () {
-                if (!mcp || mcp.destroyed || mcp.ownerCt !== this) {
-                    return;
-                }
-                if (mcp.close) {
-                    mcp.close();
-                    return;
-                }
-                Ext.suspendLayouts();
+        // Defer removal to next event loop to avoid ExtJS DOM race conditions
+        Ext.defer(() => {
+            if (mcp.close && !mcp.destroyed) {
+                mcp.close();
+            } else if (!mcp.destroyed) {
                 this.remove(mcp, true);
-                Ext.resumeLayouts(true);
-            },
-            50,
-            this,
-        );
+            }
+        }, 1);
     },
     addChat: function (jid) {
         let title = Strophe.getNodeFromJid(jid);
@@ -1362,21 +1375,13 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
         if (!cp || cp.destroyed) {
             return;
         }
-        Ext.defer(
-            function () {
-                if (!cp || cp.destroyed || cp.ownerCt !== this) {
-                    return;
-                }
-                if (cp.close) {
-                    cp.close();
-                    return;
-                }
-                Ext.suspendLayouts();
+        // Defer removal to next event loop to avoid ExtJS DOM race conditions
+        Ext.defer(() => {
+            if (cp.close && !cp.destroyed) {
+                cp.close();
+            } else if (!cp.destroyed) {
                 this.remove(cp, true);
-                Ext.resumeLayouts(true);
-            },
-            50,
-            this,
-        );
+            }
+        }, 1);
     },
 });
