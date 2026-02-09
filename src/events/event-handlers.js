@@ -3,7 +3,6 @@
  * MsgBus events, sound system, chat events
  */
 
-
 import { LiveConfig } from "../config.js";
 import { $iq, $pres } from "strophe.js";
 import { msgBus } from "./MsgBus.js";
@@ -19,8 +18,6 @@ export function UTCStringToDate(dtStr, format) {
     }
     return dt;
 }
-
-
 
 // Audio cache for reusing Audio objects
 const audioCache = {};
@@ -53,31 +50,28 @@ function playSound(sidx) {
     audio.play().catch(function (err) {
         console.error("Error playing sound:", err);
     });
-};
+}
 
 msgBus.on("soundevent", (sevent) => {
-    const enable = getPreference(
-        `sound::${sevent}::enabled`,
-        "true"
-    );
+    const enable = getPreference(`sound::${sevent}::enabled`, "true");
     if (enable === "false") {
         return;
     }
-    const sidx = getPreference(
-        `sound::${sevent}::sound`,
-        "default"
-    );
+    const sidx = getPreference(`sound::${sevent}::sound`, "default");
     playSound(sidx);
 });
 
 msgBus.on("loggingout", function () {
     /* Remove chatrooms from view */
-    Ext.getCmp("chatpanel").items.each(function (panel) {
-        if (panel.chatType === "groupchat") {
-            //Ext.getCmp('chatpanel').remove(panel);
-            panel.clearRoom();
-        }
-    });
+    const chatPanel = Ext.getCmp("chatpanel");
+    if (chatPanel && chatPanel.items) {
+        chatPanel.items.each(function (panel) {
+            if (panel.chatType === "groupchat") {
+                //Ext.getCmp('chatpanel').remove(panel);
+                panel.clearRoom();
+            }
+        });
+    }
     /* Remove buddies */
     const buddiesTree = Ext.getCmp("buddies");
     if (buddiesTree && buddiesTree.getRootNode()) {
@@ -90,7 +84,7 @@ msgBus.on("loggingout", function () {
         bookmarksRoot.suspendEvents(false);
         bookmarksRoot.removeAll();
         bookmarksRoot.resumeEvents();
-        bookmarksRoot.initalLoad = false;
+        bookmarksRoot.initialLoad = false;
     }
     /* Remove chatrooms */
     const chatroomsTree = Ext.getCmp("chatrooms");
@@ -100,11 +94,17 @@ msgBus.on("loggingout", function () {
 });
 
 msgBus.on("loggedout", function () {
-    Ext.getCmp("loginwindow").show();
+    const loginWindow = Ext.getCmp("loginwindow");
+    if (loginWindow) {
+        loginWindow.show();
+    }
 });
 
 msgBus.on("loggedin", function () {
-    Ext.getCmp("loginwindow").hide();
+    const loginWindow = Ext.getCmp("loginwindow");
+    if (loginWindow) {
+        loginWindow.hide();
+    }
 
     Application.XMPPConn.send(
         $iq({
@@ -113,7 +113,7 @@ msgBus.on("loggedin", function () {
             to: LiveConfig.XMPPMUCHOST,
         }).c("query", {
             xmlns: "http://jabber.org/protocol/disco#items",
-        })
+        }),
     );
 });
 
@@ -121,10 +121,14 @@ msgBus.on("joinchat", function (room, handle, anonymous) {
     if (handle === null || handle === "") {
         handle = Application.USERNAME;
     }
-    let mcp = Ext.getCmp("chatpanel").getMUC(room);
+    const chatPanel = Ext.getCmp("chatpanel");
+    if (!chatPanel) {
+        return;
+    }
+    let mcp = chatPanel.getMUC(room);
     if (mcp === null) {
         Application.log("Creating chatroom:" + room);
-        mcp = Ext.getCmp("chatpanel").addMUC(room, handle, anonymous);
+        mcp = chatPanel.addMUC(room, handle, anonymous);
         // Ext.getCmp("chatpanel").setActiveTab(mcp);
         /* Initial Presence */
         const p = $pres({
@@ -144,12 +148,12 @@ msgBus.on("joinchat", function (room, handle, anonymous) {
                     $pres({
                         type: "unavailable",
                         to: room + "/" + handle,
-                    })
+                    }),
                 );
             }
         });
     }
-    Ext.getCmp("chatpanel").setActiveTab(mcp);
+    chatPanel.setActiveTab(mcp);
 });
 
 export { playSound };

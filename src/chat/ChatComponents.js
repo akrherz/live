@@ -62,10 +62,7 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        MUCChatPanel.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        MUCChatPanel.superclass.initComponent.apply(this, arguments);
         this.buildItems();
     },
     clearRoom: function () {
@@ -205,7 +202,6 @@ const ChatPanel = Ext.extend(Ext.Panel, {
     },
 });
 
-
 const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     bodyStyle: { "margin-left": "-15px" },
     title: "0 people in room",
@@ -215,7 +211,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     initComponent: function () {
         this.root = {
             text: "Room Users",
-            expanded: true
+            expanded: true,
         };
         const iconfig = {
             plugins: new DataTip({
@@ -251,10 +247,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        MUCRoomUsers.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        MUCRoomUsers.superclass.initComponent.apply(this, arguments);
 
         // Robustly update the title with the number of people in the room
         const updateTitle = () => {
@@ -262,7 +255,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             let count = 0;
             if (root && root.childNodes) {
                 // Only count visible, non-placeholder nodes
-                count = root.childNodes.filter(function(n) {
+                count = root.childNodes.filter(function (n) {
                     return n && n.data && n.data.jid;
                 }).length;
             }
@@ -280,7 +273,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             this.getStore().on("remove", updateTitle, this);
         }
         updateTitle();
-    }
+    },
 });
 
 Application.colors = [
@@ -341,8 +334,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                     autocomplete: "off",
                 },
                 style: {
-                    background:
-                        "#" + getPreference("bgcolor", "FFFFFF"),
+                    background: "#" + getPreference("bgcolor", "FFFFFF"),
                     color: "#" + getPreference("fgcolor", "000000"),
                 },
                 enableKeyEvents: true,
@@ -418,14 +410,8 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                         txt.focus();
                         return false;
                     }
-                    const bgcolor = getPreference(
-                        "bgcolor",
-                        "FFFFFF",
-                    );
-                    const fgcolor = getPreference(
-                        "fgcolor",
-                        "000000",
-                    );
+                    const bgcolor = getPreference("bgcolor", "FFFFFF");
+                    const fgcolor = getPreference("fgcolor", "000000");
 
                     /* allchat */
                     if (this.ownerCt.ownerCt.chatType === "allchats") {
@@ -500,10 +486,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                 },
             },
         ];
-        ChatTextEntry.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        ChatTextEntry.superclass.initComponent.apply(this, arguments);
     },
 });
 
@@ -528,7 +511,9 @@ Application.msgFormatter = new Ext.XTemplate(
     "{message}</p>",
     {
         isNotToday: function (ts) {
-            return new Date().format("md") !== ts.format("md");
+            // Use Ext.Date.format for date formatting
+            const today = new Date();
+            return Ext.Date.format(today, "md") !== Ext.Date.format(ts, "md");
         },
         getAuthorClass: function (jid) {
             //console.log("node: "+Strophe.getNodeFromJid(jid) );
@@ -629,8 +614,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         {
             icon: "icons/font-less.png",
             handler: function () {
-                const size =
-                    parseInt(getPreference("font-size", 14)) - 2;
+                const size = parseInt(getPreference("font-size", 14)) - 2;
                 setPreference("font-size", size);
                 //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
                 const cssfmt = String.format("normal {0}px arial", size);
@@ -645,8 +629,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         {
             icon: "icons/font-more.png",
             handler: function () {
-                const size =
-                    parseInt(getPreference("font-size", 14)) + 2;
+                const size = parseInt(getPreference("font-size", 14)) + 2;
                 setPreference("font-size", size);
                 const cssfmt = String.format("normal {0}px arial", size);
                 Ext.util.CSS.updateRule(
@@ -670,7 +653,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 hidden: true,
             },
             {
-                id: "message",
+                // Removed id: "message" to avoid duplicate component id errors
                 header: "Message",
                 sortable: true,
                 dataIndex: "ts",
@@ -694,6 +677,36 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
         ];
+        const scrollToLatest = () => {
+            const gridView = this.getView && this.getView();
+            const gridStore = this.getStore && this.getStore();
+            if (!gridView || !gridStore || gridStore.getCount() === 0) {
+                return;
+            }
+            Ext.defer(
+                function () {
+                    const viewInner = this.getView && this.getView();
+                    const storeInner = this.getStore && this.getStore();
+                    if (
+                        !viewInner ||
+                        !storeInner ||
+                        storeInner.getCount() === 0
+                    ) {
+                        return;
+                    }
+                    const lastIndex = storeInner.getCount() - 1;
+                    if (viewInner.focusRow) {
+                        viewInner.focusRow(lastIndex);
+                    } else if (viewInner.el && viewInner.el.dom) {
+                        viewInner.el.dom.scrollTop =
+                            viewInner.el.dom.scrollHeight;
+                    }
+                },
+                50,
+                this,
+            );
+        };
+
         this.store = new Ext.data.ArrayStore({
             sortInfo: {
                 field: "ts",
@@ -740,11 +753,20 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     if (records[i].get("author") !== "iembot") {
                         nonIEMBot = true;
                     }
-                    if (records[i].get("message").match(/tornado/i)) {
+                    const messageText = records[i].get("message");
+                    const handle = this.ownerCt && this.ownerCt.handle;
+                    if (
+                        typeof messageText === "string" &&
+                        messageText.match(/tornado/i)
+                    ) {
                         msgBus.fire("soundevent", "tornado");
                     }
                     // TODO: figure out how to make this case insensitive
-                    if (records[i].get("message").match(this.ownerCt.handle)) {
+                    if (
+                        typeof messageText === "string" &&
+                        handle &&
+                        messageText.match(handle)
+                    ) {
                         msgBus.fire("soundevent", "myhandle");
                     }
                     nothingNew = false;
@@ -766,6 +788,20 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
             this,
         );
+        this.store.on(
+            "add",
+            function () {
+                scrollToLatest();
+            },
+            this,
+        );
+        this.store.on(
+            "datachanged",
+            function () {
+                scrollToLatest();
+            },
+            this,
+        );
         const iconfig = {
             selModel: {
                 type: "rowmodel",
@@ -778,21 +814,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
             listeners: {
-                add: function (store, records) {
-                    // Auto-scroll to the latest message after a short delay to ensure rendering
-                    Ext.defer(
-                        function () {
-                            const view = this.getView();
-                            if (view && records.length > 0) {
-                                const lastRecord = records[records.length - 1];
-                                view.focusRow(lastRecord);
-                            }
-                        },
-                        50,
-                        this,
-                    );
-                },
                 render: function (p) {
+                    scrollToLatest();
                     const viewEl = p.getView().getEl();
                     if (viewEl) {
                         viewEl.on("mousedown", function (e, t) {
@@ -826,10 +849,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         };
         Ext.apply(this, iconfig);
 
-        ChatGridPanel.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        ChatGridPanel.superclass.initComponent.apply(this, arguments);
 
         /*
          * this.view = new Ext.grid.GridView({ cellTpl: new Ext.Template( '<td class="x-grid3-col x-grid3-cell x-grid3-td-{id} {css}" style="{style}" tabIndex="0" {cellAttr}>', '<div
@@ -838,7 +858,6 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
          */
     },
 });
-
 
 /*
  * Handles all of the ROSTER related activities
@@ -987,8 +1006,7 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
         // this.addEvents('reorder');
         if (!this.ddGroupId) {
             this.ddGroupId =
-                "dd-tabpanel-group-" +
-                DDTabPanel.superclass.getId.call(this);
+                "dd-tabpanel-group-" + DDTabPanel.superclass.getId.call(this);
         }
         // Initialize stack for tracking tab history
         this.stack = new Ext.util.MixedCollection();
@@ -1112,20 +1130,56 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
             this.stack.remove(c);
         }
         delete c.tabEl;
-        c.un("disable", this.onItemDisabled, this);
-        c.un("enable", this.onItemEnabled, this);
-        c.un("titlechange", this.onItemTitleChanged, this);
-        c.un("iconchange", this.onItemIconChanged, this);
-        c.un("beforeshow", this.onBeforeShowItem, this);
+        // Removed c.un(...) calls for listeners that may not have been added, to prevent ExtJS errors
 
-        // if this.move, the active tab stays the active one
-        if (c === this.activeTab) {
+        // Only manage active tab if this panel is still rendered and not being destroyed
+        if (c === this.activeTab && !this.destroying && !this.destroyed) {
+            const isPanelInDom =
+                this.el && this.el.dom && document.body.contains(this.el.dom);
+            const isTabBarInDom =
+                this.tabBar &&
+                this.tabBar.el &&
+                this.tabBar.el.dom &&
+                document.body.contains(this.tabBar.el.dom);
+            if (!isPanelInDom || !isTabBarInDom) {
+                this.activeTab = null;
+                return;
+            }
             if (!this.move) {
                 const next = this.stack ? this.stack.next() : null;
                 if (next) {
-                    this.setActiveTab(next);
+                    Ext.defer(() => {
+                        try {
+                            if (
+                                !this.destroyed &&
+                                this.items.contains(next) &&
+                                this.el &&
+                                this.el.dom &&
+                                document.body.contains(this.el.dom)
+                            ) {
+                                this.setActiveTab(next);
+                            }
+                        } catch {
+                            // Defensive: prevent UI lockup if ExtJS throws
+                            this.activeTab = null;
+                        }
+                    }, 1);
                 } else if (this.items.getCount() > 0) {
-                    this.setActiveTab(0);
+                    Ext.defer(() => {
+                        try {
+                            if (
+                                !this.destroyed &&
+                                this.items.getCount() > 0 &&
+                                this.el &&
+                                this.el.dom &&
+                                document.body.contains(this.el.dom)
+                            ) {
+                                this.setActiveTab(0);
+                            }
+                        } catch {
+                            this.activeTab = null;
+                        }
+                    }, 1);
                 } else {
                     this.activeTab = null;
                 }
@@ -1323,22 +1377,14 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
         if (mcp.closable === false) {
             return;
         }
-        Ext.defer(
-            function () {
-                if (!mcp || mcp.destroyed || mcp.ownerCt !== this) {
-                    return;
-                }
-                if (mcp.close) {
-                    mcp.close();
-                    return;
-                }
-                Ext.suspendLayouts();
+        // Defer removal to next event loop to avoid ExtJS DOM race conditions
+        Ext.defer(() => {
+            if (mcp.close && !mcp.destroyed) {
+                mcp.close();
+            } else if (!mcp.destroyed) {
                 this.remove(mcp, true);
-                Ext.resumeLayouts(true);
-            },
-            50,
-            this,
-        );
+            }
+        }, 1);
     },
     addChat: function (jid) {
         let title = Strophe.getNodeFromJid(jid);
@@ -1362,21 +1408,13 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
         if (!cp || cp.destroyed) {
             return;
         }
-        Ext.defer(
-            function () {
-                if (!cp || cp.destroyed || cp.ownerCt !== this) {
-                    return;
-                }
-                if (cp.close) {
-                    cp.close();
-                    return;
-                }
-                Ext.suspendLayouts();
+        // Defer removal to next event loop to avoid ExtJS DOM race conditions
+        Ext.defer(() => {
+            if (cp.close && !cp.destroyed) {
+                cp.close();
+            } else if (!cp.destroyed) {
                 this.remove(cp, true);
-                Ext.resumeLayouts(true);
-            },
-            50,
-            this,
-        );
+            }
+        }, 1);
     },
 });
