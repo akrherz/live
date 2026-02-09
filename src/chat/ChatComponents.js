@@ -62,10 +62,7 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        MUCChatPanel.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        MUCChatPanel.superclass.initComponent.apply(this, arguments);
         this.buildItems();
     },
     clearRoom: function () {
@@ -205,7 +202,6 @@ const ChatPanel = Ext.extend(Ext.Panel, {
     },
 });
 
-
 const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     bodyStyle: { "margin-left": "-15px" },
     title: "0 people in room",
@@ -215,7 +211,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     initComponent: function () {
         this.root = {
             text: "Room Users",
-            expanded: true
+            expanded: true,
         };
         const iconfig = {
             plugins: new DataTip({
@@ -251,10 +247,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
         };
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
-        MUCRoomUsers.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        MUCRoomUsers.superclass.initComponent.apply(this, arguments);
 
         // Robustly update the title with the number of people in the room
         const updateTitle = () => {
@@ -262,7 +255,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             let count = 0;
             if (root && root.childNodes) {
                 // Only count visible, non-placeholder nodes
-                count = root.childNodes.filter(function(n) {
+                count = root.childNodes.filter(function (n) {
                     return n && n.data && n.data.jid;
                 }).length;
             }
@@ -280,7 +273,7 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
             this.getStore().on("remove", updateTitle, this);
         }
         updateTitle();
-    }
+    },
 });
 
 Application.colors = [
@@ -341,8 +334,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                     autocomplete: "off",
                 },
                 style: {
-                    background:
-                        "#" + getPreference("bgcolor", "FFFFFF"),
+                    background: "#" + getPreference("bgcolor", "FFFFFF"),
                     color: "#" + getPreference("fgcolor", "000000"),
                 },
                 enableKeyEvents: true,
@@ -418,14 +410,8 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                         txt.focus();
                         return false;
                     }
-                    const bgcolor = getPreference(
-                        "bgcolor",
-                        "FFFFFF",
-                    );
-                    const fgcolor = getPreference(
-                        "fgcolor",
-                        "000000",
-                    );
+                    const bgcolor = getPreference("bgcolor", "FFFFFF");
+                    const fgcolor = getPreference("fgcolor", "000000");
 
                     /* allchat */
                     if (this.ownerCt.ownerCt.chatType === "allchats") {
@@ -500,10 +486,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                 },
             },
         ];
-        ChatTextEntry.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        ChatTextEntry.superclass.initComponent.apply(this, arguments);
     },
 });
 
@@ -631,8 +614,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         {
             icon: "icons/font-less.png",
             handler: function () {
-                const size =
-                    parseInt(getPreference("font-size", 14)) - 2;
+                const size = parseInt(getPreference("font-size", 14)) - 2;
                 setPreference("font-size", size);
                 //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
                 const cssfmt = String.format("normal {0}px arial", size);
@@ -647,8 +629,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         {
             icon: "icons/font-more.png",
             handler: function () {
-                const size =
-                    parseInt(getPreference("font-size", 14)) + 2;
+                const size = parseInt(getPreference("font-size", 14)) + 2;
                 setPreference("font-size", size);
                 const cssfmt = String.format("normal {0}px arial", size);
                 Ext.util.CSS.updateRule(
@@ -706,14 +687,19 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 function () {
                     const viewInner = this.getView && this.getView();
                     const storeInner = this.getStore && this.getStore();
-                    if (!viewInner || !storeInner || storeInner.getCount() === 0) {
+                    if (
+                        !viewInner ||
+                        !storeInner ||
+                        storeInner.getCount() === 0
+                    ) {
                         return;
                     }
                     const lastIndex = storeInner.getCount() - 1;
                     if (viewInner.focusRow) {
                         viewInner.focusRow(lastIndex);
                     } else if (viewInner.el && viewInner.el.dom) {
-                        viewInner.el.dom.scrollTop = viewInner.el.dom.scrollHeight;
+                        viewInner.el.dom.scrollTop =
+                            viewInner.el.dom.scrollHeight;
                     }
                 },
                 50,
@@ -767,11 +753,20 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     if (records[i].get("author") !== "iembot") {
                         nonIEMBot = true;
                     }
-                    if (records[i].get("message").match(/tornado/i)) {
+                    const messageText = records[i].get("message");
+                    const handle = this.ownerCt && this.ownerCt.handle;
+                    if (
+                        typeof messageText === "string" &&
+                        messageText.match(/tornado/i)
+                    ) {
                         msgBus.fire("soundevent", "tornado");
                     }
                     // TODO: figure out how to make this case insensitive
-                    if (records[i].get("message").match(this.ownerCt.handle)) {
+                    if (
+                        typeof messageText === "string" &&
+                        handle &&
+                        messageText.match(handle)
+                    ) {
                         msgBus.fire("soundevent", "myhandle");
                     }
                     nothingNew = false;
@@ -854,10 +849,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         };
         Ext.apply(this, iconfig);
 
-        ChatGridPanel.superclass.initComponent.apply(
-            this,
-            arguments,
-        );
+        ChatGridPanel.superclass.initComponent.apply(this, arguments);
 
         /*
          * this.view = new Ext.grid.GridView({ cellTpl: new Ext.Template( '<td class="x-grid3-col x-grid3-cell x-grid3-td-{id} {css}" style="{style}" tabIndex="0" {cellAttr}>', '<div
@@ -866,7 +858,6 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
          */
     },
 });
-
 
 /*
  * Handles all of the ROSTER related activities
@@ -1015,8 +1006,7 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
         // this.addEvents('reorder');
         if (!this.ddGroupId) {
             this.ddGroupId =
-                "dd-tabpanel-group-" +
-                DDTabPanel.superclass.getId.call(this);
+                "dd-tabpanel-group-" + DDTabPanel.superclass.getId.call(this);
         }
         // Initialize stack for tracking tab history
         this.stack = new Ext.util.MixedCollection();
@@ -1144,8 +1134,13 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
 
         // Only manage active tab if this panel is still rendered and not being destroyed
         if (c === this.activeTab && !this.destroying && !this.destroyed) {
-            const isPanelInDom = this.el && this.el.dom && document.body.contains(this.el.dom);
-            const isTabBarInDom = this.tabBar && this.tabBar.el && this.tabBar.el.dom && document.body.contains(this.tabBar.el.dom);
+            const isPanelInDom =
+                this.el && this.el.dom && document.body.contains(this.el.dom);
+            const isTabBarInDom =
+                this.tabBar &&
+                this.tabBar.el &&
+                this.tabBar.el.dom &&
+                document.body.contains(this.tabBar.el.dom);
             if (!isPanelInDom || !isTabBarInDom) {
                 this.activeTab = null;
                 return;
@@ -1155,7 +1150,13 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
                 if (next) {
                     Ext.defer(() => {
                         try {
-                            if (!this.destroyed && this.items.contains(next) && this.el && this.el.dom && document.body.contains(this.el.dom)) {
+                            if (
+                                !this.destroyed &&
+                                this.items.contains(next) &&
+                                this.el &&
+                                this.el.dom &&
+                                document.body.contains(this.el.dom)
+                            ) {
                                 this.setActiveTab(next);
                             }
                         } catch {
@@ -1166,7 +1167,13 @@ const DDTabPanel = Ext.extend(Ext.TabPanel, {
                 } else if (this.items.getCount() > 0) {
                     Ext.defer(() => {
                         try {
-                            if (!this.destroyed && this.items.getCount() > 0 && this.el && this.el.dom && document.body.contains(this.el.dom)) {
+                            if (
+                                !this.destroyed &&
+                                this.items.getCount() > 0 &&
+                                this.el &&
+                                this.el.dom &&
+                                document.body.contains(this.el.dom)
+                            ) {
                                 this.setActiveTab(0);
                             }
                         } catch {

@@ -265,7 +265,7 @@ export function setAppTime() {
  * Setup click handlers for feature info popups
  */
 function setupFeatureClickHandlers() {
-    if (!olMap) return;
+    if (!olMap) {return;}
 
     olMap.on('click', function(evt) {
         const features = [];
@@ -320,7 +320,7 @@ export function createOLMap(targetDiv) {
     Application.layerstore = {
         data: {
             each: function(callback, scope) {
-                if (!window.olMap) return;
+                if (!window.olMap) {return;}
                 window.olMap.getLayers().forEach(layer => {
                     const record = {
                         getLayer: () => layer,
@@ -332,7 +332,7 @@ export function createOLMap(targetDiv) {
         },
         find: function(field, value) {
             let index = -1;
-            if (!window.olMap) return index;
+            if (!window.olMap) {return index;}
             window.olMap.getLayers().forEach((layer, idx) => {
                 if (layer.get(field) === value || layer.get('name') === value) {
                     index = idx;
@@ -341,7 +341,7 @@ export function createOLMap(targetDiv) {
             return index;
         },
         getAt: function(index) {
-            if (!window.olMap) return null;
+            if (!window.olMap) {return null;}
             const layer = window.olMap.getLayers().item(index);
             return layer ? {
                 getLayer: () => layer,
