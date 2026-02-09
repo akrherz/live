@@ -696,6 +696,31 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
         ];
+        const scrollToLatest = () => {
+            const gridView = this.getView && this.getView();
+            const gridStore = this.getStore && this.getStore();
+            if (!gridView || !gridStore || gridStore.getCount() === 0) {
+                return;
+            }
+            Ext.defer(
+                function () {
+                    const viewInner = this.getView && this.getView();
+                    const storeInner = this.getStore && this.getStore();
+                    if (!viewInner || !storeInner || storeInner.getCount() === 0) {
+                        return;
+                    }
+                    const lastIndex = storeInner.getCount() - 1;
+                    if (viewInner.focusRow) {
+                        viewInner.focusRow(lastIndex);
+                    } else if (viewInner.el && viewInner.el.dom) {
+                        viewInner.el.dom.scrollTop = viewInner.el.dom.scrollHeight;
+                    }
+                },
+                50,
+                this,
+            );
+        };
+
         this.store = new Ext.data.ArrayStore({
             sortInfo: {
                 field: "ts",
@@ -768,6 +793,20 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
             this,
         );
+        this.store.on(
+            "add",
+            function () {
+                scrollToLatest();
+            },
+            this,
+        );
+        this.store.on(
+            "datachanged",
+            function () {
+                scrollToLatest();
+            },
+            this,
+        );
         const iconfig = {
             selModel: {
                 type: "rowmodel",
@@ -780,21 +819,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
             listeners: {
-                add: function (store, records) {
-                    // Auto-scroll to the latest message after a short delay to ensure rendering
-                    Ext.defer(
-                        function () {
-                            const view = this.getView();
-                            if (view && records.length > 0) {
-                                const lastRecord = records[records.length - 1];
-                                view.focusRow(lastRecord);
-                            }
-                        },
-                        50,
-                        this,
-                    );
-                },
                 render: function (p) {
+                    scrollToLatest();
                     const viewEl = p.getView().getEl();
                     if (viewEl) {
                         viewEl.on("mousedown", function (e, t) {
