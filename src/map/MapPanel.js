@@ -5,19 +5,33 @@
 
 import Map from 'ol/Map';
 import View from 'ol/View';
-import {fromLonLat, transformExtent} from 'ol/proj';
+import {fromLonLat} from 'ol/proj';
 import {defaults as defaultControls} from 'ol/control';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import OSM from 'ol/source/OSM';
+import XYZ from 'ol/source/XYZ';
 import KML from 'ol/format/KML';
 import GeoJSON from 'ol/format/GeoJSON';
-import {Style, Fill, Stroke, Circle as CircleStyle} from 'ol/style';
+import {Style, Fill, Stroke, Icon} from 'ol/style';
 import {createLSRStore, createSBWStore} from './feature-stores.js';
+import {lsrStyles} from './lsr-styles.js';
+import { Application } from '../app-state.js';
 
 // Global reference to the OpenLayers map
 let olMap = null;
+
+const lsrStyleCache = {};
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
 
 /**
  * Get the OpenLayers map instance
@@ -86,17 +100,41 @@ function sbwStyleFunction(feature) {
  * Style function for Local Storm Reports
  * Uses the imported lsrStyles configuration
  */
-function lsrStyleFunction() {
-    // TODO: Import and use lsrStyles from lsr-styles.js
-    // For now, using a simple circle
-    return new Style({
-        image: new CircleStyle({
-            radius: 10,
-            fill: new Fill({
-                color: '#ff0000',
-            }),
+function lsrStyleFunction(feature) {
+    const ptype = feature?.get('ptype');
+    const styleKey = ptype ?? 'default';
+
+    if (lsrStyleCache[styleKey]) {
+        return lsrStyleCache[styleKey];
+    }
+
+    const iconPath = lsrStyles[styleKey]?.externalGraphic;
+    const style = new Style({
+        image: new Icon({
+            src: iconPath || 'lsr-icons/other.png',
+            anchor: [0.5, 1],
+            scale: 0.9,
+            crossOrigin: 'anonymous',
         }),
     });
+
+    lsrStyleCache[styleKey] = style;
+    return style;
+}
+
+function createIEMTileLayer(name, layername, checkedGroup) {
+    const layer = new TileLayer({
+        source: new XYZ({
+            url: `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${layername}/{z}/{x}/{y}.png`,
+            crossOrigin: 'anonymous',
+        }),
+        visible: false,
+        opacity: 0.8,
+    });
+    layer.set('name', name);
+    layer.set('checkedGroup', checkedGroup);
+    layer.set('refreshable', true);
+    return layer;
 }
 
 /**
@@ -226,6 +264,66 @@ function createVectorLayers() {
         },
     });
 
+    const ridgeIILayer = createIEMTileLayer(
+        'NEXRAD Base Reflectivity',
+        'nexrad-n0q-900913',
+        'Precip',
+    );
+
+    const q2hsrLayer = createIEMTileLayer(
+        'NMQ Hybrid Scan Reflectivity',
+        'q2-hsr-900913',
+        'Precip',
+    );
+
+    const q21hLayer = createIEMTileLayer(
+        'NMQ Q2 1 Hour Precip',
+        'q2-n1p-900913',
+        'Precip',
+    );
+
+    const q21dLayer = createIEMTileLayer(
+        'NMQ Q2 1 Day Precip',
+        'q2-p24h-900913',
+        'Precip',
+    );
+
+    const q22dLayer = createIEMTileLayer(
+        'NMQ Q2 2 Day Precip',
+        'q2-p48h-900913',
+        'Precip',
+    );
+
+    const q23dLayer = createIEMTileLayer(
+        'NMQ Q2 3 Day Precip',
+        'q2-p72h-900913',
+        'Precip',
+    );
+
+    const goesEastM1VISLayer = createIEMTileLayer(
+        'GOES East Mesoscale1 Visible',
+        'goes_east_mesoscale-1_ch02',
+        'Satellite',
+    );
+
+    const goesWestM1VISLayer = createIEMTileLayer(
+        'GOES West Mesoscale1 Visible',
+        'goes_west_mesoscale-1_ch02',
+        'Satellite',
+    );
+
+    const goesWestVISLayer = createIEMTileLayer(
+        'GOES West Visible',
+        'goes_west_conus_ch02',
+        'Satellite',
+    );
+
+    const goesEastVISLayer = createIEMTileLayer(
+        'GOES East Visible',
+        'goes_west_conus_ch13',
+        'Satellite',
+    );
+
     return {
         lsrsLayer,
         sbwsLayer,
@@ -236,6 +334,16 @@ function createVectorLayers() {
         qpf1Layer,
         qpf2Layer,
         qpf15Layer,
+        ridgeIILayer,
+        q2hsrLayer,
+        q21hLayer,
+        q21dLayer,
+        q22dLayer,
+        q23dLayer,
+        goesEastM1VISLayer,
+        goesWestM1VISLayer,
+        goesWestVISLayer,
+        goesEastVISLayer,
     };
 }
 
@@ -276,13 +384,13 @@ function setupFeatureClickHandlers() {
         if (features.length > 0) {
             const {feature, layer} = features[0];
             const props = feature.getProperties();
-            const layerName = layer.get('name') || 'Feature';
+            const layerName = escapeHtml(layer.get('name') || 'Feature');
 
             // Build HTML content for popup
             let html = `<h3>${layerName}</h3><table>`;
             for (const [key, value] of Object.entries(props)) {
                 if (key !== 'geometry') {
-                    html += `<tr><td><b>${key}:</b></td><td>${value}</td></tr>`;
+                    html += `<tr><td><b>${escapeHtml(key)}:</b></td><td>${escapeHtml(value)}</td></tr>`;
                 }
             }
             html += '</table>';
@@ -320,8 +428,8 @@ export function createOLMap(targetDiv) {
     Application.layerstore = {
         data: {
             each: function(callback, scope) {
-                if (!window.olMap) {return;}
-                window.olMap.getLayers().forEach(layer => {
+                if (!olMap) {return;}
+                olMap.getLayers().forEach(layer => {
                     const record = {
                         getLayer: () => layer,
                         get: (key) => layer.get(key),
@@ -332,8 +440,8 @@ export function createOLMap(targetDiv) {
         },
         find: function(field, value) {
             let index = -1;
-            if (!window.olMap) {return index;}
-            window.olMap.getLayers().forEach((layer, idx) => {
+            if (!olMap) {return index;}
+            olMap.getLayers().forEach((layer, idx) => {
                 if (layer.get(field) === value || layer.get('name') === value) {
                     index = idx;
                 }
@@ -341,8 +449,8 @@ export function createOLMap(targetDiv) {
             return index;
         },
         getAt: function(index) {
-            if (!window.olMap) {return null;}
-            const layer = window.olMap.getLayers().item(index);
+            if (!olMap) {return null;}
+            const layer = olMap.getLayers().item(index);
             return layer ? {
                 getLayer: () => layer,
                 get: (key) => layer.get(key),
@@ -365,10 +473,18 @@ export function createOLMap(targetDiv) {
         view: new View({
             center: fromLonLat([-95.0, 42.0]),
             zoom: 5,
-            extent: transformExtent([-130, 20, -65, 50], 'EPSG:4326', 'EPSG:3857'),
         }),
         controls: defaultControls(),
     });
+
+    const layersByName = {};
+    olMap.getLayers().forEach((layer) => {
+        const layerName = layer.get('name') || (layer.getProperties && layer.getProperties().name);
+        if (layerName) {
+            layersByName[layerName] = layer;
+        }
+    });
+    Application.mapLayersByName = layersByName;
 
     return olMap;
 }
@@ -377,6 +493,64 @@ export function createOLMap(targetDiv) {
  * Custom ExtJS panel that hosts an OpenLayers 8 map
  */
 export function createMapPanel() {
+    function ensureLSRGridWindow() {
+        let win = Ext.getCmp('lsrgrid');
+        if (win) {
+            return win;
+        }
+        win = new Ext.Window({
+            id: 'lsrgrid',
+            title: 'Local Storm Reports',
+            width: 950,
+            height: 360,
+            closeAction: 'hide',
+            layout: 'fit',
+            items: [
+                new Ext.grid.GridPanel({
+                    store: Application.lsrStore,
+                    stripeRows: true,
+                    columns: [
+                        { header: 'Valid', dataIndex: 'valid', width: 160 },
+                        { header: 'Message', dataIndex: 'message', flex: 1 },
+                    ],
+                }),
+            ],
+        });
+        return win;
+    }
+
+    function ensureSBWGridWindow() {
+        let win = Ext.getCmp('sbwgrid');
+        if (win) {
+            return win;
+        }
+        win = new Ext.Window({
+            id: 'sbwgrid',
+            title: 'Storm Based Warnings',
+            width: 900,
+            height: 320,
+            closeAction: 'hide',
+            layout: 'fit',
+            items: [
+                new Ext.grid.GridPanel({
+                    store: Application.sbwStore,
+                    stripeRows: true,
+                    columns: [
+                        { header: 'Issue', dataIndex: 'issue', width: 150 },
+                        { header: 'Expire', dataIndex: 'expire', width: 150 },
+                        { header: 'Phenomena', dataIndex: 'phenomena', width: 90 },
+                        { header: 'Significance', dataIndex: 'significance', width: 100 },
+                        { header: 'WFO', dataIndex: 'wfo', width: 80 },
+                        { header: 'Status', dataIndex: 'status', width: 80 },
+                        { header: 'Type', dataIndex: 'ptype', id: 'sbw-type-col' },
+                    ],
+                    autoExpandColumn: 'sbw-type-col',
+                }),
+            ],
+        });
+        return win;
+    }
+
     return {
         xtype: 'panel',
         region: 'center',
@@ -397,7 +571,7 @@ export function createMapPanel() {
                         setupFeatureClickHandlers();
 
                         // Store map reference on the panel
-                        this.map = window.olMap;
+                        this.map = getMap();
                     }
                 }, 100);
             },
@@ -430,31 +604,31 @@ export function createMapPanel() {
                         {
                             text: 'LSR Grid',
                             handler: function() {
-                                if (!Ext.getCmp('lsrgrid')) {
-                                    new Application.LSRGrid({ id: 'lsrgrid' });
-                                }
-                                Ext.getCmp('lsrgrid').show();
+                                ensureLSRGridWindow().show();
                             },
                         },
                         {
                             text: 'SBW Grid',
                             handler: function() {
-                                if (!Ext.getCmp('sbwgrid')) {
-                                    new Application.SBWGrid({ id: 'sbwgrid' });
-                                }
-                                Ext.getCmp('sbwgrid').show();
+                                ensureSBWGridWindow().show();
                             },
                         },
                         {
                             text: 'Show Legend',
                             handler: function() {
-                                if (!Ext.getCmp('maplegend')) {
-                                    new Application.MapLegend({
+                                const legendsHtml = document.getElementById('legends')
+                                    ? document.getElementById('legends').innerHTML
+                                    : '<p>Legend content unavailable.</p>';
+                                let legendWindow = Ext.getCmp('maplegend');
+                                if (!legendWindow) {
+                                    legendWindow = new Application.MapLegend({
                                         id: 'maplegend',
-                                        contentEl: 'legends',
+                                        html: legendsHtml,
                                     });
+                                } else if (legendWindow.body && legendWindow.body.update) {
+                                    legendWindow.body.update(legendsHtml);
                                 }
-                                Ext.getCmp('maplegend').show();
+                                legendWindow.show();
                             },
                         },
                     ],
@@ -478,8 +652,9 @@ export function createMapPanel() {
                     change: function(slider, value) {
                         // Update opacity for all vector layers
                         const opacity = value / 100;
-                        if (window.olMap) {
-                            window.olMap.getLayers().forEach(layer => {
+                        const map = getMap();
+                        if (map) {
+                            map.getLayers().forEach(layer => {
                                 if (layer instanceof VectorLayer) {
                                     layer.setOpacity(opacity);
                                 }
@@ -496,6 +671,42 @@ export function createMapPanel() {
  * Create layer tree panel that controls map layers
  */
 export function createLayerTree() {
+    function handleLayerToggle(layerName, visible) {
+        if (!layerName) {
+            return;
+        }
+        setLayerVisibleByName(layerName, visible);
+    }
+
+    function setLayerVisibleByName(layerName, visible) {
+        if (!layerName || !olMap) {
+            return;
+        }
+        let layer =
+            Application.mapLayersByName && Application.mapLayersByName[layerName]
+                ? Application.mapLayersByName[layerName]
+                : null;
+        if (!layer) {
+            const layers = olMap.getLayers().getArray();
+            layer = layers.find((candidateLayer) =>
+                candidateLayer.get('name') === layerName ||
+                candidateLayer.getProperties().name === layerName
+            );
+        }
+        if (layer) {
+            layer.setVisible(visible);
+            if (visible) {
+                const source = layer.getSource && layer.getSource();
+                if (source && source.refresh) {
+                    source.refresh();
+                }
+            }
+            if (olMap.renderSync) {
+                olMap.renderSync();
+            }
+        }
+    }
+
     return {
         xtype: 'treepanel',
         region: 'east',
@@ -516,6 +727,76 @@ export function createLayerTree() {
                             text: 'OpenStreetMap',
                             checked: true,
                             leaf: true,
+                        },
+                    ],
+                },
+                {
+                    text: 'Precip',
+                    children: [
+                        {
+                            text: 'NEXRAD Base Reflectivity',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NEXRAD Base Reflectivity',
+                        },
+                        {
+                            text: 'NMQ Hybrid Scan Reflectivity',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NMQ Hybrid Scan Reflectivity',
+                        },
+                        {
+                            text: 'NMQ Q2 1 Hour Precip',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NMQ Q2 1 Hour Precip',
+                        },
+                        {
+                            text: 'NMQ Q2 1 Day Precip',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NMQ Q2 1 Day Precip',
+                        },
+                        {
+                            text: 'NMQ Q2 2 Day Precip',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NMQ Q2 2 Day Precip',
+                        },
+                        {
+                            text: 'NMQ Q2 3 Day Precip',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NMQ Q2 3 Day Precip',
+                        },
+                    ],
+                },
+                {
+                    text: 'Satellite',
+                    children: [
+                        {
+                            text: 'GOES East Mesoscale1 Visible',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'GOES East Mesoscale1 Visible',
+                        },
+                        {
+                            text: 'GOES West Mesoscale1 Visible',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'GOES West Mesoscale1 Visible',
+                        },
+                        {
+                            text: 'GOES West Visible',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'GOES West Visible',
+                        },
+                        {
+                            text: 'GOES East Visible',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'GOES East Visible',
                         },
                     ],
                 },
@@ -597,15 +878,30 @@ export function createLayerTree() {
             ],
         },
         listeners: {
-            checkchange: (node, checked) => {
-                if (node.data && node.data.layerName && olMap) {
-                    const layers = olMap.getLayers().getArray();
-                    const layer = layers.find(l =>
-                        l.get('name') === node.data.layerName
-                    );
-                    if (layer) {
-                        layer.setVisible(checked);
+            afterrender: function(tree) {
+                tree.on('checkchange', function(node, checked) {
+                    if (node && node.data && node.data.layerName) {
+                        handleLayerToggle(node.data.layerName, checked);
                     }
+                });
+
+                const view = tree.getView && tree.getView();
+                if (view && view.on) {
+                    view.on('itemclick', function(_view, record, item, _index, event) {
+                        if (!record || !record.data || !record.data.layerName) {
+                            return;
+                        }
+                        const isCheckboxClick = Boolean(
+                            event && event.getTarget && event.getTarget('.x-tree-checkbox', item),
+                        );
+                        if (isCheckboxClick) {
+                            return;
+                        }
+                        const currentChecked = Boolean(record.get('checked'));
+                        const nextChecked = !currentChecked;
+                        record.set('checked', nextChecked);
+                        handleLayerToggle(record.data.layerName, nextChecked);
+                    });
                 }
             },
         },
@@ -613,8 +909,8 @@ export function createLayerTree() {
 }
 
 // Map refresh task - periodically reloads visible layers
-if (typeof window !== 'undefined' && window.Application) {
-    window.Application.MapTask = {
+if (typeof Application !== 'undefined') {
+    Application.MapTask = {
         skipFirst: true,
         run: function () {
             if (this.skipFirst) {
@@ -622,7 +918,7 @@ if (typeof window !== 'undefined' && window.Application) {
                 return;
             }
             // Reload all vector layers to get fresh data
-            const map = window.olMap;
+            const map = getMap();
             if (map) {
                 map.getLayers().forEach(layer => {
                     const source = layer.getSource();
@@ -638,8 +934,8 @@ if (typeof window !== 'undefined' && window.Application) {
 }
 
 // Export Application.LayerTree for backward compatibility
-if (typeof window !== 'undefined' && window.Application) {
-    window.Application.LayerTree = createLayerTree();
+if (typeof Application !== 'undefined') {
+    Application.LayerTree = createLayerTree();
 }
 
 export default createMapPanel();

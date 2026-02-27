@@ -3,3 +3,5 @@
 /.buildpath
 /node_modules
 /dist
+/public/vendor
+/coverage

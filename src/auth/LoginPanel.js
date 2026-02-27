@@ -12,15 +12,17 @@ import { doAnonymousLogin } from "../xmpp/handlers.js";
 export const LoginPanel = {
     xtype: "panel",
     html: `
-            <div class="login-panel">
+            <div class="login-shell">
+              <div class="login-panel">
                 <div class="login-header">
-                    <img src="/images/nws.png" width="100" alt="NWS Logo" />
+                    <img src="images/nws.png" width="92" alt="NWS Logo" />
                     <h2>Weather.IM Live</h2>
+                    <p class="welcome-text">Browser chat access for weather.im</p>
                 </div>
 
                 <div class="login-section primary-section">
                     <h3>Sign In</h3>
-                    <p class="welcome-text">Welcome to Weather.IM... please log in with your user account.</p>
+                    <p class="login-copy">Welcome to Weather.IM. Please sign in with your user account.</p>
                     <form id="login-form" class="login-form">
                         <div class="form-group">
                             <label for="username">Username</label>
@@ -42,7 +44,7 @@ export const LoginPanel = {
 
                 <div class="login-section">
                     <h3>Anonymous Access</h3>
-                    <p>You can login to this service without registering. Note that anonymous users cannot chat within rooms or save preferences.</p>
+                    <p class="login-copy">You can log in without registering. Anonymous users cannot chat within rooms or save preferences.</p>
                     <button type="button" id="anonymous-btn" class="btn btn-secondary btn-block">
                         Login Anonymously
                     </button>
@@ -50,13 +52,15 @@ export const LoginPanel = {
 
                 <div class="login-section">
                     <h3>New User?</h3>
-                    <p>Due to spam prevention, new users must register for an account.</p>
+                    <p class="login-copy">Due to spam prevention, new users must register for an account.</p>
                     <a href="/create.php" class="btn btn-secondary btn-block">Create Account</a>
                 </div>
+              </div>
             </div>
         `,
     border: false,
     autoScroll: true,
+    cls: "login-panel-wrapper",
     listeners: {
         afterrender: () => {
             // Attach event listeners after panel is rendered

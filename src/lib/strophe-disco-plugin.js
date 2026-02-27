@@ -220,6 +220,9 @@ Strophe.addConnectionPlugin("disco", {
         } else {
             items = this._items;
         }
+        if (!items) {
+            items = [];
+        }
         const iqresult = $iq({ type: "result", id: id, to: from }).c(
             "query",
             query_attrs,

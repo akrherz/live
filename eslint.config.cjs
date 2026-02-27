@@ -3,11 +3,11 @@ const globals = require('globals');
 
 module.exports = [
     {
-        ignores: ['dist/**', 'tests/**'],
+        ignores: ['dist/**', 'tests/**', 'public/vendor/**'],
     },
     js.configs.recommended,
     {
-        files: ['**/*.js'],
+        files: ['**/*.{js,mjs,cjs}'],
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',

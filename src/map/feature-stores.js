@@ -51,12 +51,7 @@ export function createLSRStore(lsrsLayer) {
         },
         fields: [
             { name: 'valid', type: 'string' },
-            { name: 'event', type: 'string' },
-            { name: 'magnitude', type: 'string' },
-            { name: 'city', type: 'string' },
-            { name: 'county', type: 'string' },
-            { name: 'state', type: 'string' },
-            { name: 'remark', type: 'string' },
+            { name: 'message', type: 'string' },
             { name: 'ptype', type: 'string' },
         ],
     });
@@ -72,6 +67,7 @@ export function createSBWStore(sbwsLayer) {
             direction: 'DESC',
         },
         fields: [
+            { name: 'vtec', type: 'string' },
             { name: 'issue', type: 'string' },
             { name: 'expire', type: 'string' },
             { name: 'phenomena', type: 'string' },

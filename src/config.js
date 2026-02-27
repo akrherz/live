@@ -3,15 +3,18 @@
  * Central configuration for Weather.IM Live application
  */
 
-// Initialize Application namespace
-if (typeof window !== 'undefined') {
-  window.Application = window.Application || {};
-}
+import { Application } from "./app-state.js";
 
 // User identity and connection settings
 export const LiveConfig = {
   NAME: "Weather.IM Live",
+
+  // XMPP transport settings
+  // transport: "bosh" | "websocket"
+  XMPP_TRANSPORT: "websocket",
   BOSH: "https://weather.im/http-bind/",
+  WEBSOCKET: "wss://weather.im/ws",
+
   RECONNECT: true,
   ATTEMPTS: 0,
   XMPPHOST: "weather.im",
@@ -25,7 +28,5 @@ export const LiveConfig = {
 
 };
 
-// Apply config to global Application object for compatibility
-if (typeof window !== 'undefined' && window.Application) {
-  Object.assign(window.Application, LiveConfig);
-}
+// Apply config to shared app state
+Object.assign(Application, LiveConfig);

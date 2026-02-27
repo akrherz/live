@@ -28,9 +28,8 @@ class MsgBus {
     for (const handler of [...this.listeners[event]]) {
       try {
         handler(...args);
-      } catch {
-        // Optionally log or handle errors
-        // console.error('MsgBus handler error:', e);
+      } catch (e) {
+        console.error('MsgBus handler error in event "' + event + '":', e);
       }
     }
   }

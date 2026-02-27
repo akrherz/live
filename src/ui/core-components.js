@@ -5,7 +5,9 @@
 
 import { LoginPanel } from "../auth/LoginPanel.js";
 import MapPanel from "../map/MapPanel.js";
+import { getMap } from "../map/MapPanel.js";
 import { setPreference } from "../xmpp/handlers.js";
+import { Application } from "../app-state.js";
 
 Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
@@ -127,9 +129,10 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
         // Wait for map to be ready before setting up map-related functionality
         const initMapStuff = () => {
             const mp = Ext.getCmp("map");
-            if (mp && window.olMap) {
+            const map = getMap();
+            if (mp && map) {
                 // Listen for layer visibility changes in OpenLayers 10
-                window.olMap.getLayers().on('propertychange', function() {
+                map.getLayers().on('propertychange', function() {
                     const myobj = { lstring: "" };
                     Application.layerstore.data.each(function (record) {
                         const layer = record.getLayer();
@@ -152,13 +155,46 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
         };
         initMapStuff();
 
-        new Ext.Window({
+        const loginWindow = new Ext.Window({
             id: "loginwindow",
             modal: true,
             closable: false,
+            resizable: false,
+            draggable: false,
+            width: 560,
+            minWidth: 520,
+            maxWidth: 620,
+            height: 720,
+            minHeight: 520,
+            maxHeight: 760,
+            layout: "fit",
+            bodyStyle: "overflow: hidden;",
             title: "Weather.IM Live Login Options",
             items: [LoginPanel],
-        }).show();
+            listeners: {
+                show: function () {
+                    this.center();
+                },
+            },
+        });
+
+        const applyLoginWindowSize = () => {
+            const bodySize = Ext.getBody().getViewSize();
+            const width = Math.min(620, Math.max(520, bodySize.width - 40));
+            const height = Math.min(760, Math.max(520, bodySize.height - 40));
+            loginWindow.setSize(width, height);
+            loginWindow.center();
+        };
+
+        applyLoginWindowSize();
+        loginWindow.show();
+
+        Ext.EventManager.onWindowResize(function () {
+            if (!loginWindow || loginWindow.isDestroyed) {
+                return;
+            }
+            applyLoginWindowSize();
+        });
     },
 });
 

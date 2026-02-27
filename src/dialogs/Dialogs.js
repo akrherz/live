@@ -1,8 +1,23 @@
 import { msgBus } from "../events/MsgBus.js";
-import { $iq } from "strophe.js";
+import { $iq, Strophe } from "strophe.js";
 import { LiveConfig } from "../config.js";
 import { syncPreferences, setPreference } from "../xmpp/handlers.js";
 import { playSound } from '../events/event-handlers.js';
+import { Application } from "../app-state.js";
+
+function getDefaultRoomHandle() {
+    if (Application.USERNAME) {
+        return Application.USERNAME;
+    }
+    if (Application.XMPPConn && Application.XMPPConn.jid) {
+        return Strophe.getNodeFromJid(Application.XMPPConn.jid);
+    }
+    const usernameInput = document.getElementById("username");
+    if (usernameInput && usernameInput.value) {
+        return Strophe.getNodeFromJid(usernameInput.value.trim().toLowerCase());
+    }
+    return "";
+}
 
 
 Application.saveViews = function () {
@@ -407,7 +422,7 @@ const mucform = new Ext.form.FormPanel({
             xtype: "textfield",
             allowBlank: false,
             name: "roomhandle",
-            value: Application.USERNAME,
+            value: getDefaultRoomHandle(),
             fieldLabel: "Chat Handle",
         },
         {
@@ -446,7 +461,7 @@ const mucform = new Ext.form.FormPanel({
                 mucform
                     .getForm()
                     .findField("roomhandle")
-                    .setValue(Application.USERNAME);
+                    .setValue(getDefaultRoomHandle());
             }
         },
     },
@@ -501,6 +516,14 @@ Application.JoinChatroomDialog = new Ext.Window({
     width: 400,
     title: "Join a Group Chat",
     items: [mucform],
+    listeners: {
+        show: function () {
+            const handleField = mucform.getForm().findField("roomhandle");
+            if (handleField && !handleField.getValue()) {
+                handleField.setValue(getDefaultRoomHandle());
+            }
+        },
+    },
     buttons: [
         {
             xtype: "button",
@@ -538,7 +561,7 @@ Application.JoinChatroomDialog = new Ext.Window({
                         alias: alias,
                         anonymous: anonymous,
                         autojoin: autojoin,
-                        icon: "/icons/chat.png",
+                        icon: "icons/chat.png",
                         handle: handle,
                         leaf: true,
                         });

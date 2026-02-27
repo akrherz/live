@@ -7,14 +7,60 @@ import { LiveConfig } from "../config.js";
 import { $iq, $pres } from "strophe.js";
 import { msgBus } from "./MsgBus.js";
 import { getPreference } from "../xmpp/handlers.js";
+import { Application } from "../app-state.js";
 
 export function UTCStringToDate(dtStr, format) {
-    const dt = Date.parseDate(dtStr, format);
-    if (dt === undefined) {
-        return "";
+    let dt = null;
+
+    if (typeof Date.parseDate === "function") {
+        dt = Date.parseDate(dtStr, format);
     }
-    if (typeof dt.fromUTC === "function") {
-        return dt.fromUTC();
+
+    if (!dt) {
+        if (format === "Ymd\\Th:i:s") {
+            const match = dtStr.match(
+                /^(\d{4})(\d{2})(\d{2})T(\d{2}):(\d{2}):(\d{2})$/
+            );
+            if (match) {
+                const [, year, month, day, hour, minute, second] = match;
+                dt = new Date(
+                    Date.UTC(
+                        Number(year),
+                        Number(month) - 1,
+                        Number(day),
+                        Number(hour),
+                        Number(minute),
+                        Number(second)
+                    )
+                );
+            }
+        } else if (format === "Y-m-d\\Th:i:s") {
+            const match = dtStr.match(
+                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/
+            );
+            if (match) {
+                const [, year, month, day, hour, minute, second] = match;
+                dt = new Date(
+                    Date.UTC(
+                        Number(year),
+                        Number(month) - 1,
+                        Number(day),
+                        Number(hour),
+                        Number(minute),
+                        Number(second)
+                    )
+                );
+            }
+        } else {
+            const nativeDate = new Date(dtStr);
+            if (!Number.isNaN(nativeDate.getTime())) {
+                dt = nativeDate;
+            }
+        }
+    }
+
+    if (!dt) {
+        return null;
     }
     return dt;
 }
