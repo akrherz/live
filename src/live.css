@@ -70,35 +70,54 @@ td.x-grid3-td-message div.x-grid3-cell-inner {
 }
 
 /* Login Panel Styles */
-.login-panel {
+.login-panel-wrapper .x-panel-body {
+    background: #eef2f6;
+}
+
+.login-shell {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 20px;
-    max-width: 450px;
-    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.login-panel {
+    width: 100%;
+    max-width: 500px;
+    margin: 0;
+    padding: 20px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1px solid #d8dee6;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .login-header img {
     display: block;
-    margin: 0 auto 15px;
+    margin: 0 auto 10px;
 }
 
 .login-header h2 {
     margin: 0;
     color: #333;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 500;
 }
 
 .login-section {
-    background: #f8f9fa;
+    background: #f7f9fc;
     border: 1px solid #dee2e6;
     border-radius: 6px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 16px;
+    margin-bottom: 14px;
 }
 
 .login-section.primary-section {
@@ -114,9 +133,16 @@ td.x-grid3-td-message div.x-grid3-cell-inner {
 }
 
 .welcome-text {
-    margin: 0 0 20px 0;
+    margin: 6px 0 0 0;
     color: #666;
     font-size: 14px;
+}
+
+.login-copy {
+    margin: 0 0 14px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .login-form {
@@ -157,7 +183,7 @@ td.x-grid3-td-message div.x-grid3-cell-inner {
 }
 
 .btn {
-    padding: 10px 20px;
+    padding: 10px 16px;
     border: none;
     border-radius: 4px;
     font-size: 14px;
@@ -191,6 +217,7 @@ td.x-grid3-td-message div.x-grid3-cell-inner {
 .btn-block {
     display: block;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .form-footer {

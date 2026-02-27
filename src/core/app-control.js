@@ -1,8 +1,10 @@
 import { msgBus } from "../events/MsgBus.js";
-import { $pres, Strophe } from 'strophe.js';
+import { $iq, $pres, Strophe } from 'strophe.js';
 import { saveBookmarks } from '../dialogs/Dialogs.js';
 import { login, setPreference } from "../xmpp/handlers.js";
 import { DataTip } from "../ui/data-tip.js";
+import { LiveConfig } from "../config.js";
+import { Application } from "../app-state.js";
 
 Application.log = function(text) {
     console.log("Application.log:", text);
@@ -283,8 +285,12 @@ Application.Control = {
                     itemclick : function(_view, record) {  // this
                         Application.JoinChatroomDialog.show(null, function(){
                             const form = this.items.items[0].getForm();
+                            const defaultHandle = Application.USERNAME ||
+                                (Application.XMPPConn && Application.XMPPConn.jid
+                                    ? Strophe.getNodeFromJid(Application.XMPPConn.jid)
+                                    : "");
                             form.findField("roomname").setValue(Strophe.getNodeFromJid(record.data.jid));
-                            form.findField("roomhandle").setValue(Application.USERNAME);
+                            form.findField("roomhandle").setValue(defaultHandle);
                             form.findField("bookmark").enable();
                             form.findField("anonymous").setValue(false);
                             form.findField("autojoin").setValue(false);
@@ -332,6 +338,8 @@ function doLogin() {
 
 Application.ServiceGuard = {
     skipFirst : true,
+    pingInFlight : false,
+    pingTimeoutMs : 15000,
     run : function() {
         if (this.skipFirst) {
             this.skipFirst = false;
@@ -346,9 +354,36 @@ Application.ServiceGuard = {
         // }
         if (Application.XMPPConn.authenticated) {
             if (Application.XMPPConn.errors === 0) {
-                // punjab is pinging openfire for us, might as well remove
-                // Application.XMPPConn.send($iq({'type': 'get'}).c('ping', {
-                // xmlns: 'urn:xmpp:ping' } ));
+                if (this.pingInFlight) {
+                    return;
+                }
+
+                this.pingInFlight = true;
+                const guard = this;
+                const pingId = `svc-ping-${Date.now()}`;
+                const stanza = $iq({
+                    type: 'get',
+                    to: LiveConfig.XMPPHOST,
+                    id: pingId,
+                }).c('ping', {
+                    xmlns: 'urn:xmpp:ping',
+                });
+
+                Application.XMPPConn.sendIQ(
+                    stanza,
+                    function () {
+                        guard.pingInFlight = false;
+                        Application.log(`ServiceGuard ping OK: ${pingId}`);
+                    },
+                    function () {
+                        guard.pingInFlight = false;
+                        Application.log(`ServiceGuard ping failed: ${pingId}, forcing reconnect`);
+                        if (Application.RECONNECT && Application.XMPPConn.connected) {
+                            Application.XMPPConn.disconnect();
+                        }
+                    },
+                    this.pingTimeoutMs,
+                );
             } else {
                 Application.log("Strophe error counter is non-zero: "
                         + Application.XMPPConn.errors);

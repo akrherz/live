@@ -9,6 +9,30 @@ function iembotFilter(record) {
     return record.get("author") !== "iembot";
 }
 
+function formatTimestamp(value) {
+    if (!value) {
+        return "";
+    }
+
+    let dateValue = value;
+    if (!(dateValue instanceof Date)) {
+        dateValue = new Date(value);
+    }
+    if (Number.isNaN(dateValue.getTime())) {
+        return String(value);
+    }
+
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+    const day = String(dateValue.getDate()).padStart(2, "0");
+    const hours = dateValue.getHours();
+    const minutes = String(dateValue.getMinutes()).padStart(2, "0");
+    const suffix = hours >= 12 ? "PM" : "AM";
+    const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+
+    return `${year}/${month}/${day} ${hour12}:${minutes} ${suffix}`;
+}
+
 /*
  * Generate a html version of the active grid
  */
@@ -20,13 +44,7 @@ function grid2html(gridPanel) {
         "<table cellpadding='2' cellspacing='0' border='1'><tr><th>Roomname</th><th>Date</th><th>Author</th><th>Message</th></tr>";
     for (let i = 0; i < ds.getCount(); i++) {
         const row = ds.getAt(i);
-        t += String.format(
-            "<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>\r\n",
-            row.get("roomname") || roomname,
-            row.get("ts").format("Y/m/d g:i A"),
-            row.get("author"),
-            row.get("message"),
-        );
+        t += `<tr><td>${row.get("roomname") || roomname}</td><td>${formatTimestamp(row.get("ts"))}</td><td>${row.get("author")}</td><td>${row.get("message")}</td></tr>\r\n`;
     }
     t += "</table></body></html>";
     return t;
@@ -66,6 +84,18 @@ function showHtmlVersion(gridPanel) {
     win.show();
 }
 
+function printGrid(gridPanel) {
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) {
+        return;
+    }
+    printWindow.document.open();
+    printWindow.document.write(grid2html(gridPanel));
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+}
+
 const LinkInterceptor = {
     render: function (p) {
         p.body.on({
@@ -74,6 +104,7 @@ const LinkInterceptor = {
                 // way
 
                 t.target = "_blank";
+                t.rel = "noopener noreferrer";
                 hideTextWindow();
             },
             click: function (e, t) {
@@ -83,7 +114,7 @@ const LinkInterceptor = {
 
                 if (String(t.target).toLowerCase() !== "_blank") {
                     e.stopEvent();
-                    window.open(t.href);
+                    open(t.href, "_blank", "noopener,noreferrer");
                 }
                 hideTextWindow();
             },
@@ -96,6 +127,7 @@ export {
     iembotFilter,
     grid2html,
     htmlExport,
+    printGrid,
     showHtmlVersion,
     LinkInterceptor,
 };

@@ -4,21 +4,199 @@ import { msgBus } from "../events/MsgBus.js";
  * Connection, message, presence, roster, and IQ handlers
  */
 
-import { $iq, $pres, Strophe } from "strophe.js";
+import { $iq, $msg, $pres, Strophe } from "strophe.js";
 import WKT from "ol/format/WKT";
 import { UTCStringToDate } from "../events/event-handlers.js";
+import { parseLSRDetails, stripHtml } from "./lsr-parser.js";
 import { onBuddyPresence } from "../chat/ChatComponents.js";
 import { iembotFilter } from "../utils/grid-utilities.js";
 import { doLogin } from "../core/app-control.js";
 import { LiveConfig } from "../config.js";
+import { getMap } from "../map/MapPanel.js";
+import { Application } from "../app-state.js";
 
+const recentMessageKeys = [];
+const recentMessageKeySet = new Set();
+const RECENT_MESSAGE_KEY_LIMIT = 1000;
 
-function buildXMPP() {
-    Application.log("Initializing XMPPConn Obj");
-    Application.XMPPConn = new Strophe.Connection(LiveConfig.BOSH);
+function uniqueValues(values) {
+    const seen = new Set();
+    const output = [];
+    values.forEach((value) => {
+        if (!value || seen.has(value)) {
+            return;
+        }
+        seen.add(value);
+        output.push(value);
+    });
+    return output;
+}
+
+function deriveWebsocketCandidates() {
+    const pushEndpointVariants = (list, endpoint) => {
+        if (!endpoint) {
+            return;
+        }
+
+        let normalizedEndpoint = endpoint;
+        if (/^ws:\/\//i.test(normalizedEndpoint)) {
+            normalizedEndpoint = normalizedEndpoint.replace(/^ws:\/\//i, "wss://");
+        }
+        if (!/^wss:\/\//i.test(normalizedEndpoint)) {
+            return;
+        }
+
+        list.push(normalizedEndpoint);
+
+        if (!normalizedEndpoint.endsWith("/")) {
+            list.push(normalizedEndpoint + "/");
+        }
+    };
+
+    const explicit = LiveConfig.WEBSOCKET ? [LiveConfig.WEBSOCKET] : [];
+    if (explicit.length > 0) {
+        const explicitCandidates = [];
+        explicit.forEach((endpoint) => {
+            pushEndpointVariants(explicitCandidates, endpoint);
+        });
+        return uniqueValues(explicitCandidates);
+    }
+
+    const candidates = [];
+    if (LiveConfig.BOSH) {
+        const boshAsWs = LiveConfig.BOSH
+            .replace(/^https:/i, "wss:")
+            .replace(/^http:/i, "wss:");
+        pushEndpointVariants(candidates, boshAsWs);
+        try {
+            const url = new URL(boshAsWs);
+            const origin = `${url.protocol}//${url.host}`;
+            pushEndpointVariants(candidates, `${origin}/ws`);
+            pushEndpointVariants(candidates, `${origin}/xmpp-websocket`);
+            if (/http-bind\/?$/i.test(url.pathname)) {
+                const replacedPath = url.pathname.replace(/http-bind\/?$/i, "ws/");
+                pushEndpointVariants(candidates, `${origin}${replacedPath}`);
+            }
+        } catch {
+            pushEndpointVariants(candidates, `wss://${LiveConfig.XMPPHOST}/ws`);
+        }
+    } else {
+        pushEndpointVariants(candidates, `wss://${LiveConfig.XMPPHOST}/ws`);
+    }
+
+    return uniqueValues(candidates);
+}
+
+function createXMPPConnection(serviceUrl) {
+    Application.currentXMPPServiceUrl = serviceUrl;
+    Application.log("Initializing XMPPConn Obj with service: " + serviceUrl);
+    Application.XMPPConn = new Strophe.Connection(serviceUrl);
     Application.XMPPConn.disco.addFeature(
         "http://jabber.org/protocol/chatstates"
     );
+}
+
+function advanceWebsocketCandidate() {
+    if (!Application.wsServiceCandidates || Application.wsServiceCandidates.length === 0) {
+        return false;
+    }
+    const nextIndex = (Application.wsServiceIndex || 0) + 1;
+    if (nextIndex >= Application.wsServiceCandidates.length) {
+        return false;
+    }
+    Application.wsServiceIndex = nextIndex;
+    const nextServiceUrl = Application.wsServiceCandidates[nextIndex];
+    createXMPPConnection(nextServiceUrl);
+    return true;
+}
+
+function getDelayStampValue(msg) {
+    const delays = msg.getElementsByTagName("delay");
+    for (let i = 0; i < delays.length; i++) {
+        const delay = delays[i];
+        const namespaceUri = delay.namespaceURI || delay.getAttribute("xmlns") || "";
+        if (namespaceUri === "urn:xmpp:delay" || namespaceUri === "jabber:x:delay") {
+            const stamp = delay.getAttribute("stamp");
+            if (stamp) {
+                return stamp;
+            }
+        }
+    }
+    return null;
+}
+
+function parseDelayStamp(stamp) {
+    if (!stamp) {
+        return null;
+    }
+
+    const nativeDate = new Date(stamp);
+    if (!Number.isNaN(nativeDate.getTime())) {
+        return nativeDate;
+    }
+
+    if (/^\d{8}T\d{2}:\d{2}:\d{2}$/.test(stamp)) {
+        return UTCStringToDate(stamp, "Ymd\\Th:i:s");
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(stamp)) {
+        return UTCStringToDate(stamp.substring(0, 19), "Y-m-d\\Th:i:s");
+    }
+
+    return null;
+}
+
+function isDuplicateMessageStanza(msg, type, from, text, isDelayed) {
+    const stanzaId = msg.getAttribute("id");
+    let dedupeKey = null;
+
+    if (stanzaId) {
+        dedupeKey = ["id", type || "", from || "", stanzaId].join("|");
+    } else if (isDelayed) {
+        const stamp = getDelayStampValue(msg) || "";
+        const normalizedText = (text || "").trim().substring(0, 256);
+        dedupeKey = ["delay", type || "", from || "", stamp, normalizedText].join("|");
+    }
+
+    if (!dedupeKey) {
+        return false;
+    }
+
+    if (recentMessageKeySet.has(dedupeKey)) {
+        return true;
+    }
+
+    recentMessageKeySet.add(dedupeKey);
+    recentMessageKeys.push(dedupeKey);
+
+    if (recentMessageKeys.length > RECENT_MESSAGE_KEY_LIMIT) {
+        const evicted = recentMessageKeys.shift();
+        if (evicted) {
+            recentMessageKeySet.delete(evicted);
+        }
+    }
+
+    return false;
+}
+
+
+function buildXMPP() {
+    const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
+    Application.wsServiceCandidates = [];
+    Application.wsServiceIndex = 0;
+
+    if (transport === "websocket") {
+        Application.wsServiceCandidates = deriveWebsocketCandidates();
+        const initialServiceUrl = Application.wsServiceCandidates[0];
+        Application.log(
+            "Using websocket transport candidates: " +
+                Application.wsServiceCandidates.join(", "),
+        );
+        createXMPPConnection(initialServiceUrl);
+    } else {
+        Application.log("Using BOSH transport for XMPP connection");
+        createXMPPConnection(LiveConfig.BOSH);
+    }
 }
 
 /*
@@ -105,6 +283,49 @@ Application.register = function () {
  * 3. User wants to log out...
  */
 function onConnect(status) {
+    function cancelReconnectTimer() {
+        if (Application.reconnectTimer) {
+            clearTimeout(Application.reconnectTimer);
+            Application.reconnectTimer = null;
+        }
+    }
+
+    function scheduleReconnect(reason) {
+        if (!Application.RECONNECT) {
+            return;
+        }
+        if (Application.reconnectTimer) {
+            return;
+        }
+
+        const attempts = (Application.reconnectAttempts || 0) + 1;
+        Application.reconnectAttempts = attempts;
+
+        const baseDelayMs = 3000;
+        const maxDelayMs = 60000;
+        const exponentialDelay = Math.min(
+            maxDelayMs,
+            baseDelayMs * Math.pow(2, Math.max(0, attempts - 1)),
+        );
+        const jitterMs = Math.floor(Math.random() * 1000);
+        const delayMs = exponentialDelay + jitterMs;
+
+        Application.log(
+            "Reconnecting in " +
+                Math.round(delayMs / 1000) +
+                " seconds (attempt " +
+                attempts +
+                ", reason: " +
+                reason +
+                ")",
+        );
+
+        Application.reconnectTimer = Ext.defer(function () {
+            Application.reconnectTimer = null;
+            doLogin();
+        }, delayMs, this);
+    }
+
     if (status === Strophe.Status.CONNECTING) {
         Application.log("Strophe.Status.CONNECTING...");
     } else if (status === Strophe.Status.ERROR) {
@@ -113,35 +334,46 @@ function onConnect(status) {
     } else if (status === Strophe.Status.AUTHFAIL) {
         Application.log("Strophe.Status.AUTHFAIL...");
         Application.RECONNECT = false;
+        Application.reconnectAttempts = 0;
+        cancelReconnectTimer();
         Ext.getCmp("loginpanel").addMessage(
             "Authentication failed, please check username and password..."
         );
         Application.XMPPConn.disconnect();
     } else if (status === Strophe.Status.CONNFAIL) {
         Application.log("Strophe.Status.CONNFAIL...");
+        const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
+        if (transport === "websocket" && advanceWebsocketCandidate()) {
+            Application.log(
+                "Retrying websocket using alternate endpoint: " +
+                    Application.currentXMPPServiceUrl,
+            );
+        }
+        scheduleReconnect("connfail");
         // msgBus.fire("loggedout");
     } else if (status === Strophe.Status.DISCONNECTED) {
         Application.log("Strophe.Status.DISCONNECTED...");
+        markPendingMessagesFailed();
         msgBus.fire("loggingout");
         if (Application.RECONNECT) {
-            /* Lets wait 5 seconds before trying to reconnect */
-            Application.log("Relogging in after 3 seconds delay");
-            Ext.defer(doLogin, 3000, this);
+            scheduleReconnect("disconnected");
         } else {
+            Application.reconnectAttempts = 0;
+            cancelReconnectTimer();
             msgBus.fire("loggedout");
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
     } else if (status === Strophe.Status.DISCONNECTING) {
         Application.log("Strophe.Status.DISCONNECTING...");
-        Application.XMPPConn.flush();
-        //Application.XMPPConn.disconnect();
     } else if (status === Strophe.Status.ATTACHED) {
         Application.log("Strophe.Status.ATTACHED...");
     } else if (status === Strophe.Status.CONNECTED) {
         Application.log("Strophe.Status.CONNECTED...");
         Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
         Application.RECONNECT = true;
+        Application.reconnectAttempts = 0;
+        cancelReconnectTimer();
 
         /* Add Connection Handlers, removed on disconnect it seems */
         Application.XMPPConn.addHandler(
@@ -236,27 +468,85 @@ function onConnect(status) {
         msgBus.fire("loggedin");
     }
 }
+
+function markPendingMessagesFailed() {
+    const chatPanel = Ext.getCmp("chatpanel");
+    if (!chatPanel || !chatPanel.items || !chatPanel.items.each) {
+        return;
+    }
+
+    let failedCount = 0;
+    chatPanel.items.each(function (panel) {
+        if (!panel || panel.chatType !== "chat" || !panel.gp || !panel.gp.getStore) {
+            return;
+        }
+        const store = panel.gp.getStore();
+        if (!store || !store.each) {
+            return;
+        }
+        store.each(function (record) {
+            if (record.get("delivery_status") === "sent") {
+                record.set("delivery_status", "failed");
+                if (record.commit) {
+                    record.commit();
+                }
+                failedCount += 1;
+            }
+        });
+    });
+
+    if (failedCount > 0) {
+        Application.log("Marked pending messages as failed: " + failedCount);
+    }
+}
 /*
  * Update the map layers based on our stored preferences
  */
 function updateMap() {
-    const lstring = getPreference("layers");
-    if (lstring === null) {
+    const lstring = getPreference("layers", "");
+    if (typeof lstring !== "string" || lstring.trim() === "") {
         return;
     }
-    const tokens = lstring.split("||");
-    for (let i = 0; i < tokens.length; i++) {
-        if (tokens[i] === "") {
-            continue;
-        }
-        const idx = Application.layerstore.find("title", tokens[i]);
-        if (idx === -1) {
-            continue;
-        }
-        Application.log("Setting Layer " + tokens[i] + " visable");
-        const layer = Application.layerstore.getAt(idx).getLayer();
-        layer.setVisibility(true);
+
+    const map = typeof getMap === "function" ? getMap() : null;
+    if (!map || !map.getLayers) {
+        Ext.defer(updateMap, 500);
+        return;
     }
+
+    const desiredVisible = new Set(
+        lstring
+            .split("||")
+            .map((token) => token.trim())
+            .filter((token) => token.length > 0)
+    );
+
+    const layers = map.getLayers().getArray();
+    layers.forEach((layer) => {
+        const layerName = layer.get("name") || layer.get("title");
+        if (!layerName) {
+            return;
+        }
+
+        const isBaseLayer = layer.get("type") === "base";
+        if (isBaseLayer) {
+            return;
+        }
+
+        const shouldBeVisible = desiredVisible.has(layerName);
+        if (layer.getVisible && layer.getVisible() !== shouldBeVisible) {
+            Application.log(
+                "Setting Layer " + layerName + " visible=" + shouldBeVisible
+            );
+            layer.setVisible(shouldBeVisible);
+            if (shouldBeVisible) {
+                const source = layer.getSource && layer.getSource();
+                if (source && source.refresh) {
+                    source.refresh();
+                }
+            }
+        }
+    });
 }
 
 function setSounds() {
@@ -306,7 +596,7 @@ function parsePrefs(msg) {
     setSounds();
     const size = parseInt(getPreference("font-size", 14)) + 2;
     // var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
-    const cssfmt = String.format("normal {0}px arial", size);
+    const cssfmt = `normal ${size}px/${size + 2}px arial`;
     Ext.util.CSS.updateRule("td.x-grid3-td-message", "font", cssfmt);
     Ext.util.CSS.updateRule(".message-entry-box", "font", cssfmt);
     updateMap();
@@ -326,11 +616,14 @@ function parseViews(msg) {
             Ext.getCmp("mfv" + (i + 1)).setValue(label);
             Ext.getCmp("fm" + (i + 1)).setText(label);
         }
+        if (!bounds) {
+            continue;
+        }
         const extent = bounds.split(",").map(Number);
         Ext.getCmp("mfv" + (i + 1)).bounds = extent;
         if (i === 0) {
             const mapPanel = Ext.getCmp("map");
-            const map = mapPanel ? mapPanel.map : window.olMap;
+            const map = mapPanel ? mapPanel.map : getMap();
             if (map && map.getView) {
                 map.getView().fit(extent, { size: map.getSize() });
             }
@@ -739,6 +1032,40 @@ function onMessage(msg) {
     }
     return true;
 }
+
+function markMessageDelivered(receiptId) {
+    if (!receiptId) {
+        return false;
+    }
+
+    const chatPanel = Ext.getCmp("chatpanel");
+    if (!chatPanel || !chatPanel.items || !chatPanel.items.each) {
+        return false;
+    }
+
+    let updated = false;
+    chatPanel.items.each(function (panel) {
+        if (updated || !panel.gp || !panel.gp.getStore) {
+            return;
+        }
+        const store = panel.gp.getStore();
+        if (!store || !store.findBy) {
+            return;
+        }
+        const idx = store.findBy((record) => record.get("stanza_id") === receiptId);
+        if (idx > -1) {
+            const record = store.getAt(idx);
+            record.set("delivery_status", "delivered");
+            if (record.commit) {
+                record.commit();
+            }
+            updated = true;
+        }
+    });
+
+    return updated;
+}
+
 // http://stackoverflow.com/questions/37684
 Application.replaceURLWithHTMLLinks = function (text) {
     const exp =
@@ -754,9 +1081,36 @@ function messageParser(msg) {
     const from = msg.getAttribute("from");
     const type = msg.getAttribute("type");
     const elems = msg.getElementsByTagName("body");
-    let x = msg.querySelectorAll("delay[xmlns='urn:xmpp:delay']");
+    const body = elems.length > 0 ? elems[0] : null;
+    const stanzaId = msg.getAttribute("id");
+    const receiptRequest = msg.querySelector("request[xmlns='urn:xmpp:receipts']");
+    const receiptReceived = msg.querySelector("received[xmlns='urn:xmpp:receipts']");
+
+    if (receiptReceived) {
+        const receiptId = receiptReceived.getAttribute("id");
+        const updated = markMessageDelivered(receiptId);
+        Application.log(
+            "Delivery receipt received for message id: " +
+                receiptId +
+                (updated ? " (updated)" : " (not matched)")
+        );
+        return;
+    }
+
+    if (type === "chat" && from && stanzaId && receiptRequest) {
+        Application.XMPPConn.send(
+            $msg({
+                to: from,
+                id: "rcpt-" + stanzaId,
+            }).c("received", {
+                xmlns: "urn:xmpp:receipts",
+                id: stanzaId,
+            }),
+        );
+    }
+
+    let x = null;
     const html = msg.getElementsByTagName("html");
-    const body = elems[0];
     let txt = "";
     let isDelayed = false;
     let stamp = null;
@@ -773,25 +1127,31 @@ function messageParser(msg) {
         txt = txt.replace(/<p/g, "<span").replace(/<\/p>/g, "</span>");
         if (txt === "") {
             Application.log("Message Failure:" + msg);
-            txt = Application.replaceURLWithHTMLLinks(Strophe.getText(body));
+            txt = body
+                ? Application.replaceURLWithHTMLLinks(Strophe.getText(body))
+                : "";
         }
     } else {
-        txt = Application.replaceURLWithHTMLLinks(Strophe.getText(body));
+        txt = body
+            ? Application.replaceURLWithHTMLLinks(Strophe.getText(body))
+            : "";
     }
 
-    if (x.length > 0) {
-        stamp = UTCStringToDate(
-            x[0].getAttribute("stamp").substring(0, 19),
-            "Y-m-d\\Th:i:s"
-        );
+    const delayStampValue = getDelayStampValue(msg);
+    const parsedDelayStamp = parseDelayStamp(delayStampValue);
+    if (parsedDelayStamp) {
+        stamp = parsedDelayStamp;
         isDelayed = true;
     } else {
         stamp = new Date();
     }
 
+    if (isDuplicateMessageStanza(msg, type, from, txt, isDelayed)) {
+        Application.log("Skipping duplicate message stanza from: " + from);
+        return;
+    }
+
     if (type === "groupchat") {
-        console.log('[MUC] Received groupchat message from:', from);
-        console.log('[MUC] Message text length:', txt ? txt.length : 0, 'text:', txt);
         /* Look to see if a product_id is embedded */
         let product_id = null;
         x = msg.getElementsByTagName("x");
@@ -803,11 +1163,8 @@ function messageParser(msg) {
         geomParser(msg, isDelayed);
         const sender = Strophe.getResourceFromJid(from);
         const room = Strophe.getBareJidFromJid(from);
-        console.log('[MUC] Looking for room:', room, 'sender:', sender);
         const mpc = Ext.getCmp("chatpanel").getMUC(room);
-        console.log('[MUC] Found MUC panel:', mpc ? 'YES' : 'NO', 'has gp:', mpc && mpc.gp ? 'YES' : 'NO');
         if (mpc && mpc.gp && sender) {
-            console.log('[MUC] Adding message to store:', {sender, txt: txt.substring(0, 50), stamp});
             mpc.gp.getStore().add({
                 ts: stamp,
                 author: sender,
@@ -817,7 +1174,6 @@ function messageParser(msg) {
                 xdelay: isDelayed,
                 product_id: product_id,
             });
-            console.log('[MUC] Store now has', mpc.gp.getStore().getCount(), 'messages');
             // i = mpc.gp.getStore().getCount() - 1;
             // row = mpc.gp.getView().getRow(i);
             // if (row) row.scrollIntoView();
@@ -904,6 +1260,23 @@ function messageParser(msg) {
         }).show();
     }
 }
+
+function sortStoreByPreference(store, fallbackField) {
+    if (!store || typeof store.sort !== "function") {
+        return;
+    }
+
+    const sortState =
+        typeof store.getSortState === "function" ? store.getSortState() : null;
+    const sortInfo = store.sortInfo || {};
+    const field = sortState?.field || sortInfo.field || fallbackField;
+    const direction = sortState?.direction || sortInfo.direction || "DESC";
+
+    if (field) {
+        store.sort(field, direction);
+    }
+}
+
 function geomParser(msg, isDelayed) {
     if (!Ext.getCmp("map")) {
         return;
@@ -911,6 +1284,7 @@ function geomParser(msg, isDelayed) {
     /* Look for iembot geometry declarations */
     const elems = msg.getElementsByTagName("body");
     const body = elems[0];
+    const lsrText = body ? Strophe.getText(body) : "";
     const html = msg.getElementsByTagName("html");
     let txt = null;
     if (html.length > 0) {
@@ -949,7 +1323,10 @@ function geomParser(msg, isDelayed) {
                     x[i].getAttribute("expire"),
                     "Ymd\\Th:i:s"
                 );
-                feature.set("expire", d.toUTC());
+                if (!(d instanceof Date) || Number.isNaN(d.getTime())) {
+                    continue;
+                }
+                feature.set("expire", d);
                 const diff = d - new Date();
                 // console.log("Product Time Diff:"+ diff);
                 if (diff <= 0) {
@@ -964,11 +1341,29 @@ function geomParser(msg, isDelayed) {
                     x[i].getAttribute("valid"),
                     "Ymd\\Th:i:s"
                 );
-                feature.set("valid", d.toUTC());
+                if (d instanceof Date && !Number.isNaN(d.getTime())) {
+                    feature.set("valid", d);
+                }
             }
             // console.log("Product Time Delayed:"+ delayed);
             feature.set("ptype", x[i].getAttribute("ptype"));
-            feature.set("message", txt);
+            feature.set("message", stripHtml(txt || ""));
+            if (x[i].getAttribute("category") === "LSR") {
+                const lsrDetails = parseLSRDetails(lsrText || txt, {
+                    event: x[i].getAttribute("event"),
+                    magnitude: x[i].getAttribute("magnitude"),
+                    city: x[i].getAttribute("city"),
+                    county: x[i].getAttribute("county"),
+                    state: x[i].getAttribute("state"),
+                    remark: x[i].getAttribute("remark"),
+                });
+                feature.set("event", lsrDetails.event);
+                feature.set("magnitude", lsrDetails.magnitude);
+                feature.set("city", lsrDetails.city);
+                feature.set("county", lsrDetails.county);
+                feature.set("state", lsrDetails.state);
+                feature.set("remark", lsrDetails.remark);
+            }
             const valid = feature.get("valid");
             if (
                 (x[i].getAttribute("category") === "LSR" ||
@@ -979,48 +1374,62 @@ function geomParser(msg, isDelayed) {
                     !isDelayed ||
                     (new Date() - valid < 7200000)
                 ) {
-                    const lsrs = Application.lsrStore.layer;
-                    lsrs.addFeatures([feature]);
+                    const lsrsLayer = Application.lsrStore.layer;
+                    const lsrsSource =
+                        lsrsLayer && lsrsLayer.getSource
+                            ? lsrsLayer.getSource()
+                            : null;
+                    if (!lsrsSource || !lsrsSource.addFeature) {
+                        continue;
+                    }
+                    lsrsSource.addFeature(feature);
                     new Ext.util.DelayedTask(function () {
-                        lsrs.removeFeatures([feature]);
+                        if (lsrsSource.removeFeature &&
+                            lsrsSource.getFeatures().indexOf(feature) !== -1) {
+                            lsrsSource.removeFeature(feature);
+                        }
                     }).delay(delayed);
-                    const sstate = Application.lsrStore.getSortState();
-                    Application.lsrStore.sort(sstate.field, sstate.direction);
+                    sortStoreByPreference(Application.lsrStore, "valid");
                 }
             }
             if (x[i].getAttribute("category") === "SBW") {
                 feature.set("vtec", x[i].getAttribute("vtec"));
                 const vtec = feature.get("vtec");
-                const recordID = Application.sbwStore.find("vtec", vtec);
+                const sbwsLayer = Application.sbwStore.layer;
+                const sbwsSource =
+                    sbwsLayer && sbwsLayer.getSource
+                        ? sbwsLayer.getSource()
+                        : null;
+                if (!sbwsSource || !sbwsSource.addFeature) {
+                    continue;
+                }
+                const findSBWFeature = (v) =>
+                    sbwsSource.getFeatures().find((f) => f.get("vtec") === v) || null;
                 if (x[i].getAttribute("status") === "CAN") {
-                    if (recordID > -1) {
-                        Application.log(
-                            "Removing SBW vtec [" + vtec + "]"
-                        );
-                        Application.sbwStore.removeAt(recordID);
+                    const existingCAN = findSBWFeature(vtec);
+                    if (existingCAN) {
+                        Application.log("Removing SBW vtec [" + vtec + "]");
+                        sbwsSource.removeFeature(existingCAN);
                     }
                     continue;
                 }
-                if (recordID > -1) {
-                    Application.log(
-                        "Old SBW vtec [" + vtec + "]"
-                    );
-                    Application.sbwStore.removeAt(recordID);
+                // Remove any existing feature with this vtec before adding an updated one
+                const existingOld = findSBWFeature(vtec);
+                if (existingOld) {
+                    Application.log("Old SBW vtec [" + vtec + "]");
+                    sbwsSource.removeFeature(existingOld);
                 }
                 Application.log(
-                    "Adding SBW vtec [" +
-                        vtec +
-                        "] delay [" +
-                        delayed +
-                        "]"
+                    "Adding SBW vtec [" + vtec + "] delay [" + delayed + "]"
                 );
-                const sbws = Application.sbwStore.layer;
-                sbws.addFeatures([feature]);
+                sbwsSource.addFeature(feature);
                 new Ext.util.DelayedTask(function () {
-                    sbws.removeFeatures([feature]);
+                    // Only remove if this specific feature is still in the source
+                    if (sbwsSource.removeFeature && findSBWFeature(vtec) === feature) {
+                        sbwsSource.removeFeature(feature);
+                    }
                 }).delay(delayed);
-                const sstate = Application.sbwStore.getSortState();
-                Application.sbwStore.sort(sstate.field, sstate.direction);
+                sortStoreByPreference(Application.sbwStore, "issue");
             }
         }
     }

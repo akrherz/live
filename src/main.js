@@ -9,6 +9,7 @@ import 'ol/ol.css';
 
 // Import configuration
 import './config.js';
+import { Application } from './app-state.js';
 
 // Import Strophe.js from npm package and set up plugins
 import { Strophe } from 'strophe.js';
@@ -43,7 +44,7 @@ console.log('Weather.IM Live ES module loaded');
 
 // Wait for all global dependencies to be available before initializing
 function initializeApp() {
-  if (!window.Ext) {
+  if (typeof Ext === 'undefined') {
     console.warn('ExtJS not loaded yet, retrying...');
     setTimeout(initializeApp, 50);
     return;
@@ -65,14 +66,14 @@ function initializeApp() {
   Application.audioMuted = false;
 
   // ExtJS configuration
-  Ext.BLANK_IMAGE_URL = '/vendor/ext/3.4.1/resources/images/default/s.gif';
+  Ext.BLANK_IMAGE_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
   Ext.onReady(function() {
     console.log('Ext.onReady fired');
 
     try {
-      // Cleanup on window close (modern ExtJS: use Ext.get(window).on)
-      Ext.get(window).on('beforeunload', () => {
+      // Cleanup on page close
+      addEventListener('beforeunload', () => {
         if (typeof Application.XMPPConn !== 'undefined') {
           Application.XMPPConn.flush();
           Application.XMPPConn.disconnect();

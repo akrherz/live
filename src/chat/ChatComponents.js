@@ -1,10 +1,108 @@
 import { msgBus } from "../events/MsgBus.js";
 import { $msg, $pres, Strophe } from "strophe.js";
 import { loadTextProductInWindow, hideTextWindow } from "../ui/text-window.js";
-import { iembotFilter, showHtmlVersion } from "../utils/grid-utilities.js";
+import {
+    iembotFilter,
+    printGrid,
+    showHtmlVersion,
+} from "../utils/grid-utilities.js";
 import { LiveConfig } from "../config.js";
 import { getPreference, setPreference } from "../xmpp/handlers.js";
 import { DataTip } from "../ui/data-tip.js";
+import { Application } from "../app-state.js";
+
+function createOutgoingMessageStanza(panel, text, fgcolor, bgcolor) {
+    const messageId =
+        "msg-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(
+        Application.replaceURLWithHTMLLinks(text),
+        "text/html",
+    );
+    const nodes = Array.from(doc.body.childNodes);
+
+    let msg = $msg({
+        to: panel.barejid,
+        type: panel.chatType,
+        id: messageId,
+    })
+        .c("active", {
+            xmlns: "http://jabber.org/protocol/chatstates",
+        })
+        .up()
+        .c("body")
+        .t(text)
+        .up();
+
+    if (panel.chatType === "chat") {
+        msg = msg
+            .c("request", {
+                xmlns: "urn:xmpp:receipts",
+            })
+            .up();
+    }
+
+    msg = msg
+        .c("html", {
+            xmlns: "http://jabber.org/protocol/xhtml-im",
+        })
+        .c("body", {
+            xmlns: "http://www.w3.org/1999/xhtml",
+        })
+        .c("p")
+        .c("span", {
+            style: "color:#" + fgcolor + ";background:#" + bgcolor + ";",
+        });
+
+    for (let i = 0; i < nodes.length; i++) {
+        msg = msg.cnode(nodes[i]);
+        if (i < nodes.length) {
+            msg = msg.up();
+        }
+    }
+
+    return { msg, messageId };
+}
+
+function retryFailedDirectMessages(panel, store) {
+    if (
+        !panel ||
+        panel.chatType !== "chat" ||
+        !store ||
+        !Application.XMPPConn ||
+        !Application.XMPPConn.authenticated
+    ) {
+        return;
+    }
+
+    const fgcolor = getPreference("fgcolor", "000000");
+    const bgcolor = getPreference("bgcolor", "FFFFFF");
+    let retryCount = 0;
+
+    store.each(function (record) {
+        if (record.get("delivery_status") !== "failed") {
+            return;
+        }
+        const rawMessage = record.get("raw_message");
+        if (!rawMessage) {
+            return;
+        }
+        const { msg, messageId } = createOutgoingMessageStanza(
+            panel,
+            rawMessage,
+            fgcolor,
+            bgcolor,
+        );
+        Application.XMPPConn.send(msg);
+        record.set("stanza_id", messageId);
+        record.set("delivery_status", "sent");
+        retryCount += 1;
+    });
+
+    if (retryCount > 0) {
+        Application.log("Retried failed direct messages: " + retryCount);
+    }
+}
 
 const MUCChatPanel = Ext.extend(Ext.Panel, {
     hideMode: "offsets",
@@ -195,10 +293,35 @@ const ChatPanel = Ext.extend(Ext.Panel, {
     },
     buildItems: function () {
         // References already set in initComponent
-        /* Remove iembot muter */
-        this.gp.getTopToolbar().remove(this.gp.getTopToolbar().items.items[3]);
-        /* Remove sound muter */
-        this.gp.getTopToolbar().remove(this.gp.getTopToolbar().items.items[3]);
+        const toolbar = this.gp.getDockedItems
+            ? this.gp.getDockedItems("toolbar[dock=top]")[0]
+            : this.gp.getTopToolbar
+              ? this.gp.getTopToolbar()
+              : null;
+        if (!toolbar || !toolbar.items || !toolbar.items.each) {
+            return;
+        }
+
+        const labelsToRemove = new Set(["Hide IEMBot", "Mute Sounds"]);
+        const itemsToRemove = [];
+        toolbar.items.each((item) => {
+            if (item && labelsToRemove.has(item.text)) {
+                itemsToRemove.push(item);
+            }
+        });
+
+        itemsToRemove.forEach((item) => {
+            toolbar.remove(item, true);
+        });
+
+        const retryFailedBtn = toolbar.getComponent("retryFailedBtn");
+        if (retryFailedBtn) {
+            retryFailedBtn.show();
+        }
+
+        if (toolbar.doLayout) {
+            toolbar.doLayout();
+        }
     },
 });
 
@@ -421,51 +544,21 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                             message: Application.replaceURLWithHTMLLinks(text),
                         }).show();
                     } else {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(
-                            Application.replaceURLWithHTMLLinks(text),
-                            "text/html",
+                        const chatPanel = this.ownerCt.ownerCt;
+                        const chatType = chatPanel.chatType;
+                        const { msg, messageId } = createOutgoingMessageStanza(
+                            chatPanel,
+                            text,
+                            fgcolor,
+                            bgcolor,
                         );
-                        const nodes = Array.from(doc.body.childNodes);
-                        let msg = $msg({
-                            to: this.ownerCt.ownerCt.barejid,
-                            type: this.ownerCt.ownerCt.chatType,
-                        })
-                            .c("active", {
-                                xmlns: "http://jabber.org/protocol/chatstates",
-                            })
-                            .up()
-                            .c("body")
-                            .t(text)
-                            .up()
-                            .c("html", {
-                                xmlns: "http://jabber.org/protocol/xhtml-im",
-                            })
-                            .c("body", {
-                                xmlns: "http://www.w3.org/1999/xhtml",
-                            })
-                            .c("p")
-                            .c("span", {
-                                style:
-                                    "color:#" +
-                                    fgcolor +
-                                    ";background:#" +
-                                    bgcolor +
-                                    ";",
-                            });
-                        for (let i = 0; i < nodes.length; i++) {
-                            msg = msg.cnode(nodes[i]);
-                            if (i < nodes.length) {
-                                msg = msg.up();
-                            }
-                        }
                         Application.XMPPConn.send(msg);
                         txt.setValue("");
                         txt.focus();
 
                         // Since we don't get our messages back via XMPP
                         // we need to manually add to the store
-                        if (this.ownerCt.ownerCt.chatType === "chat") {
+                        if (chatType === "chat") {
                             text =
                                 "<span " +
                                 "style='color:#" +
@@ -480,6 +573,9 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                                 author: Application.USERNAME,
                                 message:
                                     Application.replaceURLWithHTMLLinks(text),
+                                stanza_id: messageId,
+                                delivery_status: "sent",
+                                raw_message: text,
                             });
                         }
                     }
@@ -492,14 +588,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
 
 Application.msgFormatter = new Ext.XTemplate(
     '<p class="mymessage">',
-    "<span ",
-    '<tpl if="values.me == values.author">',
-    'class="author-me"',
-    "</tpl>",
-    '<tpl if="values.me != values.author">',
-    'class="{[this.getAuthorClass(values.jid)]}" style="color: #{[Application.getUserColor(values.author)]};"',
-    "</tpl>",
-    ">(",
+    '<span class="{[values.me === values.author ? "author-me" : this.getAuthorClass(values.jid)]}" style="{[values.me === values.author ? "" : this.getAuthorStyle(values.author)]}">(',
     '<tpl if="this.isNotToday(ts)">',
     '{ts:date("d M")} ',
     "</tpl>",
@@ -507,7 +596,11 @@ Application.msgFormatter = new Ext.XTemplate(
     '<tpl if="values.room != null">',
     "[{room}] ",
     "</tpl>",
-    "{author}:</span> ",
+    "{author}",
+    '<tpl if="values.me === values.author && values.delivery_status">',
+    '<span style="font-size: 0.85em; margin-left: 6px; opacity: 0.8; {[this.getDeliveryStyle(values.delivery_status)]}">{[this.getDeliveryLabel(values.delivery_status)]}</span>',
+    '</tpl>',
+    ":</span> ",
     "{message}</p>",
     {
         isNotToday: function (ts) {
@@ -517,7 +610,7 @@ Application.msgFormatter = new Ext.XTemplate(
         },
         getAuthorClass: function (jid) {
             //console.log("node: "+Strophe.getNodeFromJid(jid) );
-            if (jid === null) {
+            if (jid === null || typeof jid === "undefined") {
                 return "author-default";
             }
             if (Strophe.getNodeFromJid(jid) === "iembot") {
@@ -528,6 +621,34 @@ Application.msgFormatter = new Ext.XTemplate(
             }
 
             return "author-chatpartner";
+        },
+        getAuthorStyle: function (author) {
+            if (
+                !Application.getUserColor ||
+                typeof Application.getUserColor !== "function"
+            ) {
+                return "";
+            }
+            const userColor = Application.getUserColor(author) || "000000";
+            return `color: #${userColor};`;
+        },
+        getDeliveryLabel: function (deliveryStatus) {
+            if (deliveryStatus === "delivered") {
+                return "✓✓";
+            }
+            if (deliveryStatus === "sent") {
+                return "✓";
+            }
+            if (deliveryStatus === "failed") {
+                return "⚠";
+            }
+            return "";
+        },
+        getDeliveryStyle: function (deliveryStatus) {
+            if (deliveryStatus === "failed") {
+                return "color: #cc0000;";
+            }
+            return "";
         },
     },
 );
@@ -553,9 +674,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             icon: "icons/print.png",
             cls: "x-btn-text-icon",
             handler: (btn) => {
-                btn.ownerCt.ownerCt.getGridEl().print({
-                    isGrid: true,
-                });
+                printGrid(btn.ownerCt.ownerCt);
             },
         },
         {
@@ -612,12 +731,23 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
         },
         {
+            itemId: "retryFailedBtn",
+            text: "Retry Failed",
+            hidden: true,
+            handler: function (btn) {
+                const grid = btn.ownerCt && btn.ownerCt.ownerCt;
+                const panel = grid && grid.ownerCt;
+                const store = grid && grid.getStore ? grid.getStore() : null;
+                retryFailedDirectMessages(panel, store);
+            },
+        },
+        {
             icon: "icons/font-less.png",
             handler: function () {
                 const size = parseInt(getPreference("font-size", 14)) - 2;
                 setPreference("font-size", size);
                 //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
-                const cssfmt = String.format("normal {0}px arial", size);
+                const cssfmt = `normal ${size}px arial`;
                 Ext.util.CSS.updateRule(
                     "td.x-grid3-td-message",
                     "font",
@@ -631,7 +761,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             handler: function () {
                 const size = parseInt(getPreference("font-size", 14)) + 2;
                 setPreference("font-size", size);
-                const cssfmt = String.format("normal {0}px arial", size);
+                const cssfmt = `normal ${size}px arial`;
                 Ext.util.CSS.updateRule(
                     "td.x-grid3-td-message",
                     "font",
@@ -642,9 +772,6 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         },
     ],
     initComponent: function () {
-        // Store reference to parent for use in renderer
-        const parentPanel = this.ownerCt;
-
         this.columns = [
             {
                 header: "Author",
@@ -659,20 +786,17 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 dataIndex: "ts",
                 flex: 1,
                 renderer: function (_value, _p, record) {
+                    const parentPanel = this.ownerCt;
                     const data = {
                         author: record.get("author"),
                         message: record.get("message"),
                         ts: record.get("ts"),
                         room: record.get("room"),
                         jid: record.get("jid"),
+                        delivery_status: record.get("delivery_status"),
                         me: parentPanel ? parentPanel.handle : null,
                     };
-                    console.log("[Renderer] Data:", data);
                     const html = Application.msgFormatter.apply(data);
-                    console.log(
-                        "[Renderer] HTML output:",
-                        html.substring(0, 100),
-                    );
                     return html;
                 },
             },
@@ -726,6 +850,9 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     name: "xdelay",
                     type: "boolean",
                 },
+                "stanza_id",
+                "delivery_status",
+                "raw_message",
             ],
         });
         this.store.on(
@@ -822,6 +949,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             if (t.tagName === "A") {
                                 e.stopEvent();
                                 t.target = "_blank";
+                                t.rel = "noopener noreferrer";
                             }
                         });
                     }
@@ -833,12 +961,17 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             // way
                             //console.log("Daryl2:"+ t.tagName);
                             t.target = "_blank";
+                            t.rel = "noopener noreferrer";
                             hideTextWindow();
                         },
                         click: function (e, t) {
                             if (String(t.target).toLowerCase() !== "_blank") {
                                 e.stopEvent();
-                                window.open(t.href);
+                                open(
+                                    t.href,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                );
                             }
                             hideTextWindow();
                         },
@@ -1336,10 +1469,11 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
         this.buildItems();
     },
     buildItems: function () {
+        const helpElement = document.getElementById("help");
+        const helpHtml = helpElement ? helpElement.innerHTML : "";
         this.add({
-            contentEl: "help",
+            html: helpHtml,
             title: "Help",
-            preventBodyReset: true,
             style: {
                 margin: "5px",
             },
