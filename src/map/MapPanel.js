@@ -17,6 +17,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {Style, Fill, Stroke, Icon} from 'ol/style';
 import {createLSRStore, createSBWStore} from './feature-stores.js';
 import {lsrStyles} from './lsr-styles.js';
+import {iemTileLayerConfig, iemBoundaryLayerConfig} from './layer-config.js';
 import { Application } from '../app-state.js';
 
 // Global reference to the OpenLayers map
@@ -123,17 +124,34 @@ function lsrStyleFunction(feature) {
 }
 
 function createIEMTileLayer(name, layername, checkedGroup) {
+    const cfg = iemTileLayerConfig(name, layername, checkedGroup);
     const layer = new TileLayer({
         source: new XYZ({
-            url: `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${layername}/{z}/{x}/{y}.png`,
+            url: cfg.url,
             crossOrigin: 'anonymous',
         }),
-        visible: false,
-        opacity: 0.8,
+        visible: cfg.visible,
+        opacity: cfg.opacity,
     });
-    layer.set('name', name);
-    layer.set('checkedGroup', checkedGroup);
-    layer.set('refreshable', true);
+    layer.set('name', cfg.name);
+    layer.set('checkedGroup', cfg.checkedGroup);
+    layer.set('refreshable', cfg.refreshable);
+    return layer;
+}
+
+function createIEMBoundaryLayer(name, layername) {
+    const cfg = iemBoundaryLayerConfig(name, layername);
+    const layer = new TileLayer({
+        source: new XYZ({
+            url: cfg.url,
+            crossOrigin: 'anonymous',
+        }),
+        visible: cfg.visible,
+        opacity: cfg.opacity,
+    });
+    layer.set('name', cfg.name);
+    layer.set('checkedGroup', cfg.checkedGroup);
+    layer.set('refreshable', cfg.refreshable);
     return layer;
 }
 
@@ -264,6 +282,14 @@ function createVectorLayers() {
         },
     });
 
+    const wfoCWALayer = createIEMBoundaryLayer('NWS WFO CWA', 'wfo-900913');
+    const cwsuLayer = createIEMBoundaryLayer('NWS CWSU', 'cwsu-900913');
+    const fireZonesLayer = createIEMBoundaryLayer('NWS Fire Zones', 'fz-900913');
+    const usCountiesLayer = createIEMBoundaryLayer('US Counties', 'uscounties');
+    const usStatesLayer = createIEMBoundaryLayer('US States', 'usstates');
+    const tribalLayer = createIEMBoundaryLayer('Tribal Boundaries', 'tribal-900913');
+    const rfcHSALayer = createIEMBoundaryLayer('NWS RFC HSA', 'rfc-900913');
+
     const ridgeIILayer = createIEMTileLayer(
         'NEXRAD Base Reflectivity',
         'nexrad-n0q-900913',
@@ -344,6 +370,13 @@ function createVectorLayers() {
         goesWestM1VISLayer,
         goesWestVISLayer,
         goesEastVISLayer,
+        wfoCWALayer,
+        cwsuLayer,
+        fireZonesLayer,
+        usCountiesLayer,
+        usStatesLayer,
+        tribalLayer,
+        rfcHSALayer,
     };
 }
 
@@ -872,6 +905,53 @@ export function createLayerTree() {
                             checked: false,
                             leaf: true,
                             layerName: 'Convective Sigmets',
+                        },
+                    ],
+                },
+                {
+                    text: 'Political Boundaries',
+                    children: [
+                        {
+                            text: 'NWS WFO CWA',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NWS WFO CWA',
+                        },
+                        {
+                            text: 'NWS CWSU',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NWS CWSU',
+                        },
+                        {
+                            text: 'NWS Fire Zones',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NWS Fire Zones',
+                        },
+                        {
+                            text: 'US Counties',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'US Counties',
+                        },
+                        {
+                            text: 'US States',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'US States',
+                        },
+                        {
+                            text: 'Tribal Boundaries',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'Tribal Boundaries',
+                        },
+                        {
+                            text: 'NWS RFC HSA',
+                            checked: false,
+                            leaf: true,
+                            layerName: 'NWS RFC HSA',
                         },
                     ],
                 },
