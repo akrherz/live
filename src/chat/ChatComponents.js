@@ -1078,12 +1078,12 @@ function onBuddyPresence(msg) {
                     }
                     if (!msg.getAttribute("type")) {
                         if (msg.getElementsByTagName("show").length > 0) {
-                            leaf.setIconCls("buddy-away");
+                            leaf.set("iconCls", "buddy-away");
                         } else {
-                            leaf.setIconCls("buddy-online");
+                            leaf.set("iconCls", "buddy-online");
                         }
                         leaf.data.presence = "online";
-                        leaf.ui.show();
+                        leaf.set("hidden", false);
                         //console.log("Replace"+ resource +" Status:"+ status);
                         leaf.data.resources.replace(resource, {
                             status: status,
@@ -1092,8 +1092,8 @@ function onBuddyPresence(msg) {
                     } else if (msg.getAttribute("type") === "unavailable") {
                         if (leaf.data.resources.length === 1) {
                             leaf.data.presence = "offline";
-                            leaf.setIconCls("buddy-offline");
-                            leaf.ui.hide();
+                            leaf.set("iconCls", "buddy-offline");
+                            leaf.set("hidden", true);
                         }
                         leaf.data.resources.remove(resource);
                     }

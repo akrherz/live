@@ -77,7 +77,8 @@ export function saveBookmarks() {
             autojoin: n.data.autojoin ? "true" : "false",
             jid: n.data.jid,
         })
-            .c("nick", n.data.handle)
+            .c("nick")
+            .t(n.data.handle)
             .up()
             .up();
     }, stanza);
@@ -565,6 +566,7 @@ Application.JoinChatroomDialog = new Ext.Window({
                         handle: handle,
                         leaf: true,
                         });
+                        saveBookmarks();
                     }
                 }
                 msgBus.fire(
