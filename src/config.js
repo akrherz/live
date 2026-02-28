@@ -11,7 +11,7 @@ export const LiveConfig = {
 
   // XMPP transport settings
   // transport: "bosh" | "websocket"
-  XMPP_TRANSPORT: "websocket",
+  XMPP_TRANSPORT: "bosh",
   BOSH: "https://weather.im/http-bind/",
   WEBSOCKET: "wss://weather.im/ws",
 

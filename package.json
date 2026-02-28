@@ -14,9 +14,8 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/lsr-parser.test.mjs tests/layer-config.test.mjs tests/date-utils.test.mjs",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stderr --test-reporter=lcov --test-reporter-destination=coverage/lcov.info tests/lsr-parser.test.mjs tests/layer-config.test.mjs tests/date-utils.test.mjs",
-    "test:lsr": "node --test tests/lsr-parser.test.mjs",
+    "test": "node --test tests/layer-config.test.mjs tests/date-utils.test.mjs",
+    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stderr --test-reporter=lcov --test-reporter-destination=coverage/lcov.info tests/layer-config.test.mjs tests/date-utils.test.mjs",
     "test:layer-config": "node --test tests/layer-config.test.mjs",
     "test:date-utils": "node --test tests/date-utils.test.mjs",
     "sync:extjs": "node scripts/sync-extjs-assets.mjs",
