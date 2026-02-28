@@ -41,10 +41,10 @@ Application.Control = {
 
                         Ext.getCmp('buddies').getRootNode().cascade(function(n) {
                                     if (checked) {
-                                        n.ui.show();
+                                        n.set('hidden', false);
                                     } else {
                                         if (n.data.presence === 'offline') {
-                                            n.ui.hide();
+                                            n.set('hidden', true);
                                         }
                                     }
                                 });
@@ -251,24 +251,18 @@ Application.Control = {
                         }
                 },
                 root : {
-                            initialLoad : false,
                             listeners : {
-                                beforeappend : function(_tree, root, node) {
+                                beforeappend : function(parentNode, node) {
                                     /*
                                      * Ensure that we are appending an unique
                                      * node
                                      */
-                                    const oldnode = root.findChild('jid', node.data.jid);
+                                    const oldnode = parentNode.findChild('jid', node.data.jid);
                                     if (oldnode) {
                                         Application.log("Replacing MUC bookmark: "+ node.data.jid );
-                                        root.removeChild(oldnode, true);
+                                        parentNode.removeChild(oldnode, true);
                                     }
                                     return true; /* lets be safe */
-                                },
-                                append : function(_tree, root) {
-                                    if (root.initialLoad) {
-                                        saveBookmarks();
-                                    }
                                 }
                             }
                         }

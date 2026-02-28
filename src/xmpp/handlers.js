@@ -689,10 +689,6 @@ function parseBookmarks(msg) {
             autoJoinedRooms += 1;
         }
     }
-    const bookmarksTree = Ext.getCmp("bookmarks");
-    if (bookmarksTree && bookmarksTree.getRootNode()) {
-        bookmarksTree.getRootNode().initialLoad = true;
-    }
 }
 
 function onIQ(msg) {
@@ -779,7 +775,11 @@ function onRoster(msg) {
 }
 
 function rosterParser(msg) {
-    const root = Ext.getCmp("buddies").root;
+    const buddiesTree = Ext.getCmp("buddies");
+    const root = buddiesTree ? buddiesTree.getRootNode() : null;
+    if (!root) {
+        return;
+    }
     const roster_items = msg.getElementsByTagName("item");
     for (let i = 0; i < roster_items.length; i++) {
         /* Look to see if there is a group */
