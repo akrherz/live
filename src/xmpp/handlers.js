@@ -1173,6 +1173,8 @@ function messageParser(msg) {
         return;
     }
 
+    const geoPoint = extractLatLongFromMessage(msg);
+
     if (type === "groupchat") {
         /* Look to see if a product_id is embedded */
         let product_id = null;
@@ -1195,6 +1197,8 @@ function messageParser(msg) {
                 jid: mpc.getJidByHandle(sender),
                 xdelay: isDelayed,
                 product_id: product_id,
+                geo_lat: geoPoint ? geoPoint.lat : null,
+                geo_long: geoPoint ? geoPoint.long : null,
             });
             // i = mpc.gp.getStore().getCount() - 1;
             // row = mpc.gp.getView().getRow(i);
@@ -1214,6 +1218,8 @@ function messageParser(msg) {
                         jid: mpc.getJidByHandle(sender),
                         xdelay: isDelayed,
                         product_id: product_id,
+                        geo_lat: geoPoint ? geoPoint.lat : null,
+                        geo_long: geoPoint ? geoPoint.long : null,
                     });
                 if (Ext.getCmp("__allchats__").gp.getStore().isFiltered()) {
                     Ext.getCmp("__allchats__")
@@ -1256,6 +1262,8 @@ function messageParser(msg) {
             room: null,
             xdelay: false,
             message: txt,
+            geo_lat: geoPoint ? geoPoint.lat : null,
+            geo_long: geoPoint ? geoPoint.long : null,
         });
     } else if (from === LiveConfig.XMPPHOST) {
         /* Broadcast message! */
@@ -1281,6 +1289,30 @@ function messageParser(msg) {
                 "</p>",
         }).show();
     }
+}
+
+function extractLatLongFromMessage(msg) {
+    const x = msg.getElementsByTagName("x");
+    if (!x || x.length === 0) {
+        return null;
+    }
+
+    for (let i = 0; i < x.length; i++) {
+        const lat = parseFloat(x[i].getAttribute("lat"));
+        const lon = parseFloat(x[i].getAttribute("long"));
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            continue;
+        }
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            continue;
+        }
+        return {
+            lat: lat,
+            long: lon,
+        };
+    }
+
+    return null;
 }
 
 function sortStoreByPreference(store, fallbackField) {

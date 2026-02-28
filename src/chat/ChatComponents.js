@@ -6,6 +6,8 @@ import {
     printGrid,
     showHtmlVersion,
 } from "../utils/grid-utilities.js";
+import { fromLonLat } from "ol/proj";
+import { getMap } from "../map/MapPanel.js";
 import { LiveConfig } from "../config.js";
 import { getPreference, setPreference } from "../utils/prefs.js";
 import { DataTip } from "../ui/data-tip.js";
@@ -587,26 +589,38 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
 });
 
 Application.msgFormatter = new Ext.XTemplate(
-    '<p class="mymessage">',
-    '<span class="{[values.me === values.author ? "author-me" : this.getAuthorClass(values.jid)]}" style="{[values.me === values.author ? "" : this.getAuthorStyle(values.author)]}">(',
+    '<div class="chat-message-row {[this.getMessageRowClass(values)]}">',
+    '<div class="chat-message-header {[this.getAuthorClass(values.jid)]}">',
+    '<span class="chat-message-ts">',
     '<tpl if="this.isNotToday(ts)">',
     '{ts:date("d M")} ',
     "</tpl>",
-    '{ts:date("g:i A")}) ',
+    '{ts:date("g:i A")}',
+    "</span>",
+    '<span class="chat-message-sep">·</span>',
     '<tpl if="values.room != null">',
-    "[{room}] ",
+    '<span class="chat-message-room">[{room}]</span>',
+    '<span class="chat-message-sep">·</span>',
     "</tpl>",
-    "{author}",
+    '<span class="chat-message-author" style="{[this.getAuthorStyle(values.author, values.jid)]}">{author}</span>',
     '<tpl if="values.me === values.author && values.delivery_status">',
-    '<span style="font-size: 0.85em; margin-left: 6px; opacity: 0.8; {[this.getDeliveryStyle(values.delivery_status)]}">{[this.getDeliveryLabel(values.delivery_status)]}</span>',
+    '<span class="chat-message-delivery {[this.getDeliveryClass(values.delivery_status)]}">{[this.getDeliveryLabel(values.delivery_status)]}</span>',
     '</tpl>',
-    ":</span> ",
-    "{message}</p>",
+    '{[this.getGeoBadge(values)]}',
+    "</div>",
+    '<div class="chat-message-body">{message}</div>',
+    "</div>",
     {
         isNotToday: function (ts) {
             // Use Ext.Date.format for date formatting
             const today = new Date();
             return Ext.Date.format(today, "md") !== Ext.Date.format(ts, "md");
+        },
+        getMessageRowClass: function (values) {
+            if (values.me === values.author) {
+                return "chat-message-own";
+            }
+            return "chat-message-peer";
         },
         getAuthorClass: function (jid) {
             //console.log("node: "+Strophe.getNodeFromJid(jid) );
@@ -622,7 +636,13 @@ Application.msgFormatter = new Ext.XTemplate(
 
             return "author-chatpartner";
         },
-        getAuthorStyle: function (author) {
+        getAuthorStyle: function (author, jid) {
+            if (jid) {
+                const node = Strophe.getNodeFromJid(jid);
+                if (node === "iembot" || (node && node.match(/^nws/))) {
+                    return "";
+                }
+            }
             if (
                 !Application.getUserColor ||
                 typeof Application.getUserColor !== "function"
@@ -644,11 +664,41 @@ Application.msgFormatter = new Ext.XTemplate(
             }
             return "";
         },
-        getDeliveryStyle: function (deliveryStatus) {
+        getDeliveryClass: function (deliveryStatus) {
             if (deliveryStatus === "failed") {
-                return "color: #cc0000;";
+                return "chat-message-delivery-failed";
             }
-            return "";
+            return "chat-message-delivery-ok";
+        },
+        getGeoBadge: function (values) {
+            const rawLat = values.geo_lat;
+            const rawLon = values.geo_long;
+            if (
+                rawLat === null ||
+                typeof rawLat === "undefined" ||
+                rawLat === "" ||
+                rawLon === null ||
+                typeof rawLon === "undefined" ||
+                rawLon === ""
+            ) {
+                return "";
+            }
+
+            const lat = Number(rawLat);
+            const lon = Number(rawLon);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return "";
+            }
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                return "";
+            }
+            return (
+                `<button class="chat-map-zoom-btn" type="button" ` +
+                `data-lat="${lat}" data-long="${lon}" ` +
+                `title="Zoom map to ${lat.toFixed(3)}, ${lon.toFixed(3)}">` +
+                "Zoom Map" +
+                "</button>"
+            );
         },
     },
 );
@@ -810,6 +860,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 header: "Message",
                 sortable: true,
                 dataIndex: "ts",
+                tdCls: "chat-message-cell",
+                cellWrap: true,
                 flex: 1,
                 renderer: function (_value, _p, record) {
                     const parentPanel = this.ownerCt;
@@ -820,6 +872,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         room: record.get("room"),
                         jid: record.get("jid"),
                         delivery_status: record.get("delivery_status"),
+                        geo_lat: record.get("geo_lat"),
+                        geo_long: record.get("geo_long"),
                         me: parentPanel ? parentPanel.handle : null,
                     };
                     const html = Application.msgFormatter.apply(data);
@@ -879,6 +933,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 "stanza_id",
                 "delivery_status",
                 "raw_message",
+                "geo_lat",
+                "geo_long",
             ],
         });
         this.store.on(
@@ -979,6 +1035,40 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             }
                         });
                     }
+                    p.body.on({
+                        click: function (e, t) {
+                            const lat = parseFloat(t.getAttribute("data-lat"));
+                            const lon = parseFloat(t.getAttribute("data-long"));
+                            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                                e.stopEvent();
+                                return;
+                            }
+
+                            const mapPanel = Ext.getCmp("map");
+                            const map = mapPanel && mapPanel.map ? mapPanel.map : getMap();
+                            if (map && map.getView) {
+                                const view = map.getView();
+                                const center = fromLonLat([lon, lat]);
+                                const currentZoom = view.getZoom ? view.getZoom() : 5;
+                                const targetZoom = Math.max(currentZoom || 5, 8);
+                                if (view.animate) {
+                                    view.animate({
+                                        center: center,
+                                        zoom: targetZoom,
+                                        duration: 250,
+                                    });
+                                } else {
+                                    view.setCenter(center);
+                                    if (view.setZoom) {
+                                        view.setZoom(targetZoom);
+                                    }
+                                }
+                            }
+                            e.stopEvent();
+                            hideTextWindow();
+                        },
+                        delegate: ".chat-map-zoom-btn",
+                    });
                     p.body.on({
                         mousedown: function (e, t) {
                             // try to
