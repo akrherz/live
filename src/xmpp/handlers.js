@@ -7,7 +7,6 @@ import { msgBus } from "../events/MsgBus.js";
 import { $iq, $msg, $pres, Strophe } from "strophe.js";
 import WKT from "ol/format/WKT";
 import { UTCStringToDate } from "../utils/date-utils.js";
-import { parseLSRDetails, stripHtml } from "./lsr-parser.js";
 import { getPreference, setPreference } from "../utils/prefs.js";
 import { onBuddyPresence } from "../chat/ChatComponents.js";
 import { iembotFilter } from "../utils/grid-utilities.js";
@@ -1307,7 +1306,6 @@ function geomParser(msg, isDelayed) {
     /* Look for iembot geometry declarations */
     const elems = msg.getElementsByTagName("body");
     const body = elems[0];
-    const lsrText = body ? Strophe.getText(body) : "";
     const html = msg.getElementsByTagName("html");
     let txt = null;
     if (html.length > 0) {
@@ -1368,25 +1366,8 @@ function geomParser(msg, isDelayed) {
                     feature.set("valid", d);
                 }
             }
-            // console.log("Product Time Delayed:"+ delayed);
             feature.set("ptype", x[i].getAttribute("ptype"));
-            feature.set("message", stripHtml(txt || ""));
-            if (x[i].getAttribute("category") === "LSR") {
-                const lsrDetails = parseLSRDetails(lsrText || txt, {
-                    event: x[i].getAttribute("event"),
-                    magnitude: x[i].getAttribute("magnitude"),
-                    city: x[i].getAttribute("city"),
-                    county: x[i].getAttribute("county"),
-                    state: x[i].getAttribute("state"),
-                    remark: x[i].getAttribute("remark"),
-                });
-                feature.set("event", lsrDetails.event);
-                feature.set("magnitude", lsrDetails.magnitude);
-                feature.set("city", lsrDetails.city);
-                feature.set("county", lsrDetails.county);
-                feature.set("state", lsrDetails.state);
-                feature.set("remark", lsrDetails.remark);
-            }
+            feature.set("message", txt);
             const valid = feature.get("valid");
             if (
                 (x[i].getAttribute("category") === "LSR" ||
