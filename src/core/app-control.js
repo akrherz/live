@@ -1,7 +1,8 @@
 import { msgBus } from "../events/MsgBus.js";
 import { $iq, $pres, Strophe } from 'strophe.js';
 import { saveBookmarks } from '../dialogs/Dialogs.js';
-import { login, setPreference } from "../xmpp/handlers.js";
+import { login } from "../xmpp/handlers.js";
+import { setPreference } from "../utils/prefs.js";
 import { DataTip } from "../ui/data-tip.js";
 import { LiveConfig } from "../config.js";
 import { Application } from "../app-state.js";

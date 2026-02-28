@@ -7,7 +7,7 @@ import {
     showHtmlVersion,
 } from "../utils/grid-utilities.js";
 import { LiveConfig } from "../config.js";
-import { getPreference, setPreference } from "../xmpp/handlers.js";
+import { getPreference, setPreference } from "../utils/prefs.js";
 import { DataTip } from "../ui/data-tip.js";
 import { Application } from "../app-state.js";
 

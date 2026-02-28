@@ -6,8 +6,9 @@ import { msgBus } from "../events/MsgBus.js";
 
 import { $iq, $msg, $pres, Strophe } from "strophe.js";
 import WKT from "ol/format/WKT";
-import { UTCStringToDate } from "../events/event-handlers.js";
+import { UTCStringToDate } from "../utils/date-utils.js";
 import { parseLSRDetails, stripHtml } from "./lsr-parser.js";
+import { getPreference, setPreference } from "../utils/prefs.js";
 import { onBuddyPresence } from "../chat/ChatComponents.js";
 import { iembotFilter } from "../utils/grid-utilities.js";
 import { doLogin } from "../core/app-control.js";
@@ -1462,107 +1463,5 @@ Application.updateColors = function () {
 
 };
 
-/*
- * Sync application Preferences upstream!
- */
-function syncPreferences() {
-    Application.log("Saving preferences to server...");
-    const stanza = $iq({
-        type: "set",
-        id: "_set1",
-    })
-        .c("query", {
-            xmlns: "jabber:iq:private",
-        })
-        .c("storage", {
-            xmlns: "nwschatlive:prefs",
-        });
-    Application.prefStore.each(function (record) {
-        this.c("pref", {
-            key: record.get("key"),
-            value: record.get("value"),
-        }).up();
-    }, stanza);
-    if (Application.XMPPConn !== undefined) {
-        Application.XMPPConn.sendIQ(stanza.tree());
-    }
-};
-
-Application.removePreference = function (key) {
-    const idx = Application.prefStore.find("key", key);
-    if (idx > -1) {
-        Application.prefStore.removeAt(idx);
-    }
-};
-
-function getPreference(key, base) {
-    const idx = Application.prefStore.find("key", key);
-    if (idx > -1) {
-        const record = Application.prefStore.getAt(idx);
-        return record.get("value");
-    }
-    return base;
-};
-
-function setPreference(key, value) {
-    const idx = Application.prefStore.find("key", key);
-    if (idx > -1) {
-        Application.log("Setting Preference: " + key + " Value: " + value);
-        const record = Application.prefStore.getAt(idx);
-        record.set("value", value);
-    } else {
-        Application.log("Adding Preference: " + key + " Value: " + value);
-        Application.prefStore.add(
-            new Ext.data.Record({
-                key: key,
-                value: value,
-            })
-        );
-    }
-};
-
-/*
- * This will be how we handle the management and storage of application
- * preferences. It is a simple store, which can save its values to XMPP Private
- * Store
- */
-Application.prefStore = new Ext.data.Store({
-    fields: [
-        {
-            id: "key",
-        },
-        {
-            id: "value",
-        },
-    ],
-    locked: false,
-    listeners: {
-        remove: (st) => {
-            Application.log("prefStore remove event fired...");
-            if (st.locked) {
-                Application.log("Skipping preference save due to locking");
-                return true;
-            }
-            /* save preferences to xmpp private storage */
-            syncPreferences();
-        },
-        update: (st, record) => {
-            Application.log("prefStore update event fired...");
-            if (st.locked) {
-                Application.log("Skipping preference save due to locking");
-                return true;
-            }
-            /* save preferences to xmpp private storage */
-            syncPreferences();
-
-            if (
-                record.get("key") === "fgcolor" ||
-                record.get("key") === "bgcolor"
-            ) {
-                Application.updateColors();
-            }
-        },
-    },
-});
-
-export { login, doAnonymousLogin, syncPreferences, setPreference, getPreference };
+export { login, doAnonymousLogin };
+export { syncPreferences, setPreference, getPreference } from "../utils/prefs.js";

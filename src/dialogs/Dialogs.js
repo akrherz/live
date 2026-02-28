@@ -1,7 +1,7 @@
 import { msgBus } from "../events/MsgBus.js";
 import { $iq, Strophe } from "strophe.js";
 import { LiveConfig } from "../config.js";
-import { syncPreferences, setPreference } from "../xmpp/handlers.js";
+import { syncPreferences, setPreference } from "../utils/prefs.js";
 import { playSound } from '../events/event-handlers.js';
 import { Application } from "../app-state.js";
 

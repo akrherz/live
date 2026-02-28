@@ -5,7 +5,7 @@
 
 import { $msg, $pres, $iq, Strophe } from 'strophe.js';
 import { LiveConfig } from "../config.js";
-import { getPreference } from '../xmpp/handlers.js';
+import { getPreference } from '../utils/prefs.js';
 import { Application } from "../app-state.js";
 
 Application.AllChatMessageWindow = Ext.extend(Ext.Window, {

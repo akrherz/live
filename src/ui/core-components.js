@@ -6,7 +6,7 @@
 import { LoginPanel } from "../auth/LoginPanel.js";
 import MapPanel from "../map/MapPanel.js";
 import { getMap } from "../map/MapPanel.js";
-import { setPreference } from "../xmpp/handlers.js";
+import { setPreference } from "../utils/prefs.js";
 import { Application } from "../app-state.js";
 
 Application.msgtpl = new Ext.XTemplate(
