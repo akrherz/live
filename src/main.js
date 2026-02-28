@@ -83,9 +83,10 @@ function initializeApp() {
       Ext.QuickTips.init();
 
       console.log('Creating LiveViewport...');
+      const urlParams = new URLSearchParams(window.location.search);
       (new Application.LiveViewport({
         renderTo: Ext.getBody(),
-        enableMap: true
+        enableMap: !urlParams.has('nomap')
       })).show();
       console.log('LiveViewport created and shown');
 
