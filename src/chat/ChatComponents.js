@@ -742,6 +742,32 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
         },
         {
+            text: "Move Tab Left",
+            handler: function (btn) {
+                const grid = btn.ownerCt && btn.ownerCt.ownerCt;
+                const chatPanel = grid && grid.ownerCt;
+                const tabPanel = chatPanel && chatPanel.ownerCt;
+                if (tabPanel && tabPanel.moveActiveTabBy) {
+                    Ext.defer(function () {
+                        tabPanel.moveActiveTabBy(-1, btn);
+                    }, 1);
+                }
+            },
+        },
+        {
+            text: "Move Tab Right",
+            handler: function (btn) {
+                const grid = btn.ownerCt && btn.ownerCt.ownerCt;
+                const chatPanel = grid && grid.ownerCt;
+                const tabPanel = chatPanel && chatPanel.ownerCt;
+                if (tabPanel && tabPanel.moveActiveTabBy) {
+                    Ext.defer(function () {
+                        tabPanel.moveActiveTabBy(1, btn);
+                    }, 1);
+                }
+            },
+        },
+        {
             icon: "icons/font-less.png",
             handler: function () {
                 const size = parseInt(getPreference("font-size", 14)) - 2;
@@ -1105,361 +1131,14 @@ function onBuddyPresence(msg) {
 
 export { onBuddyPresence };
 
-Ext.namespace("Ext.ux.panel");
-
-/**
- * @class Ext.ux.panel.DDTabPanel
- * @extends Ext.TabPanel
- * @author
- *    Original by
- *        <a href="http://extjs.com/forum/member.php?u=22731">thommy</a> and
- *        <a href="http://extjs.com/forum/member.php?u=37284">rizjoj</a><br />
- *    Published and polished by: Mattias Buelens (<a href="http://extjs.com/forum/member.php?u=41421">Matti</a>)<br />
- *    With help from: <a href="http://extjs.com/forum/member.php?u=1459">mystix</a>
- *    Polished and debugged by: Tobias Uhlig (info@internetsachen.com) 04-25-2009
- *    Ported to Ext-3.1.1 by: Tobias Uhlig (info@internetsachen.com) 02-14-2010
- * @license Licensed under the terms of the Open Source <a href="http://www.gnu.org/licenses/lgpl.html">LGPL 3.0 license</a>. Commercial use is permitted to the extent that the code/component(s) do NOT become part of another Open Source or Commercially licensed development library or toolkit without explicit permission.
- * @version 2.0.0 (Feb 14, 2010)
- */
-const DDTabPanel = Ext.extend(Ext.TabPanel, {
-    /**
-     * @cfg {Number} arrowOffsetX The horizontal offset for the drop arrow indicator, in pixels (defaults to -9).
-     */
-    arrowOffsetX: -9,
-    /**
-     * @cfg {Number} arrowOffsetY The vertical offset for the drop arrow indicator, in pixels (defaults to -8).
-     */
-    arrowOffsetY: -8,
-
-    // Assign the drag and drop group id
-    /** @private */
-    initComponent: function () {
-        DDTabPanel.superclass.initComponent.call(this);
-        // In ExtJS 6, addEvents is not needed - Observable automatically supports any event
-        // this.addEvents('reorder');
-        if (!this.ddGroupId) {
-            this.ddGroupId =
-                "dd-tabpanel-group-" + DDTabPanel.superclass.getId.call(this);
-        }
-        // Initialize stack for tracking tab history
-        this.stack = new Ext.util.MixedCollection();
-    },
-
-    // New Event fired after drop tab
-    reorder: function (tab) {
-        this.fireEvent("reorder", this, tab);
-    },
-
-    // Declare the tab panel as a drop target
-    /** @private */
-    afterRender: function () {
-        DDTabPanel.superclass.afterRender.call(this);
-        // Create a drop arrow indicator
-        this.arrow = Ext.DomHelper.append(
-            Ext.getBody(),
-            '<div class="dd-arrow-down"></div>',
-            true,
-        );
-        this.arrow.hide();
-        // Create a drop target for this tab panel
-        const tabsDDGroup = this.ddGroupId;
-        this.dd = new DDTabPanel.DropTarget(this, {
-            ddGroup: tabsDDGroup,
-        });
-
-        // needed for the onRemove-Listener
-        this.move = false;
-    },
-
-    // Init the drag source after (!) rendering the tab
-    /** @private */
-    initTab: function (tab, index) {
-        DDTabPanel.superclass.initTab.call(this, tab, index);
-
-        // Add tab to stack for history tracking
-        if (this.stack && !this.stack.containsKey(tab.id)) {
-            this.stack.add(tab.id, tab);
-        }
-
-        const id = this.id + "__" + tab.id;
-        // Hotfix 3.2.0
-        Ext.fly(id).on("click", function () {
-            tab.ownerCt.setActiveTab(tab.id);
-        });
-        // Enable dragging on all tabs by default
-        Ext.applyIf(tab, { allowDrag: true });
-
-        // Extend the tab
-        Ext.apply(tab, {
-            // Make this tab a drag source
-            ds: new Ext.dd.DragSource(id, {
-                ddGroup: this.ddGroupId,
-                dropEl: tab,
-                dropElHeader: Ext.get(id, true),
-                scroll: false,
-
-                // Update the drag proxy ghost element
-                onStartDrag: function () {
-                    if (this.dropEl.iconCls) {
-                        const el = this.getProxy()
-                            .getGhost()
-                            .select(".x-tab-strip-text");
-                        el.addClass("x-panel-inline-icon");
-
-                        const proxyText = el.elements[0].innerHTML;
-                        el.elements[0].innerHTML =
-                            Ext.util.Format.stripTags(proxyText);
-
-                        el.applyStyles({
-                            paddingLeft: "20px",
-                        });
-                    }
-                },
-
-                // Activate this tab on mouse up
-                // (Fixes bug which prevents a tab from being activated by clicking it)
-                onMouseUp: function () {
-                    if (this.dropEl.ownerCt.move) {
-                        if (
-                            !this.dropEl.disabled &&
-                            this.dropEl.ownerCt.activeTab === null
-                        ) {
-                            this.dropEl.ownerCt.setActiveTab(this.dropEl);
-                        }
-                        this.dropEl.ownerCt.move = false;
-                        return;
-                    }
-                    if (!this.dropEl.isVisible() && !this.dropEl.disabled) {
-                        this.dropEl.show();
-                    }
-                },
-            }),
-            // Method to enable dragging
-            enableTabDrag: function () {
-                this.allowDrag = true;
-                return this.ds.unlock();
-            },
-            // Method to disable dragging
-            disableTabDrag: function () {
-                this.allowDrag = false;
-                return this.ds.lock();
-            },
-        });
-
-        // Initial dragging state
-        if (tab.allowDrag) {
-            tab.enableTabDrag();
-        } else {
-            tab.disableTabDrag();
-        }
-    },
-
-    /** @private */
-    onRemove: function (c) {
-        // Let ExtJS handle DOM cleanup; manual destruction can break layouts in ExtJS 6
-        DDTabPanel.superclass.onRemove.call(this, c);
-
-        if (this.stack) {
-            this.stack.remove(c);
-        }
-        delete c.tabEl;
-        // Removed c.un(...) calls for listeners that may not have been added, to prevent ExtJS errors
-
-        // Only manage active tab if this panel is still rendered and not being destroyed
-        if (c === this.activeTab && !this.destroying && !this.destroyed) {
-            const isPanelInDom =
-                this.el && this.el.dom && document.body.contains(this.el.dom);
-            const isTabBarInDom =
-                this.tabBar &&
-                this.tabBar.el &&
-                this.tabBar.el.dom &&
-                document.body.contains(this.tabBar.el.dom);
-            if (!isPanelInDom || !isTabBarInDom) {
-                this.activeTab = null;
-                return;
-            }
-            if (!this.move) {
-                const next = this.stack ? this.stack.next() : null;
-                if (next) {
-                    Ext.defer(() => {
-                        try {
-                            if (
-                                !this.destroyed &&
-                                this.items.contains(next) &&
-                                this.el &&
-                                this.el.dom &&
-                                document.body.contains(this.el.dom)
-                            ) {
-                                this.setActiveTab(next);
-                            }
-                        } catch {
-                            // Defensive: prevent UI lockup if ExtJS throws
-                            this.activeTab = null;
-                        }
-                    }, 1);
-                } else if (this.items.getCount() > 0) {
-                    Ext.defer(() => {
-                        try {
-                            if (
-                                !this.destroyed &&
-                                this.items.getCount() > 0 &&
-                                this.el &&
-                                this.el.dom &&
-                                document.body.contains(this.el.dom)
-                            ) {
-                                this.setActiveTab(0);
-                            }
-                        } catch {
-                            this.activeTab = null;
-                        }
-                    }, 1);
-                } else {
-                    this.activeTab = null;
-                }
-            } else {
-                this.activeTab = null;
-            }
-        }
-    },
-
-    // DropTarget and arrow cleanup
-    /** @private */
-    onDestroy: function () {
-        Ext.destroy(this.dd, this.arrow);
-        DDTabPanel.superclass.onDestroy.call(this);
-    },
-});
-
-// Ext.ux.panel.DDTabPanel.DropTarget
-// Implements the drop behavior of the tab panel
-/** @private */
-DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
-    constructor: function (tabpanel, iconfig) {
-        this.tabpanel = tabpanel;
-        // In ExtJS 6, get the tab bar element instead of stripWrap
-        const targetEl = tabpanel.tabBar ? tabpanel.tabBar.el : tabpanel.el;
-        DDTabPanel.DropTarget.superclass.constructor.call(
-            this,
-            targetEl,
-            iconfig,
-        );
-    },
-
-    notifyOver: function (dd, e) {
-        const tabs = this.tabpanel.items;
-        const last = tabs.length;
-
-        if (!e.within(this.getEl()) || dd.dropEl === this.tabpanel) {
-            return "x-dd-drop-nodrop";
-        }
-
-        const larrow = this.tabpanel.arrow;
-
-        // Getting the absolute Y coordinate of the tabpanel
-        const tabPanelTop = this.el.getY();
-
-        let left = null;
-        let prevTab = null;
-        let tab = null;
-        const eventPosX = e.getPageX();
-
-        for (let i = 0; i < last; i++) {
-            prevTab = tab;
-            tab = tabs.itemAt(i);
-            // Is this tab target of the drop operation?
-            const tabEl = tab.ds.dropElHeader;
-            // Getting the absolute X coordinate of the tab
-            const tabLeft = tabEl.getX();
-            // Get the middle of the tab
-            const tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
-            if (eventPosX <= tabMiddle) {
-                left = tabLeft;
-                break;
-            }
-        }
-
-        if (typeof left === "undefined") {
-            const lastTab = tabs.itemAt(last - 1);
-            if (lastTab === dd.dropEl) {
-                return "x-dd-drop-nodrop";
-            }
-            const dom = lastTab.ds.dropElHeader.dom;
-            left = new Ext.Element(dom).getX() + dom.clientWidth + 3;
-        } else if (tab === dd.dropEl || prevTab === dd.dropEl) {
-            this.tabpanel.arrow.hide();
-            return "x-dd-drop-nodrop";
-        }
-
-        larrow
-            .setTop(tabPanelTop + this.tabpanel.arrowOffsetY)
-            .setLeft(left + this.tabpanel.arrowOffsetX)
-            .show();
-
-        return "x-dd-drop-ok";
-    },
-
-    notifyDrop: function (dd, e) {
-        this.tabpanel.arrow.hide();
-
-        // no parent into child
-        if (dd.dropEl === this.tabpanel) {
-            return false;
-        }
-        const tabs = this.tabpanel.items;
-        const eventPosX = e.getPageX();
-        let tab = null;
-        let i = 0;
-        for (i = 0; i < tabs.length; i++) {
-            tab = tabs.itemAt(i);
-            // Is this tab target of the drop operation?
-            const tabEl = tab.ds.dropElHeader;
-            // Getting the absolute X coordinate of the tab
-            const tabLeft = tabEl.getX();
-            // Get the middle of the tab
-            const tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
-            if (eventPosX <= tabMiddle) {
-                break;
-            }
-        }
-
-        // do not insert at the same location
-        if (tab === dd.dropEl || tabs.itemAt(i - 1) === dd.dropEl) {
-            return false;
-        }
-
-        dd.proxy.hide();
-
-        // if tab stays in the same tabPanel
-        if (dd.dropEl.ownerCt === this.tabpanel) {
-            if (i > tabs.indexOf(dd.dropEl)) {
-                i--;
-            }
-        }
-
-        this.tabpanel.move = true;
-        const dropEl = dd.dropEl.ownerCt.remove(dd.dropEl, false);
-
-        this.tabpanel.insert(i, dropEl);
-        // Event drop
-        this.tabpanel.fireEvent("drop", this.tabpanel);
-        // Fire event reorder
-        this.tabpanel.reorder(tabs.itemAt(i));
-
-        return true;
-    },
-
-    notifyOut: function () {
-        this.tabpanel.arrow.hide();
-    },
-});
-
-Application.ChatTabPanel = Ext.extend(DDTabPanel, {
+Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
     activeTab: 0,
     deferredRender: false,
     split: true,
     enableTabScroll: true,
     initComponent: function () {
         const iconfig = {};
+
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         Application.ChatTabPanel.superclass.initComponent.apply(
@@ -1467,6 +1146,71 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
             arguments,
         );
         this.buildItems();
+    },
+    moveActiveTabBy: function (delta, sourceBtn) {
+        if (!delta) {
+            return;
+        }
+
+        if (sourceBtn) {
+            if (typeof sourceBtn.blur === "function") {
+                sourceBtn.blur();
+            }
+            if (
+                sourceBtn.el &&
+                sourceBtn.el.dom &&
+                typeof sourceBtn.el.dom.blur === "function"
+            ) {
+                sourceBtn.el.dom.blur();
+            }
+        }
+
+        const activeTab = this.getActiveTab ? this.getActiveTab() : null;
+        if (!activeTab || activeTab.closable === false) {
+            return;
+        }
+
+        const total = this.items && this.items.getCount ? this.items.getCount() : 0;
+        if (total < 2) {
+            return;
+        }
+
+        const currentIndex = this.items.indexOf(activeTab);
+        if (currentIndex < 0) {
+            return;
+        }
+
+        const targetIndex = currentIndex + delta;
+        if (targetIndex < 0 || targetIndex >= total) {
+            return;
+        }
+
+        const parkingTab = this.items.getAt(targetIndex);
+        if (parkingTab && parkingTab !== activeTab) {
+            try {
+                this.setActiveTab(parkingTab);
+            } catch {
+                // Keep moving even if focus park fails
+            }
+        }
+
+        Ext.defer(() => {
+            if (this.destroyed || activeTab.destroyed) {
+                return;
+            }
+
+            const movedTab = this.remove(activeTab, false);
+            if (!movedTab) {
+                return;
+            }
+            this.insert(targetIndex, movedTab);
+
+            Ext.defer(() => {
+                if (!this.destroyed && movedTab && !movedTab.destroyed) {
+                    this.setActiveTab(movedTab);
+                }
+            }, 10);
+        }, 1);
     },
     buildItems: function () {
         const helpElement = document.getElementById("help");
