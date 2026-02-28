@@ -354,44 +354,33 @@ Application.ServiceGuard = {
         // msgBus.fire('loggingout');
         // }
         if (Application.XMPPConn.authenticated) {
-            if (Application.XMPPConn.errors === 0) {
-                if (this.pingInFlight) {
-                    return;
-                }
-
-                this.pingInFlight = true;
-                const guard = this;
-                const pingId = `svc-ping-${Date.now()}`;
-                const stanza = $iq({
-                    type: 'get',
-                    to: LiveConfig.XMPPHOST,
-                    id: pingId,
-                }).c('ping', {
-                    xmlns: 'urn:xmpp:ping',
-                });
-
-                Application.XMPPConn.sendIQ(
-                    stanza,
-                    function () {
-                        guard.pingInFlight = false;
-                        Application.log(`ServiceGuard ping OK: ${pingId}`);
-                    },
-                    function () {
-                        guard.pingInFlight = false;
-                        Application.log(`ServiceGuard ping failed: ${pingId}, forcing reconnect`);
-                        if (Application.RECONNECT && Application.XMPPConn.connected) {
-                            Application.XMPPConn.disconnect();
-                        }
-                    },
-                    this.pingTimeoutMs,
-                );
-            } else {
-                Application.log("Strophe error counter is non-zero: "
-                        + Application.XMPPConn.errors);
+            if (this.pingInFlight) {
+                return;
             }
+
+            this.pingInFlight = true;
+            const guard = this;
+            const stanza = $iq({
+                type: 'get',
+                to: LiveConfig.XMPPHOST,
+                id: `svc-ping-${Date.now()}`,
+            }).c('ping', {
+                xmlns: 'urn:xmpp:ping',
+            });
+
+            Application.XMPPConn.sendIQ(
+                stanza,
+                function () {
+                    guard.pingInFlight = false;
+                },
+                function () {
+                    guard.pingInFlight = false;
+                },
+                this.pingTimeoutMs,
+            );
         }
     },
-    interval : 120000
+    interval : 55000
 };
 
 export { doLogin };

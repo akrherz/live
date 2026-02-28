@@ -376,6 +376,13 @@ function onConnect(status) {
         Application.reconnectAttempts = 0;
         cancelReconnectTimer();
 
+        // Reset ServiceGuard so the one-tick grace period applies on every
+        // (re)connect, preventing an immediate ping before the session is warm.
+        if (Application.ServiceGuard) {
+            Application.ServiceGuard.skipFirst = true;
+            Application.ServiceGuard.pingInFlight = false;
+        }
+
         /* Add Connection Handlers, removed on disconnect it seems */
         Application.XMPPConn.addHandler(
             onMessage,
@@ -701,6 +708,21 @@ function onIQ(msg) {
 }
 
 function iqParser(msg) {
+    // XEP-0199: respond to server-initiated pings so the server knows we are alive.
+    if (
+        msg.getAttribute("type") === "get" &&
+        msg.querySelector("ping[xmlns='urn:xmpp:ping']")
+    ) {
+        Application.XMPPConn.send(
+            $iq({
+                type: "result",
+                to: msg.getAttribute("from"),
+                id: msg.getAttribute("id"),
+            }).tree()
+        );
+        return;
+    }
+
     if (msg.getAttribute("id") === "fetchrooms") {
         const items = msg.firstChild.getElementsByTagName("item");
         const tree = Ext.getCmp("chatrooms");
