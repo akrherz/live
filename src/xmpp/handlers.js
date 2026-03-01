@@ -844,14 +844,24 @@ function onPresence(msg) {
     return true;
 }
 
-function getMUCIcon(affiliation) {
+function getMUCIconCls(affiliation) {
     if (affiliation === "owner") {
-        return "icons/owner.png";
+        return "muc-owner";
     }
     if (affiliation === "admin") {
-        return "icons/admin.png";
+        return "muc-admin";
     }
-    return "icons/participant.png";
+    return "muc-participant";
+}
+
+function getMUCNodeCls(affiliation) {
+    if (affiliation === "owner") {
+        return "muc-owner-node";
+    }
+    if (affiliation === "admin") {
+        return "muc-admin-node";
+    }
+    return "muc-participant-node";
 }
 
 function presenceParser(msg) {
@@ -1018,12 +1028,19 @@ function presenceParser(msg) {
                     roomUsersRoot.appendChild({
                         affiliation: affiliation,
                         role: role,
-                        icon: getMUCIcon(affiliation),
+                        cls: getMUCNodeCls(affiliation),
+                        iconCls: getMUCIconCls(affiliation),
                         text: Strophe.getResourceFromJid(from),
                         jid: jid,
                         leaf: true,
                     });
                 }
+            } else if (child && role !== "visitor") {
+                child.set("affiliation", affiliation);
+                child.set("role", role);
+                child.set("jid", jid);
+                child.set("cls", getMUCNodeCls(affiliation));
+                child.set("iconCls", getMUCIconCls(affiliation));
             }
         }
         if (msg.getAttribute("type") === "unavailable") {

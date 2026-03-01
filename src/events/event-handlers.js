@@ -95,7 +95,21 @@ msgBus.on("loggedout", function () {
 msgBus.on("loggedin", function () {
     const loginWindow = Ext.getCmp("loginwindow");
     if (loginWindow) {
-        loginWindow.hide();
+        const activeEl = document.activeElement;
+        if (
+            activeEl &&
+            loginWindow.el &&
+            loginWindow.el.dom &&
+            loginWindow.el.dom.contains(activeEl) &&
+            typeof activeEl.blur === "function"
+        ) {
+            activeEl.blur();
+        }
+        Ext.defer(function () {
+            if (loginWindow && !loginWindow.destroyed) {
+                loginWindow.hide();
+            }
+        }, 1);
     }
 
     Application.XMPPConn.send(

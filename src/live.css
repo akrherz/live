@@ -178,27 +178,69 @@ td.chat-message-cell .chat-message-body p,
 }
 
 .buddy-online {
-    background-image: url(/icons/available.png) !important;
+    background-image: url(../icons/available.png) !important;
 }
 
 .buddy-offline {
-    background-image: url(/icons/person.png) !important;
+    background-image: url(../icons/person.png) !important;
 }
 
 .buddy-away {
-    background-image: url(/icons/away.png) !important;
+    background-image: url(../icons/away.png) !important;
 }
 
 .chatroom-icon {
-    background-image: url(/icons/chat.png) !important;
+    background-image: url(../icons/chat.png) !important;
+}
+
+.muc-owner {
+    background-image: url(../icons/owner.png) !important;
+}
+
+.muc-admin {
+    background-image: url(../icons/admin.png) !important;
+}
+
+.muc-participant {
+    background-image: url(../icons/participant.png) !important;
+}
+
+.x-tree-icon.muc-owner,
+.x-tree-node-icon.muc-owner,
+.muc-owner-node .x-tree-icon,
+.muc-owner-node .x-tree-node-icon {
+    background-image: url(../icons/owner.png) !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: contain !important;
+}
+
+.x-tree-icon.muc-admin,
+.x-tree-node-icon.muc-admin,
+.muc-admin-node .x-tree-icon,
+.muc-admin-node .x-tree-node-icon {
+    background-image: url(../icons/admin.png) !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: contain !important;
+}
+
+.x-tree-icon.muc-participant,
+.x-tree-node-icon.muc-participant,
+.muc-participant-node .x-tree-icon,
+.muc-participant-node .x-tree-node-icon {
+    background-image: url(../icons/participant.png) !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: contain !important;
 }
 
 .new-tab {
-    background-image: url(/icons/new_tab.gif) !important;
+    background-image: url(../icons/new_tab.gif) !important;
 }
 
 .typing-tab {
-    background-image: url(/icons/typing.png) !important;
+    background-image: url(../icons/typing.png) !important;
     color: #FF0000 !important;
 }
 

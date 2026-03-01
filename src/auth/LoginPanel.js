@@ -76,7 +76,11 @@ export const LoginPanel = {
             });
 
             const anonBtn = requireElement("anonymous-btn");
-            anonBtn.addEventListener("click", () => {
+            anonBtn.addEventListener("click", (e) => {
+                const btn = e.currentTarget;
+                if (btn && typeof btn.blur === "function") {
+                    btn.blur();
+                }
                 doAnonymousLogin();
             });
         },
