@@ -10,6 +10,7 @@ import { doAnonymousLogin } from "../xmpp/handlers.js";
  * Creates a login panel with HTML content
  */
 export const LoginPanel = {
+    id: "loginpanel",
     xtype: "panel",
     html: `
             <div class="login-shell">
@@ -19,6 +20,7 @@ export const LoginPanel = {
                     <h2>Weather.IM Live</h2>
                     <p class="welcome-text">Browser chat access for weather.im</p>
                 </div>
+                <div id="login-status" class="login-status" hidden></div>
 
                 <div class="login-section primary-section">
                     <h3>Sign In</h3>
@@ -61,6 +63,17 @@ export const LoginPanel = {
     border: false,
     autoScroll: true,
     cls: "login-panel-wrapper",
+    addMessage: function (text) {
+        const statusEl = document.getElementById("login-status");
+        if (!statusEl) {
+            return;
+        }
+        statusEl.textContent = text || "";
+        statusEl.hidden = !text;
+    },
+    clearMessage: function () {
+        this.addMessage("");
+    },
     listeners: {
         afterrender: () => {
             // Attach event listeners after panel is rendered
@@ -76,7 +89,11 @@ export const LoginPanel = {
             });
 
             const anonBtn = requireElement("anonymous-btn");
-            anonBtn.addEventListener("click", () => {
+            anonBtn.addEventListener("click", (e) => {
+                const btn = e.currentTarget;
+                if (btn && typeof btn.blur === "function") {
+                    btn.blur();
+                }
                 doAnonymousLogin();
             });
         },

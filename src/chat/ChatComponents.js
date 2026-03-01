@@ -6,6 +6,8 @@ import {
     printGrid,
     showHtmlVersion,
 } from "../utils/grid-utilities.js";
+import { fromLonLat } from "ol/proj";
+import { getMap } from "../map/MapPanel.js";
 import { LiveConfig } from "../config.js";
 import { getPreference, setPreference } from "../utils/prefs.js";
 import { DataTip } from "../ui/data-tip.js";
@@ -587,26 +589,38 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
 });
 
 Application.msgFormatter = new Ext.XTemplate(
-    '<p class="mymessage">',
-    '<span class="{[values.me === values.author ? "author-me" : this.getAuthorClass(values.jid)]}" style="{[values.me === values.author ? "" : this.getAuthorStyle(values.author)]}">(',
+    '<div class="chat-message-row {[this.getMessageRowClass(values)]}">',
+    '<div class="chat-message-header {[this.getAuthorClass(values.jid)]}">',
+    '<span class="chat-message-ts">',
     '<tpl if="this.isNotToday(ts)">',
     '{ts:date("d M")} ',
     "</tpl>",
-    '{ts:date("g:i A")}) ',
+    '{ts:date("g:i A")}',
+    "</span>",
+    '<span class="chat-message-sep">·</span>',
     '<tpl if="values.room != null">',
-    "[{room}] ",
+    '<span class="chat-message-room">[{room}]</span>',
+    '<span class="chat-message-sep">·</span>',
     "</tpl>",
-    "{author}",
+    '<span class="chat-message-author" style="{[this.getAuthorStyle(values.author, values.jid)]}">{author}</span>',
     '<tpl if="values.me === values.author && values.delivery_status">',
-    '<span style="font-size: 0.85em; margin-left: 6px; opacity: 0.8; {[this.getDeliveryStyle(values.delivery_status)]}">{[this.getDeliveryLabel(values.delivery_status)]}</span>',
+    '<span class="chat-message-delivery {[this.getDeliveryClass(values.delivery_status)]}">{[this.getDeliveryLabel(values.delivery_status)]}</span>',
     '</tpl>',
-    ":</span> ",
-    "{message}</p>",
+    '{[this.getGeoBadge(values)]}',
+    "</div>",
+    '<div class="chat-message-body">{message}</div>',
+    "</div>",
     {
         isNotToday: function (ts) {
             // Use Ext.Date.format for date formatting
             const today = new Date();
             return Ext.Date.format(today, "md") !== Ext.Date.format(ts, "md");
+        },
+        getMessageRowClass: function (values) {
+            if (values.me === values.author) {
+                return "chat-message-own";
+            }
+            return "chat-message-peer";
         },
         getAuthorClass: function (jid) {
             //console.log("node: "+Strophe.getNodeFromJid(jid) );
@@ -622,7 +636,13 @@ Application.msgFormatter = new Ext.XTemplate(
 
             return "author-chatpartner";
         },
-        getAuthorStyle: function (author) {
+        getAuthorStyle: function (author, jid) {
+            if (jid) {
+                const node = Strophe.getNodeFromJid(jid);
+                if (node === "iembot" || (node && node.match(/^nws/))) {
+                    return "";
+                }
+            }
             if (
                 !Application.getUserColor ||
                 typeof Application.getUserColor !== "function"
@@ -644,11 +664,41 @@ Application.msgFormatter = new Ext.XTemplate(
             }
             return "";
         },
-        getDeliveryStyle: function (deliveryStatus) {
+        getDeliveryClass: function (deliveryStatus) {
             if (deliveryStatus === "failed") {
-                return "color: #cc0000;";
+                return "chat-message-delivery-failed";
             }
-            return "";
+            return "chat-message-delivery-ok";
+        },
+        getGeoBadge: function (values) {
+            const rawLat = values.geo_lat;
+            const rawLon = values.geo_long;
+            if (
+                rawLat === null ||
+                typeof rawLat === "undefined" ||
+                rawLat === "" ||
+                rawLon === null ||
+                typeof rawLon === "undefined" ||
+                rawLon === ""
+            ) {
+                return "";
+            }
+
+            const lat = Number(rawLat);
+            const lon = Number(rawLon);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return "";
+            }
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                return "";
+            }
+            return (
+                `<button class="chat-map-zoom-btn" type="button" ` +
+                `data-lat="${lat}" data-long="${lon}" ` +
+                `title="Zoom map to ${lat.toFixed(3)}, ${lon.toFixed(3)}">` +
+                "Zoom Map" +
+                "</button>"
+            );
         },
     },
 );
@@ -742,6 +792,32 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
         },
         {
+            text: "Move Tab Left",
+            handler: function (btn) {
+                const grid = btn.ownerCt && btn.ownerCt.ownerCt;
+                const chatPanel = grid && grid.ownerCt;
+                const tabPanel = chatPanel && chatPanel.ownerCt;
+                if (tabPanel && tabPanel.moveActiveTabBy) {
+                    Ext.defer(function () {
+                        tabPanel.moveActiveTabBy(-1, btn);
+                    }, 1);
+                }
+            },
+        },
+        {
+            text: "Move Tab Right",
+            handler: function (btn) {
+                const grid = btn.ownerCt && btn.ownerCt.ownerCt;
+                const chatPanel = grid && grid.ownerCt;
+                const tabPanel = chatPanel && chatPanel.ownerCt;
+                if (tabPanel && tabPanel.moveActiveTabBy) {
+                    Ext.defer(function () {
+                        tabPanel.moveActiveTabBy(1, btn);
+                    }, 1);
+                }
+            },
+        },
+        {
             icon: "icons/font-less.png",
             handler: function () {
                 const size = parseInt(getPreference("font-size", 14)) - 2;
@@ -784,6 +860,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 header: "Message",
                 sortable: true,
                 dataIndex: "ts",
+                tdCls: "chat-message-cell",
+                cellWrap: true,
                 flex: 1,
                 renderer: function (_value, _p, record) {
                     const parentPanel = this.ownerCt;
@@ -794,6 +872,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         room: record.get("room"),
                         jid: record.get("jid"),
                         delivery_status: record.get("delivery_status"),
+                        geo_lat: record.get("geo_lat"),
+                        geo_long: record.get("geo_long"),
                         me: parentPanel ? parentPanel.handle : null,
                     };
                     const html = Application.msgFormatter.apply(data);
@@ -853,6 +933,8 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 "stanza_id",
                 "delivery_status",
                 "raw_message",
+                "geo_lat",
+                "geo_long",
             ],
         });
         this.store.on(
@@ -953,6 +1035,40 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             }
                         });
                     }
+                    p.body.on({
+                        click: function (e, t) {
+                            const lat = parseFloat(t.getAttribute("data-lat"));
+                            const lon = parseFloat(t.getAttribute("data-long"));
+                            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                                e.stopEvent();
+                                return;
+                            }
+
+                            const mapPanel = Ext.getCmp("map");
+                            const map = mapPanel && mapPanel.map ? mapPanel.map : getMap();
+                            if (map && map.getView) {
+                                const view = map.getView();
+                                const center = fromLonLat([lon, lat]);
+                                const currentZoom = view.getZoom ? view.getZoom() : 5;
+                                const targetZoom = Math.max(currentZoom || 5, 8);
+                                if (view.animate) {
+                                    view.animate({
+                                        center: center,
+                                        zoom: targetZoom,
+                                        duration: 250,
+                                    });
+                                } else {
+                                    view.setCenter(center);
+                                    if (view.setZoom) {
+                                        view.setZoom(targetZoom);
+                                    }
+                                }
+                            }
+                            e.stopEvent();
+                            hideTextWindow();
+                        },
+                        delegate: ".chat-map-zoom-btn",
+                    });
                     p.body.on({
                         mousedown: function (e, t) {
                             // try to
@@ -1105,361 +1221,14 @@ function onBuddyPresence(msg) {
 
 export { onBuddyPresence };
 
-Ext.namespace("Ext.ux.panel");
-
-/**
- * @class Ext.ux.panel.DDTabPanel
- * @extends Ext.TabPanel
- * @author
- *    Original by
- *        <a href="http://extjs.com/forum/member.php?u=22731">thommy</a> and
- *        <a href="http://extjs.com/forum/member.php?u=37284">rizjoj</a><br />
- *    Published and polished by: Mattias Buelens (<a href="http://extjs.com/forum/member.php?u=41421">Matti</a>)<br />
- *    With help from: <a href="http://extjs.com/forum/member.php?u=1459">mystix</a>
- *    Polished and debugged by: Tobias Uhlig (info@internetsachen.com) 04-25-2009
- *    Ported to Ext-3.1.1 by: Tobias Uhlig (info@internetsachen.com) 02-14-2010
- * @license Licensed under the terms of the Open Source <a href="http://www.gnu.org/licenses/lgpl.html">LGPL 3.0 license</a>. Commercial use is permitted to the extent that the code/component(s) do NOT become part of another Open Source or Commercially licensed development library or toolkit without explicit permission.
- * @version 2.0.0 (Feb 14, 2010)
- */
-const DDTabPanel = Ext.extend(Ext.TabPanel, {
-    /**
-     * @cfg {Number} arrowOffsetX The horizontal offset for the drop arrow indicator, in pixels (defaults to -9).
-     */
-    arrowOffsetX: -9,
-    /**
-     * @cfg {Number} arrowOffsetY The vertical offset for the drop arrow indicator, in pixels (defaults to -8).
-     */
-    arrowOffsetY: -8,
-
-    // Assign the drag and drop group id
-    /** @private */
-    initComponent: function () {
-        DDTabPanel.superclass.initComponent.call(this);
-        // In ExtJS 6, addEvents is not needed - Observable automatically supports any event
-        // this.addEvents('reorder');
-        if (!this.ddGroupId) {
-            this.ddGroupId =
-                "dd-tabpanel-group-" + DDTabPanel.superclass.getId.call(this);
-        }
-        // Initialize stack for tracking tab history
-        this.stack = new Ext.util.MixedCollection();
-    },
-
-    // New Event fired after drop tab
-    reorder: function (tab) {
-        this.fireEvent("reorder", this, tab);
-    },
-
-    // Declare the tab panel as a drop target
-    /** @private */
-    afterRender: function () {
-        DDTabPanel.superclass.afterRender.call(this);
-        // Create a drop arrow indicator
-        this.arrow = Ext.DomHelper.append(
-            Ext.getBody(),
-            '<div class="dd-arrow-down"></div>',
-            true,
-        );
-        this.arrow.hide();
-        // Create a drop target for this tab panel
-        const tabsDDGroup = this.ddGroupId;
-        this.dd = new DDTabPanel.DropTarget(this, {
-            ddGroup: tabsDDGroup,
-        });
-
-        // needed for the onRemove-Listener
-        this.move = false;
-    },
-
-    // Init the drag source after (!) rendering the tab
-    /** @private */
-    initTab: function (tab, index) {
-        DDTabPanel.superclass.initTab.call(this, tab, index);
-
-        // Add tab to stack for history tracking
-        if (this.stack && !this.stack.containsKey(tab.id)) {
-            this.stack.add(tab.id, tab);
-        }
-
-        const id = this.id + "__" + tab.id;
-        // Hotfix 3.2.0
-        Ext.fly(id).on("click", function () {
-            tab.ownerCt.setActiveTab(tab.id);
-        });
-        // Enable dragging on all tabs by default
-        Ext.applyIf(tab, { allowDrag: true });
-
-        // Extend the tab
-        Ext.apply(tab, {
-            // Make this tab a drag source
-            ds: new Ext.dd.DragSource(id, {
-                ddGroup: this.ddGroupId,
-                dropEl: tab,
-                dropElHeader: Ext.get(id, true),
-                scroll: false,
-
-                // Update the drag proxy ghost element
-                onStartDrag: function () {
-                    if (this.dropEl.iconCls) {
-                        const el = this.getProxy()
-                            .getGhost()
-                            .select(".x-tab-strip-text");
-                        el.addClass("x-panel-inline-icon");
-
-                        const proxyText = el.elements[0].innerHTML;
-                        el.elements[0].innerHTML =
-                            Ext.util.Format.stripTags(proxyText);
-
-                        el.applyStyles({
-                            paddingLeft: "20px",
-                        });
-                    }
-                },
-
-                // Activate this tab on mouse up
-                // (Fixes bug which prevents a tab from being activated by clicking it)
-                onMouseUp: function () {
-                    if (this.dropEl.ownerCt.move) {
-                        if (
-                            !this.dropEl.disabled &&
-                            this.dropEl.ownerCt.activeTab === null
-                        ) {
-                            this.dropEl.ownerCt.setActiveTab(this.dropEl);
-                        }
-                        this.dropEl.ownerCt.move = false;
-                        return;
-                    }
-                    if (!this.dropEl.isVisible() && !this.dropEl.disabled) {
-                        this.dropEl.show();
-                    }
-                },
-            }),
-            // Method to enable dragging
-            enableTabDrag: function () {
-                this.allowDrag = true;
-                return this.ds.unlock();
-            },
-            // Method to disable dragging
-            disableTabDrag: function () {
-                this.allowDrag = false;
-                return this.ds.lock();
-            },
-        });
-
-        // Initial dragging state
-        if (tab.allowDrag) {
-            tab.enableTabDrag();
-        } else {
-            tab.disableTabDrag();
-        }
-    },
-
-    /** @private */
-    onRemove: function (c) {
-        // Let ExtJS handle DOM cleanup; manual destruction can break layouts in ExtJS 6
-        DDTabPanel.superclass.onRemove.call(this, c);
-
-        if (this.stack) {
-            this.stack.remove(c);
-        }
-        delete c.tabEl;
-        // Removed c.un(...) calls for listeners that may not have been added, to prevent ExtJS errors
-
-        // Only manage active tab if this panel is still rendered and not being destroyed
-        if (c === this.activeTab && !this.destroying && !this.destroyed) {
-            const isPanelInDom =
-                this.el && this.el.dom && document.body.contains(this.el.dom);
-            const isTabBarInDom =
-                this.tabBar &&
-                this.tabBar.el &&
-                this.tabBar.el.dom &&
-                document.body.contains(this.tabBar.el.dom);
-            if (!isPanelInDom || !isTabBarInDom) {
-                this.activeTab = null;
-                return;
-            }
-            if (!this.move) {
-                const next = this.stack ? this.stack.next() : null;
-                if (next) {
-                    Ext.defer(() => {
-                        try {
-                            if (
-                                !this.destroyed &&
-                                this.items.contains(next) &&
-                                this.el &&
-                                this.el.dom &&
-                                document.body.contains(this.el.dom)
-                            ) {
-                                this.setActiveTab(next);
-                            }
-                        } catch {
-                            // Defensive: prevent UI lockup if ExtJS throws
-                            this.activeTab = null;
-                        }
-                    }, 1);
-                } else if (this.items.getCount() > 0) {
-                    Ext.defer(() => {
-                        try {
-                            if (
-                                !this.destroyed &&
-                                this.items.getCount() > 0 &&
-                                this.el &&
-                                this.el.dom &&
-                                document.body.contains(this.el.dom)
-                            ) {
-                                this.setActiveTab(0);
-                            }
-                        } catch {
-                            this.activeTab = null;
-                        }
-                    }, 1);
-                } else {
-                    this.activeTab = null;
-                }
-            } else {
-                this.activeTab = null;
-            }
-        }
-    },
-
-    // DropTarget and arrow cleanup
-    /** @private */
-    onDestroy: function () {
-        Ext.destroy(this.dd, this.arrow);
-        DDTabPanel.superclass.onDestroy.call(this);
-    },
-});
-
-// Ext.ux.panel.DDTabPanel.DropTarget
-// Implements the drop behavior of the tab panel
-/** @private */
-DDTabPanel.DropTarget = Ext.extend(Ext.dd.DropTarget, {
-    constructor: function (tabpanel, iconfig) {
-        this.tabpanel = tabpanel;
-        // In ExtJS 6, get the tab bar element instead of stripWrap
-        const targetEl = tabpanel.tabBar ? tabpanel.tabBar.el : tabpanel.el;
-        DDTabPanel.DropTarget.superclass.constructor.call(
-            this,
-            targetEl,
-            iconfig,
-        );
-    },
-
-    notifyOver: function (dd, e) {
-        const tabs = this.tabpanel.items;
-        const last = tabs.length;
-
-        if (!e.within(this.getEl()) || dd.dropEl === this.tabpanel) {
-            return "x-dd-drop-nodrop";
-        }
-
-        const larrow = this.tabpanel.arrow;
-
-        // Getting the absolute Y coordinate of the tabpanel
-        const tabPanelTop = this.el.getY();
-
-        let left = null;
-        let prevTab = null;
-        let tab = null;
-        const eventPosX = e.getPageX();
-
-        for (let i = 0; i < last; i++) {
-            prevTab = tab;
-            tab = tabs.itemAt(i);
-            // Is this tab target of the drop operation?
-            const tabEl = tab.ds.dropElHeader;
-            // Getting the absolute X coordinate of the tab
-            const tabLeft = tabEl.getX();
-            // Get the middle of the tab
-            const tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
-            if (eventPosX <= tabMiddle) {
-                left = tabLeft;
-                break;
-            }
-        }
-
-        if (typeof left === "undefined") {
-            const lastTab = tabs.itemAt(last - 1);
-            if (lastTab === dd.dropEl) {
-                return "x-dd-drop-nodrop";
-            }
-            const dom = lastTab.ds.dropElHeader.dom;
-            left = new Ext.Element(dom).getX() + dom.clientWidth + 3;
-        } else if (tab === dd.dropEl || prevTab === dd.dropEl) {
-            this.tabpanel.arrow.hide();
-            return "x-dd-drop-nodrop";
-        }
-
-        larrow
-            .setTop(tabPanelTop + this.tabpanel.arrowOffsetY)
-            .setLeft(left + this.tabpanel.arrowOffsetX)
-            .show();
-
-        return "x-dd-drop-ok";
-    },
-
-    notifyDrop: function (dd, e) {
-        this.tabpanel.arrow.hide();
-
-        // no parent into child
-        if (dd.dropEl === this.tabpanel) {
-            return false;
-        }
-        const tabs = this.tabpanel.items;
-        const eventPosX = e.getPageX();
-        let tab = null;
-        let i = 0;
-        for (i = 0; i < tabs.length; i++) {
-            tab = tabs.itemAt(i);
-            // Is this tab target of the drop operation?
-            const tabEl = tab.ds.dropElHeader;
-            // Getting the absolute X coordinate of the tab
-            const tabLeft = tabEl.getX();
-            // Get the middle of the tab
-            const tabMiddle = tabLeft + tabEl.dom.clientWidth / 2;
-            if (eventPosX <= tabMiddle) {
-                break;
-            }
-        }
-
-        // do not insert at the same location
-        if (tab === dd.dropEl || tabs.itemAt(i - 1) === dd.dropEl) {
-            return false;
-        }
-
-        dd.proxy.hide();
-
-        // if tab stays in the same tabPanel
-        if (dd.dropEl.ownerCt === this.tabpanel) {
-            if (i > tabs.indexOf(dd.dropEl)) {
-                i--;
-            }
-        }
-
-        this.tabpanel.move = true;
-        const dropEl = dd.dropEl.ownerCt.remove(dd.dropEl, false);
-
-        this.tabpanel.insert(i, dropEl);
-        // Event drop
-        this.tabpanel.fireEvent("drop", this.tabpanel);
-        // Fire event reorder
-        this.tabpanel.reorder(tabs.itemAt(i));
-
-        return true;
-    },
-
-    notifyOut: function () {
-        this.tabpanel.arrow.hide();
-    },
-});
-
-Application.ChatTabPanel = Ext.extend(DDTabPanel, {
+Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
     activeTab: 0,
     deferredRender: false,
     split: true,
     enableTabScroll: true,
     initComponent: function () {
         const iconfig = {};
+
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         Application.ChatTabPanel.superclass.initComponent.apply(
@@ -1467,6 +1236,71 @@ Application.ChatTabPanel = Ext.extend(DDTabPanel, {
             arguments,
         );
         this.buildItems();
+    },
+    moveActiveTabBy: function (delta, sourceBtn) {
+        if (!delta) {
+            return;
+        }
+
+        if (sourceBtn) {
+            if (typeof sourceBtn.blur === "function") {
+                sourceBtn.blur();
+            }
+            if (
+                sourceBtn.el &&
+                sourceBtn.el.dom &&
+                typeof sourceBtn.el.dom.blur === "function"
+            ) {
+                sourceBtn.el.dom.blur();
+            }
+        }
+
+        const activeTab = this.getActiveTab ? this.getActiveTab() : null;
+        if (!activeTab || activeTab.closable === false) {
+            return;
+        }
+
+        const total = this.items && this.items.getCount ? this.items.getCount() : 0;
+        if (total < 2) {
+            return;
+        }
+
+        const currentIndex = this.items.indexOf(activeTab);
+        if (currentIndex < 0) {
+            return;
+        }
+
+        const targetIndex = currentIndex + delta;
+        if (targetIndex < 0 || targetIndex >= total) {
+            return;
+        }
+
+        const parkingTab = this.items.getAt(targetIndex);
+        if (parkingTab && parkingTab !== activeTab) {
+            try {
+                this.setActiveTab(parkingTab);
+            } catch {
+                // Keep moving even if focus park fails
+            }
+        }
+
+        Ext.defer(() => {
+            if (this.destroyed || activeTab.destroyed) {
+                return;
+            }
+
+            const movedTab = this.remove(activeTab, false);
+            if (!movedTab) {
+                return;
+            }
+            this.insert(targetIndex, movedTab);
+
+            Ext.defer(() => {
+                if (!this.destroyed && movedTab && !movedTab.destroyed) {
+                    this.setActiveTab(movedTab);
+                }
+            }, 10);
+        }, 1);
     },
     buildItems: function () {
         const helpElement = document.getElementById("help");

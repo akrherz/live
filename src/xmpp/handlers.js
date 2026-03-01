@@ -223,6 +223,13 @@ function login(username, password) {
 
 // Anonymous Login!
 function doAnonymousLogin() {
+    Application.lastLoginMode = "anonymous";
+    Application.manualLogout = false;
+    Application.RECONNECT = true;
+    const loginPanel = Ext.getCmp("loginpanel");
+    if (loginPanel && loginPanel.clearMessage) {
+        loginPanel.clearMessage();
+    }
     if (typeof Application.XMPPConn === "undefined") {
         buildXMPP();
     }
@@ -283,6 +290,20 @@ Application.register = function () {
  * 3. User wants to log out...
  */
 function onConnect(status) {
+    function showLoginPromptMessage(text) {
+        const loginPanel = Ext.getCmp("loginpanel");
+        if (loginPanel && loginPanel.addMessage) {
+            loginPanel.addMessage(text);
+        }
+    }
+
+    function shouldAutoReconnect() {
+        return (
+            Application.lastLoginMode === "anonymous" &&
+            Application.RECONNECT === true
+        );
+    }
+
     function cancelReconnectTimer() {
         if (Application.reconnectTimer) {
             clearTimeout(Application.reconnectTimer);
@@ -291,7 +312,7 @@ function onConnect(status) {
     }
 
     function scheduleReconnect(reason) {
-        if (!Application.RECONNECT) {
+        if (!shouldAutoReconnect()) {
             return;
         }
         if (Application.reconnectTimer) {
@@ -322,7 +343,7 @@ function onConnect(status) {
 
         Application.reconnectTimer = Ext.defer(function () {
             Application.reconnectTimer = null;
-            doLogin();
+            doAnonymousLogin();
         }, delayMs, this);
     }
 
@@ -333,13 +354,18 @@ function onConnect(status) {
         // msgBus.fire("loggedout");
     } else if (status === Strophe.Status.AUTHFAIL) {
         Application.log("Strophe.Status.AUTHFAIL...");
-        Application.RECONNECT = false;
         Application.reconnectAttempts = 0;
         cancelReconnectTimer();
-        Ext.getCmp("loginpanel").addMessage(
-            "Authentication failed, please check username and password..."
-        );
-        Application.XMPPConn.disconnect();
+        if (Application.lastLoginMode === "anonymous") {
+            scheduleReconnect("authfail");
+        } else {
+            Application.RECONNECT = false;
+            Ext.getCmp("loginpanel").addMessage(
+                "Authentication failed, please check username and password..."
+            );
+            Application.XMPPConn.disconnect();
+            msgBus.fire("loggedout");
+        }
     } else if (status === Strophe.Status.CONNFAIL) {
         Application.log("Strophe.Status.CONNFAIL...");
         const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
@@ -349,17 +375,33 @@ function onConnect(status) {
                     Application.currentXMPPServiceUrl,
             );
         }
-        scheduleReconnect("connfail");
-        // msgBus.fire("loggedout");
+        if (shouldAutoReconnect()) {
+            scheduleReconnect("connfail");
+        } else {
+            Application.reconnectAttempts = 0;
+            cancelReconnectTimer();
+            if (Application.lastLoginMode === "password") {
+                showLoginPromptMessage(
+                    "Connection failed. Please sign in again.",
+                );
+            }
+            msgBus.fire("loggedout");
+        }
     } else if (status === Strophe.Status.DISCONNECTED) {
         Application.log("Strophe.Status.DISCONNECTED...");
         markPendingMessagesFailed();
         msgBus.fire("loggingout");
-        if (Application.RECONNECT) {
+        if (shouldAutoReconnect()) {
             scheduleReconnect("disconnected");
         } else {
             Application.reconnectAttempts = 0;
             cancelReconnectTimer();
+            if (!Application.manualLogout && Application.lastLoginMode === "password") {
+                showLoginPromptMessage(
+                    "Connection lost. Please sign in again.",
+                );
+            }
+            Application.manualLogout = false;
             msgBus.fire("loggedout");
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
@@ -371,7 +413,8 @@ function onConnect(status) {
     } else if (status === Strophe.Status.CONNECTED) {
         Application.log("Strophe.Status.CONNECTED...");
         Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
-        Application.RECONNECT = true;
+        Application.manualLogout = false;
+        Application.RECONNECT = Application.lastLoginMode === "anonymous";
         Application.reconnectAttempts = 0;
         cancelReconnectTimer();
 
@@ -844,14 +887,24 @@ function onPresence(msg) {
     return true;
 }
 
-function getMUCIcon(affiliation) {
+function getMUCIconCls(affiliation) {
     if (affiliation === "owner") {
-        return "icons/owner.png";
+        return "muc-owner";
     }
     if (affiliation === "admin") {
-        return "icons/admin.png";
+        return "muc-admin";
     }
-    return "icons/participant.png";
+    return "muc-participant";
+}
+
+function getMUCNodeCls(affiliation) {
+    if (affiliation === "owner") {
+        return "muc-owner-node";
+    }
+    if (affiliation === "admin") {
+        return "muc-admin-node";
+    }
+    return "muc-participant-node";
 }
 
 function presenceParser(msg) {
@@ -1018,12 +1071,19 @@ function presenceParser(msg) {
                     roomUsersRoot.appendChild({
                         affiliation: affiliation,
                         role: role,
-                        icon: getMUCIcon(affiliation),
+                        cls: getMUCNodeCls(affiliation),
+                        iconCls: getMUCIconCls(affiliation),
                         text: Strophe.getResourceFromJid(from),
                         jid: jid,
                         leaf: true,
                     });
                 }
+            } else if (child && role !== "visitor") {
+                child.set("affiliation", affiliation);
+                child.set("role", role);
+                child.set("jid", jid);
+                child.set("cls", getMUCNodeCls(affiliation));
+                child.set("iconCls", getMUCIconCls(affiliation));
             }
         }
         if (msg.getAttribute("type") === "unavailable") {
@@ -1173,6 +1233,8 @@ function messageParser(msg) {
         return;
     }
 
+    const geoPoint = extractLatLongFromMessage(msg);
+
     if (type === "groupchat") {
         /* Look to see if a product_id is embedded */
         let product_id = null;
@@ -1195,6 +1257,8 @@ function messageParser(msg) {
                 jid: mpc.getJidByHandle(sender),
                 xdelay: isDelayed,
                 product_id: product_id,
+                geo_lat: geoPoint ? geoPoint.lat : null,
+                geo_long: geoPoint ? geoPoint.long : null,
             });
             // i = mpc.gp.getStore().getCount() - 1;
             // row = mpc.gp.getView().getRow(i);
@@ -1214,6 +1278,8 @@ function messageParser(msg) {
                         jid: mpc.getJidByHandle(sender),
                         xdelay: isDelayed,
                         product_id: product_id,
+                        geo_lat: geoPoint ? geoPoint.lat : null,
+                        geo_long: geoPoint ? geoPoint.long : null,
                     });
                 if (Ext.getCmp("__allchats__").gp.getStore().isFiltered()) {
                     Ext.getCmp("__allchats__")
@@ -1256,6 +1322,8 @@ function messageParser(msg) {
             room: null,
             xdelay: false,
             message: txt,
+            geo_lat: geoPoint ? geoPoint.lat : null,
+            geo_long: geoPoint ? geoPoint.long : null,
         });
     } else if (from === LiveConfig.XMPPHOST) {
         /* Broadcast message! */
@@ -1281,6 +1349,30 @@ function messageParser(msg) {
                 "</p>",
         }).show();
     }
+}
+
+function extractLatLongFromMessage(msg) {
+    const x = msg.getElementsByTagName("x");
+    if (!x || x.length === 0) {
+        return null;
+    }
+
+    for (let i = 0; i < x.length; i++) {
+        const lat = parseFloat(x[i].getAttribute("lat"));
+        const lon = parseFloat(x[i].getAttribute("long"));
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            continue;
+        }
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            continue;
+        }
+        return {
+            lat: lat,
+            long: lon,
+        };
+    }
+
+    return null;
 }
 
 function sortStoreByPreference(store, fallbackField) {
