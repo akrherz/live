@@ -223,6 +223,13 @@ function login(username, password) {
 
 // Anonymous Login!
 function doAnonymousLogin() {
+    Application.lastLoginMode = "anonymous";
+    Application.manualLogout = false;
+    Application.RECONNECT = true;
+    const loginPanel = Ext.getCmp("loginpanel");
+    if (loginPanel && loginPanel.clearMessage) {
+        loginPanel.clearMessage();
+    }
     if (typeof Application.XMPPConn === "undefined") {
         buildXMPP();
     }
@@ -283,6 +290,20 @@ Application.register = function () {
  * 3. User wants to log out...
  */
 function onConnect(status) {
+    function showLoginPromptMessage(text) {
+        const loginPanel = Ext.getCmp("loginpanel");
+        if (loginPanel && loginPanel.addMessage) {
+            loginPanel.addMessage(text);
+        }
+    }
+
+    function shouldAutoReconnect() {
+        return (
+            Application.lastLoginMode === "anonymous" &&
+            Application.RECONNECT === true
+        );
+    }
+
     function cancelReconnectTimer() {
         if (Application.reconnectTimer) {
             clearTimeout(Application.reconnectTimer);
@@ -291,7 +312,7 @@ function onConnect(status) {
     }
 
     function scheduleReconnect(reason) {
-        if (!Application.RECONNECT) {
+        if (!shouldAutoReconnect()) {
             return;
         }
         if (Application.reconnectTimer) {
@@ -322,7 +343,7 @@ function onConnect(status) {
 
         Application.reconnectTimer = Ext.defer(function () {
             Application.reconnectTimer = null;
-            doLogin();
+            doAnonymousLogin();
         }, delayMs, this);
     }
 
@@ -333,13 +354,18 @@ function onConnect(status) {
         // msgBus.fire("loggedout");
     } else if (status === Strophe.Status.AUTHFAIL) {
         Application.log("Strophe.Status.AUTHFAIL...");
-        Application.RECONNECT = false;
         Application.reconnectAttempts = 0;
         cancelReconnectTimer();
-        Ext.getCmp("loginpanel").addMessage(
-            "Authentication failed, please check username and password..."
-        );
-        Application.XMPPConn.disconnect();
+        if (Application.lastLoginMode === "anonymous") {
+            scheduleReconnect("authfail");
+        } else {
+            Application.RECONNECT = false;
+            Ext.getCmp("loginpanel").addMessage(
+                "Authentication failed, please check username and password..."
+            );
+            Application.XMPPConn.disconnect();
+            msgBus.fire("loggedout");
+        }
     } else if (status === Strophe.Status.CONNFAIL) {
         Application.log("Strophe.Status.CONNFAIL...");
         const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
@@ -349,17 +375,33 @@ function onConnect(status) {
                     Application.currentXMPPServiceUrl,
             );
         }
-        scheduleReconnect("connfail");
-        // msgBus.fire("loggedout");
+        if (shouldAutoReconnect()) {
+            scheduleReconnect("connfail");
+        } else {
+            Application.reconnectAttempts = 0;
+            cancelReconnectTimer();
+            if (Application.lastLoginMode === "password") {
+                showLoginPromptMessage(
+                    "Connection failed. Please sign in again.",
+                );
+            }
+            msgBus.fire("loggedout");
+        }
     } else if (status === Strophe.Status.DISCONNECTED) {
         Application.log("Strophe.Status.DISCONNECTED...");
         markPendingMessagesFailed();
         msgBus.fire("loggingout");
-        if (Application.RECONNECT) {
+        if (shouldAutoReconnect()) {
             scheduleReconnect("disconnected");
         } else {
             Application.reconnectAttempts = 0;
             cancelReconnectTimer();
+            if (!Application.manualLogout && Application.lastLoginMode === "password") {
+                showLoginPromptMessage(
+                    "Connection lost. Please sign in again.",
+                );
+            }
+            Application.manualLogout = false;
             msgBus.fire("loggedout");
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
@@ -371,7 +413,8 @@ function onConnect(status) {
     } else if (status === Strophe.Status.CONNECTED) {
         Application.log("Strophe.Status.CONNECTED...");
         Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
-        Application.RECONNECT = true;
+        Application.manualLogout = false;
+        Application.RECONNECT = Application.lastLoginMode === "anonymous";
         Application.reconnectAttempts = 0;
         cancelReconnectTimer();
 

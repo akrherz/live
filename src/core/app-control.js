@@ -110,6 +110,7 @@ Application.Control = {
                     handler : function() {
                         /* Don't try to reconnect */
                         Application.log("Manual logout requested.");
+                        Application.manualLogout = true;
                         Application.RECONNECT = false;
                         Application.XMPPConn.disconnect();
                     }
@@ -298,7 +299,9 @@ Application.Control = {
 };
 
 function doLogin() {
-    Application.RECONNECT = true;
+    Application.lastLoginMode = "password";
+    Application.manualLogout = false;
+    Application.RECONNECT = false;
     Application.ATTEMPTS += 1;
     if (Application.ATTEMPTS > 11){
         Application.log("Application Login Limit Reached!");
@@ -327,6 +330,12 @@ function doLogin() {
         Application.log("Invalid Password");
         return;
     }
+
+    const loginPanel = Ext.getCmp("loginpanel");
+    if (loginPanel && loginPanel.clearMessage) {
+        loginPanel.clearMessage();
+    }
+
     login(username, password);
 };
 

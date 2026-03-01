@@ -295,6 +295,16 @@ td.chat-message-cell .chat-message-body p,
     margin-bottom: 20px;
 }
 
+.login-status {
+    margin: 0 0 14px 0;
+    padding: 10px 12px;
+    border: 1px solid #d8a700;
+    background: #fff8db;
+    color: #6b5500;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
 .login-header img {
     display: block;
     margin: 0 auto 10px;
