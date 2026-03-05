@@ -42,6 +42,18 @@ import './events/event-handlers.js';
 
 console.log('Weather.IM Live ES module loaded');
 
+const iconBaseUrl = `${import.meta.env.BASE_URL}icons/`;
+const rootStyle = document.documentElement.style;
+rootStyle.setProperty('--icon-available', `url('${iconBaseUrl}available.png')`);
+rootStyle.setProperty('--icon-person', `url('${iconBaseUrl}person.png')`);
+rootStyle.setProperty('--icon-away', `url('${iconBaseUrl}away.png')`);
+rootStyle.setProperty('--icon-chat', `url('${iconBaseUrl}chat.png')`);
+rootStyle.setProperty('--icon-owner', `url('${iconBaseUrl}owner.png')`);
+rootStyle.setProperty('--icon-admin', `url('${iconBaseUrl}admin.png')`);
+rootStyle.setProperty('--icon-participant', `url('${iconBaseUrl}participant.png')`);
+rootStyle.setProperty('--icon-new-tab', `url('${iconBaseUrl}new_tab.gif')`);
+rootStyle.setProperty('--icon-typing', `url('${iconBaseUrl}typing.png')`);
+
 // Wait for all global dependencies to be available before initializing
 function initializeApp() {
   if (typeof Ext === 'undefined') {

@@ -211,31 +211,45 @@ Application.Control = {
                 }),
                 contextMenu : new Ext.menu.Menu({
                             items : [{
-                                        id : 'delete-node',
-                                        icon : 'icons/close.png',
-                                        text : 'Delete Bookmark'
-                                    }],
-                            listeners : {
-                                itemclick : function(item) {
-                                    const n = item.parentMenu.contextNode;
-                                    switch (item.id) {
-                                        case 'delete-node' :
-                                            if (n.parentNode) {
-                                                n.remove();
-                                                saveBookmarks();
-                                            }
-                                            break;
-                                    }
-                                }
-                            }
+                                id : 'delete-node',
+                                icon : 'icons/close.png',
+                                text : 'Delete Bookmark'
+                            }],
+                            listeners : {}
                         }),
+                viewConfig: {
+                    listeners: {
+                        itemcontextmenu: function(view, record, item, index, e) {
+                            e.preventDefault();
+                            view.getSelectionModel().select(record);
+                            const c = view.ownerCt.contextMenu;
+                            c.contextNode = record;
+                            setTimeout(() => {
+                                c.showAt(e.getXY());
+                                if (c.el && c.el.dom) {
+                                    c.el.dom.focus();
+                                }
+                                // Add direct click handler to menu item for actual delete logic
+                                const menuItem = c.items && c.items.items && c.items.items[0];
+                                if (menuItem && !menuItem._debugClickAttached) {
+                                    menuItem._debugClickAttached = true;
+                                    menuItem.on('click', function() {
+                                        const ctxRecord = c.contextNode;
+                                        if (!ctxRecord) {
+                                            return;
+                                        }
+                                        if (!ctxRecord.parentNode) {
+                                            return;
+                                        }
+                                        ctxRecord.remove();
+                                        saveBookmarks();
+                                    });
+                                }
+                            }, 10);
+                        }
+                    }
+                },
                 listeners : {
-                    contextmenu : function(node, e) {
-                        node.select();
-                        const c = node.getOwnerTree().contextMenu;
-                        c.contextNode = node;
-                        c.showAt(e.getXY());
-                    },
                     movenode: function(){
                         saveBookmarks();
                     },
@@ -252,21 +266,21 @@ Application.Control = {
                         }
                 },
                 root : {
-                            listeners : {
-                                beforeappend : function(parentNode, node) {
-                                    /*
-                                     * Ensure that we are appending an unique
-                                     * node
-                                     */
-                                    const oldnode = parentNode.findChild('jid', node.data.jid);
-                                    if (oldnode) {
-                                        Application.log("Replacing MUC bookmark: "+ node.data.jid );
-                                        parentNode.removeChild(oldnode, true);
-                                    }
-                                    return true; /* lets be safe */
-                                }
+                    text: "Bookmarks",
+                    expanded: true,
+                    children: [],
+                    listeners: {
+                        beforeappend: function(parentNode, node) {
+                            /* Ensure that we are appending a unique node */
+                            const oldnode = parentNode.findChild('jid', node.data.jid);
+                            if (oldnode) {
+                                Application.log("Replacing MUC bookmark: "+ node.data.jid );
+                                parentNode.removeChild(oldnode, true);
                             }
+                            return true; /* lets be safe */
                         }
+                    }
+                }
             }, {
                 flex : 2,
                 xtype : 'treepanel',

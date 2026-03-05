@@ -891,19 +891,17 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 function () {
                     const viewInner = this.getView && this.getView();
                     const storeInner = this.getStore && this.getStore();
-                    if (
-                        !viewInner ||
-                        !storeInner ||
-                        storeInner.getCount() === 0
-                    ) {
+                    if (!viewInner || !storeInner || storeInner.getCount() === 0) {
                         return;
                     }
                     const lastIndex = storeInner.getCount() - 1;
-                    if (viewInner.focusRow) {
+                    const row = viewInner.getRow && viewInner.getRow(lastIndex);
+                    if (row && row.scrollIntoView) {
+                        row.scrollIntoView(false);
+                    } else if (viewInner.focusRow) {
                         viewInner.focusRow(lastIndex);
                     } else if (viewInner.el && viewInner.el.dom) {
-                        viewInner.el.dom.scrollTop =
-                            viewInner.el.dom.scrollHeight;
+                        viewInner.el.dom.scrollTop = viewInner.el.dom.scrollHeight;
                     }
                 },
                 50,

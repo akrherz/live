@@ -178,38 +178,38 @@ td.chat-message-cell .chat-message-body p,
 }
 
 .buddy-online {
-    background-image: url(../icons/available.png) !important;
+    background-image: var(--icon-available) !important;
 }
 
 .buddy-offline {
-    background-image: url(../icons/person.png) !important;
+    background-image: var(--icon-person) !important;
 }
 
 .buddy-away {
-    background-image: url(../icons/away.png) !important;
+    background-image: var(--icon-away) !important;
 }
 
 .chatroom-icon {
-    background-image: url(../icons/chat.png) !important;
+    background-image: var(--icon-chat) !important;
 }
 
 .muc-owner {
-    background-image: url(../icons/owner.png) !important;
+    background-image: var(--icon-owner) !important;
 }
 
 .muc-admin {
-    background-image: url(../icons/admin.png) !important;
+    background-image: var(--icon-admin) !important;
 }
 
 .muc-participant {
-    background-image: url(../icons/participant.png) !important;
+    background-image: var(--icon-participant) !important;
 }
 
 .x-tree-icon.muc-owner,
 .x-tree-node-icon.muc-owner,
 .muc-owner-node .x-tree-icon,
 .muc-owner-node .x-tree-node-icon {
-    background-image: url(../icons/owner.png) !important;
+    background-image: var(--icon-owner) !important;
     background-repeat: no-repeat !important;
     background-position: center center !important;
     background-size: contain !important;
@@ -219,7 +219,7 @@ td.chat-message-cell .chat-message-body p,
 .x-tree-node-icon.muc-admin,
 .muc-admin-node .x-tree-icon,
 .muc-admin-node .x-tree-node-icon {
-    background-image: url(../icons/admin.png) !important;
+    background-image: var(--icon-admin) !important;
     background-repeat: no-repeat !important;
     background-position: center center !important;
     background-size: contain !important;
@@ -229,18 +229,18 @@ td.chat-message-cell .chat-message-body p,
 .x-tree-node-icon.muc-participant,
 .muc-participant-node .x-tree-icon,
 .muc-participant-node .x-tree-node-icon {
-    background-image: url(../icons/participant.png) !important;
+    background-image: var(--icon-participant) !important;
     background-repeat: no-repeat !important;
     background-position: center center !important;
     background-size: contain !important;
 }
 
 .new-tab {
-    background-image: url(../icons/new_tab.gif) !important;
+    background-image: var(--icon-new-tab) !important;
 }
 
 .typing-tab {
-    background-image: url(../icons/typing.png) !important;
+    background-image: var(--icon-typing) !important;
     color: #FF0000 !important;
 }
 
