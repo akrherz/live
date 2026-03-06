@@ -1,0 +1,15 @@
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+
+[Full license text omitted for brevity.]
+
+For the complete terms, see https://www.gnu.org/licenses/gpl-3.0.html
+
+Summary:
+- You may use, modify, and distribute this software under the terms of GPLv3.
+- Any derivative works must also be licensed under GPLv3.
+- Commercial use is permitted only if you comply with GPLv3.
