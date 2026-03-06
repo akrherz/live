@@ -56,10 +56,8 @@ Notes
 -----
 
 - This project uses Vite + ES modules while still depending on ExtJS (UMD).
-- ExtJS runtime assets are synced from `node_modules/extjs-gpl/build` into
-  `public/vendor/extjs-gpl/build` by `npm run sync:extjs`.
-- The sync script runs automatically for `dev`, `start`, and `build` via
-  npm `pre*` scripts.
+- ExtJS runtime assets are copied from `node_modules/@avalos/extjs-gpl/build` into
+  `public/vendor/avalos-extjs-gpl/build` automatically by the Vite config.
 - `public/vendor` is generated content and should not be committed to git.
 - This application is desktop/laptop focused and is not designed or supported
   for mobile phone usage.

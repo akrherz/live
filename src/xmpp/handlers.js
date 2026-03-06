@@ -647,7 +647,7 @@ function parsePrefs(msg) {
     const size = parseInt(getPreference("font-size", 14)) + 2;
     // var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
     const cssfmt = `normal ${size}px/${size + 2}px arial`;
-    Ext.util.CSS.updateRule("td.x-grid3-td-message", "font", cssfmt);
+    Ext.util.CSS.updateRule(".chat-message-cell", "font", cssfmt);
     Ext.util.CSS.updateRule(".message-entry-box", "font", cssfmt);
     updateMap();
     Application.updateColors();

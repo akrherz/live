@@ -824,11 +824,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 setPreference("font-size", size);
                 //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
                 const cssfmt = `normal ${size}px arial`;
-                Ext.util.CSS.updateRule(
-                    "td.x-grid3-td-message",
-                    "font",
-                    cssfmt,
-                );
+                Ext.util.CSS.updateRule(".chat-message-cell", "font", cssfmt);
                 Ext.util.CSS.updateRule(".message-entry-box", "font", cssfmt);
             },
         },
@@ -838,11 +834,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 const size = parseInt(getPreference("font-size", 14)) + 2;
                 setPreference("font-size", size);
                 const cssfmt = `normal ${size}px arial`;
-                Ext.util.CSS.updateRule(
-                    "td.x-grid3-td-message",
-                    "font",
-                    cssfmt,
-                );
+                Ext.util.CSS.updateRule(".chat-message-cell", "font", cssfmt);
                 Ext.util.CSS.updateRule(".message-entry-box", "font", cssfmt);
             },
         },
