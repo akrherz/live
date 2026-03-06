@@ -7,6 +7,12 @@ client became obsolete.  But the [weather.im](https://weather.im) service is
 still active and this interface is used there to allow browser based access
 to the XMPP chat rooms.
 
+License
+-------
+
+This project is licensed under the GNU General Public License v3.0 (GPLv3).
+See LICENSE.txt for full terms.
+
 Development
 -----------
 
