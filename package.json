@@ -14,8 +14,8 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/layer-config.test.mjs tests/date-utils.test.mjs",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stderr --test-reporter=lcov --test-reporter-destination=coverage/lcov.info tests/layer-config.test.mjs tests/date-utils.test.mjs",
+    "test": "node --test",
+    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stderr --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
     "test:layer-config": "node --test tests/layer-config.test.mjs",
     "test:date-utils": "node --test tests/date-utils.test.mjs",
     "start": "vite",
