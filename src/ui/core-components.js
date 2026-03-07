@@ -7,7 +7,9 @@ import { LoginPanel } from "../auth/LoginPanel.js";
 import MapPanel from "../map/MapPanel.js";
 import { getMap } from "../map/MapPanel.js";
 import { setPreference } from "../utils/prefs.js";
+
 import { Application } from "../app-state.js";
+import { getFullVersionString } from "../version.js";
 
 Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
@@ -19,8 +21,8 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
             {
                 xtype: "panel",
                 title: "Debug Log",
-
                 html:
+                    `<p><b>App Version:</b> ${getFullVersionString()}</p>` +
                     "<p>Browser CodeName: " +
                     navigator.appCodeName +
                     "</p>" +

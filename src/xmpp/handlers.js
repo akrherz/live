@@ -13,7 +13,27 @@ import { iembotFilter } from "../utils/grid-utilities.js";
 import { doLogin } from "../core/app-control.js";
 import { LiveConfig } from "../config.js";
 import { getMap } from "../map/MapPanel.js";
+
 import { Application } from "../app-state.js";
+import { getFullVersionString } from "../version.js";
+// XEP-0092: Software Version handler
+function onVersionIQ(iq) {
+    if (iq.getAttribute("type") !== "get") return true;
+    const query = iq.getElementsByTagName("query")[0];
+    if (!query || query.getAttribute("xmlns") !== "jabber:iq:version") return true;
+    const from = iq.getAttribute("from");
+    const id = iq.getAttribute("id");
+    const reply = $iq({
+        to: from,
+        type: "result",
+        id: id
+    })
+        .c("query", { xmlns: "jabber:iq:version" })
+        .c("name").t(LiveConfig.NAME).up()
+        .c("version").t(getFullVersionString()).up();
+    Application.XMPPConn.send(reply);
+    return true;
+}
 
 const recentMessageKeys = [];
 const recentMessageKeySet = new Set();
@@ -451,6 +471,7 @@ function onConnect(status) {
             null
         );
         Application.XMPPConn.addHandler(onIQ, null, "iq", null, null, null);
+        Application.XMPPConn.addHandler(onVersionIQ, null, "iq", null, null, null);
 
         /* Send request for roster */
         Application.XMPPConn.send(
