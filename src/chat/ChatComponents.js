@@ -704,11 +704,16 @@ Application.msgFormatter = new Ext.XTemplate(
 );
 
 const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
+    cls: "chat-grid-panel",
     region: "center",
     soundOn: true,
     iembotHide: false,
     stripeRows: true,
     autoScroll: true,
+    stickToBottom: true,
+    pendingAutoScroll: false,
+    unreadCount: 0,
+    autoScrollThresholdPx: 60,
 
     tbar: [
         {
@@ -838,7 +843,203 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 Ext.util.CSS.updateRule(".message-entry-box", "font", cssfmt);
             },
         },
+        "->",
+        {
+            itemId: "jumpToLatestBtn",
+            text: "Jump to latest",
+            hidden: true,
+            handler: function (btn) {
+                const grid = btn.ownerCt && btn.ownerCt.ownerCt;
+                if (!grid) {
+                    return;
+                }
+                grid.jumpToLatest();
+            },
+        },
     ],
+    jumpToLatest: function () {
+        this.stickToBottom = true;
+        this.unreadCount = 0;
+        this.updateJumpToLatestButton();
+        this.queueScrollToLatest();
+    },
+    getToolbar: function () {
+        if (this.getDockedItems) {
+            return this.getDockedItems("toolbar[dock=top]")[0] || null;
+        }
+        if (this.getTopToolbar) {
+            return this.getTopToolbar();
+        }
+        return null;
+    },
+    getJumpToLatestButton: function () {
+        const toolbar = this.getToolbar();
+        return toolbar && toolbar.getComponent
+            ? toolbar.getComponent("jumpToLatestBtn")
+            : null;
+    },
+    createJumpToLatestBadge: function () {
+        if (this.jumpToLatestBadgeEl || !this.getEl || !this.getEl()) {
+            return;
+        }
+        const badgeDom = Ext.DomHelper.append(
+            this.getEl(),
+            {
+                tag: "button",
+                type: "button",
+                cls: "chat-jump-latest-badge",
+                style: "display:none;",
+                html: "Jump to latest",
+            },
+            true,
+        );
+        if (!badgeDom) {
+            return;
+        }
+        badgeDom.on("click", (event) => {
+            event.stopEvent();
+            this.jumpToLatest();
+        });
+        this.jumpToLatestBadgeEl = badgeDom;
+    },
+    getScrollElement: function () {
+        const gridView = this.getView && this.getView();
+        if (!gridView) {
+            return null;
+        }
+        if (gridView.scroller && gridView.scroller.dom) {
+            return gridView.scroller.dom;
+        }
+        const gridViewEl =
+            gridView && gridView.getEl ? gridView.getEl() : gridView && gridView.el;
+        return gridViewEl && gridViewEl.dom ? gridViewEl.dom : null;
+    },
+    isNearBottom: function () {
+        const dom = this.getScrollElement();
+        if (!dom) {
+            return true;
+        }
+        const distanceFromBottom = dom.scrollHeight - dom.scrollTop - dom.clientHeight;
+        return distanceFromBottom <= this.autoScrollThresholdPx;
+    },
+    updateBottomState: function () {
+        const nearBottom = this.isNearBottom();
+        this.stickToBottom = nearBottom;
+        if (nearBottom && this.unreadCount !== 0) {
+            this.unreadCount = 0;
+            this.updateJumpToLatestButton();
+        }
+    },
+    updateJumpToLatestButton: function () {
+        const button = this.getJumpToLatestButton();
+        const badge = this.jumpToLatestBadgeEl;
+        const label =
+            this.unreadCount > 0
+                ? `${this.unreadCount} new message${this.unreadCount === 1 ? "" : "s"} \u2193`
+                : "Jump to latest";
+
+        if (this.unreadCount > 0) {
+            if (button) {
+                button.hide();
+                button.setText(label);
+            }
+            if (badge) {
+                badge.update(label);
+                badge.show();
+            }
+        } else {
+            if (button) {
+                button.hide();
+                button.setText("Jump to latest");
+            }
+            if (badge) {
+                badge.hide();
+                badge.update("Jump to latest");
+            }
+        }
+    },
+    handleIncomingRecords: function (records) {
+        this.updateBottomState();
+        let newVisibleMessageCount = 0;
+        for (let i = 0; i < records.length; i++) {
+            if (!records[i].get("xdelay")) {
+                newVisibleMessageCount += 1;
+            }
+        }
+        if (newVisibleMessageCount === 0) {
+            return;
+        }
+        if (this.stickToBottom) {
+            this.unreadCount = 0;
+            this.updateJumpToLatestButton();
+            this.queueScrollToLatest();
+            return;
+        }
+        this.unreadCount += newVisibleMessageCount;
+        this.updateJumpToLatestButton();
+    },
+    queueScrollToLatest: function () {
+        this.pendingAutoScroll = true;
+        Ext.defer(
+            function () {
+                this.flushPendingAutoScroll();
+            },
+            1,
+            this,
+        );
+    },
+    flushPendingAutoScroll: function () {
+        if (!this.pendingAutoScroll || this.destroyed) {
+            return;
+        }
+
+        const gridStore = this.getStore && this.getStore();
+        if (!gridStore || gridStore.getCount() === 0) {
+            this.pendingAutoScroll = false;
+            return;
+        }
+
+        const gridView = this.getView && this.getView();
+        const scrollDom = this.getScrollElement();
+        const ownerPanel = this.ownerCt;
+        const visible =
+            (!this.isVisible || this.isVisible(true) !== false) &&
+            (!ownerPanel ||
+                !ownerPanel.isVisible ||
+                ownerPanel.isVisible(true) !== false);
+
+        if (
+            !this.rendered ||
+            !gridView ||
+            !gridView.rendered ||
+            !scrollDom ||
+            !visible
+        ) {
+            return;
+        }
+
+        const lastIndex = gridStore.getCount() - 1;
+        const lastRecord = gridStore.getAt && gridStore.getAt(lastIndex);
+
+        if (lastRecord && typeof this.ensureVisible === "function") {
+            this.ensureVisible(lastRecord, {
+                animate: false,
+                focus: false,
+                highlight: false,
+                select: false,
+            });
+        } else {
+            const row = gridView.getRow && gridView.getRow(lastIndex);
+            if (row && typeof row.scrollIntoView === "function") {
+                row.scrollIntoView(false);
+            }
+            scrollDom.scrollTop = scrollDom.scrollHeight;
+        }
+        this.pendingAutoScroll = false;
+        this.stickToBottom = true;
+        this.unreadCount = 0;
+        this.updateJumpToLatestButton();
+    },
     initComponent: function () {
         this.columns = [
             {
@@ -873,34 +1074,6 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
         ];
-        const scrollToLatest = () => {
-            const gridView = this.getView && this.getView();
-            const gridStore = this.getStore && this.getStore();
-            if (!gridView || !gridStore || gridStore.getCount() === 0) {
-                return;
-            }
-            Ext.defer(
-                function () {
-                    const viewInner = this.getView && this.getView();
-                    const storeInner = this.getStore && this.getStore();
-                    if (!viewInner || !storeInner || storeInner.getCount() === 0) {
-                        return;
-                    }
-                    const lastIndex = storeInner.getCount() - 1;
-                    const row = viewInner.getRow && viewInner.getRow(lastIndex);
-                    if (row && row.scrollIntoView) {
-                        row.scrollIntoView(false);
-                    } else if (viewInner.focusRow) {
-                        viewInner.focusRow(lastIndex);
-                    } else if (viewInner.el && viewInner.el.dom) {
-                        viewInner.el.dom.scrollTop = viewInner.el.dom.scrollHeight;
-                    }
-                },
-                50,
-                this,
-            );
-        };
-
         this.store = new Ext.data.ArrayStore({
             sortInfo: {
                 field: "ts",
@@ -930,12 +1103,14 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         this.store.on(
             "add",
             function (_store, records) {
-                console.log(
-                    "[ChatGrid] Store add event fired, records:",
-                    records.length,
-                );
+                this.handleIncomingRecords(records);
+            },
+            this,
+        );
+        this.store.on(
+            "add",
+            function (_store, records) {
                 if (!this.soundOn) {
-                    console.log("[ChatGrid] Sound is off, skipping");
                     return true;
                 }
                 let nonIEMBot = false;
@@ -988,16 +1163,11 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             this,
         );
         this.store.on(
-            "add",
-            function () {
-                scrollToLatest();
-            },
-            this,
-        );
-        this.store.on(
             "datachanged",
             function () {
-                scrollToLatest();
+                if (this.stickToBottom) {
+                    this.queueScrollToLatest();
+                }
             },
             this,
         );
@@ -1014,8 +1184,33 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
             listeners: {
                 render: function (p) {
-                    scrollToLatest();
-                    const viewEl = p.getView().getEl();
+                    const view = p.getView();
+                    p.createJumpToLatestBadge();
+                    p.updateJumpToLatestButton();
+                    p.queueScrollToLatest();
+                    view.on(
+                        "refresh",
+                        function () {
+                            p.flushPendingAutoScroll();
+                        },
+                        p,
+                    );
+                    const scrollEl = p.getScrollElement();
+                    if (scrollEl) {
+                        Ext.get(scrollEl).on("scroll", function () {
+                            p.updateBottomState();
+                        });
+                    }
+                    const viewEl = view.getEl();
+                    if (p.ownerCt && p.ownerCt.on) {
+                        p.ownerCt.on(
+                            "activate",
+                            function () {
+                                p.flushPendingAutoScroll();
+                            },
+                            p,
+                        );
+                    }
                     if (viewEl) {
                         viewEl.on("mousedown", function (e, t) {
                             if (t.tagName === "A") {
@@ -1037,20 +1232,20 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             const mapPanel = Ext.getCmp("map");
                             const map = mapPanel && mapPanel.map ? mapPanel.map : getMap();
                             if (map && map.getView) {
-                                const view = map.getView();
+                                const mapView = map.getView();
                                 const center = fromLonLat([lon, lat]);
-                                const currentZoom = view.getZoom ? view.getZoom() : 5;
+                                const currentZoom = mapView.getZoom ? mapView.getZoom() : 5;
                                 const targetZoom = Math.max(currentZoom || 5, 8);
-                                if (view.animate) {
-                                    view.animate({
+                                if (mapView.animate) {
+                                    mapView.animate({
                                         center: center,
                                         zoom: targetZoom,
                                         duration: 250,
                                     });
                                 } else {
-                                    view.setCenter(center);
-                                    if (view.setZoom) {
-                                        view.setZoom(targetZoom);
+                                    mapView.setCenter(center);
+                                    if (mapView.setZoom) {
+                                        mapView.setZoom(targetZoom);
                                     }
                                 }
                             }

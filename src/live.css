@@ -159,6 +159,31 @@ td.chat-message-cell .chat-message-body p,
     margin: 0;
 }
 
+.chat-grid-panel {
+    position: relative;
+}
+
+.chat-jump-latest-badge {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    z-index: 40;
+    border: 1px solid #0f5ea8;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #2f89dc 0%, #1565b7 100%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 10px 14px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(8, 46, 86, 0.25);
+}
+
+.chat-jump-latest-badge:hover {
+    background: linear-gradient(180deg, #4598e4 0%, #1d71c4 100%);
+}
+
 .bigger-font {
     font-size: 30px !important;
 }
