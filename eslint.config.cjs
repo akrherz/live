@@ -28,10 +28,18 @@ module.exports = [
             'init-declarations': ['warn', 'always'],
             'no-eval': 'warn',
             'no-var': 'warn',
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "Property[value.type='ArrowFunctionExpression']:has(ThisExpression)",
+                    message: 'Do not use arrow functions for object properties that reference this. Use method shorthand or function syntax so this binds correctly.',
+                },
+            ],
             'prefer-const': 'error',
             'no-redeclare': 'error',
             semi: 'error',
             'no-shadow': 'error',
+            'object-shorthand': ['error', 'always'],
         },
     },
 ];

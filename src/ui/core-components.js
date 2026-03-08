@@ -16,7 +16,7 @@ Application.msgtpl = new Ext.XTemplate(
 );
 
 Application.DebugWindow = Ext.extend(Ext.Window, {
-    initComponent: function () {
+    initComponent () {
         this.items = [
             {
                 xtype: "panel",
@@ -49,7 +49,7 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
             {
                 text: "Clear Log",
                 icon: "icons/close.png",
-                handler: function () {
+                handler () {
                     this.items.items[0].update("");
                 },
                 scope: this,
@@ -69,16 +69,16 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
 
         Application.DebugWindow.superclass.initComponent.apply(this, arguments);
     }, // End of initComponent
-    addMessage: function (msg) {
+    addMessage (msg) {
         Application.msgtpl.append(this.items.items[0].body, {
-            msg: msg,
+            msg,
             date: new Date(),
         });
     }, // End of addMessage
 });
 
 Application.LiveViewport = Ext.extend(Ext.Viewport, {
-    initComponent: function () {
+    initComponent () {
         let mp = {
             xtype: "panel",
             region: "north",
@@ -121,7 +121,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
         Application.LiveViewport.superclass.initComponent.call(this);
         this.doStuff();
     },
-    doStuff: function () {
+    doStuff () {
         // Create non-map components immediately
         new Application.DebugWindow({
             id: "debug",
@@ -174,7 +174,7 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
             title: "Weather.IM Live Login Options",
             items: [LoginPanel],
             listeners: {
-                show: function () {
+                show () {
                     this.center();
                 },
             },
@@ -208,12 +208,12 @@ Application.MapLegend = Ext.extend(Ext.Window, {
     hidden: true,
     closeAction: "hide",
 
-    initComponent: function () {
+    initComponent () {
         const config = {};
         Ext.apply(this, Ext.apply(this.initialConfig, config));
 
         Application.MapLegend.superclass.initComponent.apply(this, arguments);
         this.buildItems();
     },
-    buildItems: function () {},
+    buildItems () {},
 });

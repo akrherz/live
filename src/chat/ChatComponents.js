@@ -116,7 +116,7 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
     anonymous: null,
     joinedChat: false /* Was I successful at getting logged into room */,
 
-    initComponent: function () {
+    initComponent () {
         // Create the child components with references immediately
         const gridPanel = new ChatGridPanel({
             region: "center",
@@ -148,13 +148,13 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
         }
         const iconfig = {
             listeners: {
-                activate: function (self) {
+                activate (self) {
                     // In ExtJS 6, just update the icon class when tab becomes active
                     if (self.iconCls) {
                         self.setIconCls("tabno");
                     }
                 },
-                deactivate: function () {
+                deactivate () {
                     // Icon class can be updated on deactivate if needed
                     // Currently no action needed
                 },
@@ -165,11 +165,11 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
         MUCChatPanel.superclass.initComponent.apply(this, arguments);
         this.buildItems();
     },
-    clearRoom: function () {
+    clearRoom () {
         this.gp.getStore().removeAll();
         this.roomusers.getRootNode().removeAll();
     },
-    getJidByHandle: function (handle) {
+    getJidByHandle (handle) {
         const node = this.roomusers.getRootNode().findChild("text", handle);
         if (node === null) {
             return null;
@@ -181,7 +181,7 @@ const MUCChatPanel = Ext.extend(Ext.Panel, {
         }
         return node.data.jid;
     },
-    buildItems: function () {
+    buildItems () {
         // References are already set in initComponent, now just configure them
         if (this.chatType === "allchats") {
             //this.gp.toolbars[0].items.items[4].setText("Sounds Off");
@@ -247,7 +247,7 @@ const ChatPanel = Ext.extend(Ext.Panel, {
     handle: null,
     anonymous: null,
 
-    initComponent: function () {
+    initComponent () {
         // Create components and store references immediately
         const gridPanel = new ChatGridPanel({
             region: "center",
@@ -264,13 +264,13 @@ const ChatPanel = Ext.extend(Ext.Panel, {
 
         const iconfig = {
             listeners: {
-                activate: function (self) {
+                activate (self) {
                     self.setIconCls("tabno");
                 },
-                deactivate: function (self) {
+                deactivate (self) {
                     self.setIconCls("tabno");
                 },
-                beforedestroy: function (self) {
+                beforedestroy (self) {
                     if (self.te.chatstate) {
                         self.te.chatstate.cancel();
                     }
@@ -290,10 +290,10 @@ const ChatPanel = Ext.extend(Ext.Panel, {
         ChatPanel.superclass.initComponent.apply(this, arguments);
         this.buildItems();
     },
-    getJidByHandle: function () {
+    getJidByHandle () {
         return this.barejid;
     },
-    buildItems: function () {
+    buildItems () {
         // References already set in initComponent
         const toolbar = this.gp.getDockedItems
             ? this.gp.getDockedItems("toolbar[dock=top]")[0]
@@ -333,44 +333,41 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
     rootVisible: false,
     lines: false,
     autoScroll: true,
-    initComponent: function () {
+    plugins: new DataTip({
+        tpl: "<div>JID: {jid}<br />Affiliation: {affiliation}<br />Role: {role}</div>",
+        constrainPosition: true,
+    }),
+    listeners: {
+        click (n) {
+            if (!n.data.jid) {
+                return;
+            }
+            const username = Strophe.getNodeFromJid(n.data.jid);
+            /* Can't speak with ourself */
+            if (username === Application.USERNAME) {
+                return;
+            }
+            /* Now, we either talk with private or private via MUC */
+            let jid = n.data.jid;
+            if (
+                Strophe.getDomainFromJid(n.data.jid) ===
+                LiveConfig.XMPPHOST
+            ) {
+                jid = Strophe.getBareJidFromJid(n.data.jid);
+            }
+            Application.log("Wish to start chat with:" + jid);
+            let cp = ChatPanel.getChat(jid);
+            if (!cp) {
+                cp = ChatPanel.addChat(jid);
+            }
+            ChatPanel.setActiveTab(cp);
+        },
+    },
+    initComponent () {
         this.root = {
             text: "Room Users",
             expanded: true,
         };
-        const iconfig = {
-            plugins: new DataTip({
-                tpl: "<div>JID: {jid}<br />Affiliation: {affiliation}<br />Role: {role}</div>",
-                constrainPosition: true,
-            }),
-            listeners: {
-                click: function (n) {
-                    if (!n.data.jid) {
-                        return;
-                    }
-                    const username = Strophe.getNodeFromJid(n.data.jid);
-                    /* Can't speak with ourself */
-                    if (username === Application.USERNAME) {
-                        return;
-                    }
-                    /* Now, we either talk with private or private via MUC */
-                    let jid = n.data.jid;
-                    if (
-                        Strophe.getDomainFromJid(n.data.jid) ===
-                        LiveConfig.XMPPHOST
-                    ) {
-                        jid = Strophe.getBareJidFromJid(n.data.jid);
-                    }
-                    Application.log("Wish to start chat with:" + jid);
-                    let cp = ChatPanel.getChat(jid);
-                    if (!cp) {
-                        cp = ChatPanel.addChat(jid);
-                    }
-                    ChatPanel.setActiveTab(cp);
-                },
-            },
-        };
-        Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
 
         MUCRoomUsers.superclass.initComponent.apply(this, arguments);
 
@@ -428,7 +425,7 @@ Application.getUserColor = function (user) {
     if (idx === -1) {
         c = Application.colors[Application.colorpointer];
         Application.UserColorStore.add(
-            new Ext.data.Record({ user: user, color: c }),
+            new Ext.data.Record({ user, color: c }),
         );
         Application.colorpointer++;
         if (Application.colorpointer > 12) {
@@ -447,7 +444,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
     },
     border: false,
     chatstate: null,
-    initComponent: function () {
+    initComponent () {
         this.items = [
             {
                 xtype: "textarea",
@@ -464,7 +461,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                 },
                 enableKeyEvents: true,
                 listeners: {
-                    keyup: function (elTxt, e) {
+                    keyup (elTxt, e) {
                         // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
                         // e.TAB, e.ESC, arrow keys: e.LEFT,
                         // e.RIGHT, e.UP,
@@ -517,7 +514,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                     },
                     render: {
                         delay: 500,
-                        fn: function () {
+                        fn () {
                             this.focus();
                         },
                     },
@@ -528,7 +525,7 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                 text: "Send",
                 width: 60,
                 popup: null,
-                handler: function () {
+                handler () {
                     const txt = this.ownerCt.getComponent(0);
                     let text = txt.getValue().trim();
                     if (text.length === 0) {
@@ -611,18 +608,18 @@ Application.msgFormatter = new Ext.XTemplate(
     '<div class="chat-message-body">{message}</div>',
     "</div>",
     {
-        isNotToday: function (ts) {
+        isNotToday (ts) {
             // Use Ext.Date.format for date formatting
             const today = new Date();
             return Ext.Date.format(today, "md") !== Ext.Date.format(ts, "md");
         },
-        getMessageRowClass: function (values) {
+        getMessageRowClass (values) {
             if (values.me === values.author) {
                 return "chat-message-own";
             }
             return "chat-message-peer";
         },
-        getAuthorClass: function (jid) {
+        getAuthorClass (jid) {
             //console.log("node: "+Strophe.getNodeFromJid(jid) );
             if (jid === null || typeof jid === "undefined") {
                 return "author-default";
@@ -636,7 +633,7 @@ Application.msgFormatter = new Ext.XTemplate(
 
             return "author-chatpartner";
         },
-        getAuthorStyle: function (author, jid) {
+        getAuthorStyle (author, jid) {
             if (jid) {
                 const node = Strophe.getNodeFromJid(jid);
                 if (node === "iembot" || (node && node.match(/^nws/))) {
@@ -652,7 +649,7 @@ Application.msgFormatter = new Ext.XTemplate(
             const userColor = Application.getUserColor(author) || "000000";
             return `color: #${userColor};`;
         },
-        getDeliveryLabel: function (deliveryStatus) {
+        getDeliveryLabel (deliveryStatus) {
             if (deliveryStatus === "delivered") {
                 return "✓✓";
             }
@@ -664,13 +661,13 @@ Application.msgFormatter = new Ext.XTemplate(
             }
             return "";
         },
-        getDeliveryClass: function (deliveryStatus) {
+        getDeliveryClass (deliveryStatus) {
             if (deliveryStatus === "failed") {
                 return "chat-message-delivery-failed";
             }
             return "chat-message-delivery-ok";
         },
-        getGeoBadge: function (values) {
+        getGeoBadge (values) {
             const rawLat = values.geo_lat;
             const rawLon = values.geo_long;
             if (
@@ -743,7 +740,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         {
             text: "Hide IEMBot",
             enableToggle: true,
-            toggleHandler: function (btn, toggled) {
+            toggleHandler (btn, toggled) {
                 const pref =
                     "muc::" +
                     Strophe.getNodeFromJid(
@@ -766,8 +763,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         {
             text: "Mute Sounds",
             enableToggle: true,
-            toggleHandler: function (btn, toggled) {
-                //var store = btn.ownerCt.ownerCt.getStore();
+            toggleHandler: (btn, toggled) => {
                 const pref =
                     "muc::" +
                     Strophe.getNodeFromJid(
@@ -789,7 +785,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             itemId: "retryFailedBtn",
             text: "Retry Failed",
             hidden: true,
-            handler: function (btn) {
+            handler (btn) {
                 const grid = btn.ownerCt && btn.ownerCt.ownerCt;
                 const panel = grid && grid.ownerCt;
                 const store = grid && grid.getStore ? grid.getStore() : null;
@@ -798,7 +794,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         },
         {
             text: "Move Tab Left",
-            handler: function (btn) {
+            handler (btn) {
                 const grid = btn.ownerCt && btn.ownerCt.ownerCt;
                 const chatPanel = grid && grid.ownerCt;
                 const tabPanel = chatPanel && chatPanel.ownerCt;
@@ -811,7 +807,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         },
         {
             text: "Move Tab Right",
-            handler: function (btn) {
+            handler (btn) {
                 const grid = btn.ownerCt && btn.ownerCt.ownerCt;
                 const chatPanel = grid && grid.ownerCt;
                 const tabPanel = chatPanel && chatPanel.ownerCt;
@@ -824,7 +820,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         },
         {
             icon: "icons/font-less.png",
-            handler: function () {
+            handler () {
                 const size = parseInt(getPreference("font-size", 14)) - 2;
                 setPreference("font-size", size);
                 //var cssfmt = String.format('normal {0}px/{1}px arial', size, size +2);
@@ -835,7 +831,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         },
         {
             icon: "icons/font-more.png",
-            handler: function () {
+            handler () {
                 const size = parseInt(getPreference("font-size", 14)) + 2;
                 setPreference("font-size", size);
                 const cssfmt = `normal ${size}px arial`;
@@ -848,7 +844,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             itemId: "jumpToLatestBtn",
             text: "Jump to latest",
             hidden: true,
-            handler: function (btn) {
+            handler (btn) {
                 const grid = btn.ownerCt && btn.ownerCt.ownerCt;
                 if (!grid) {
                     return;
@@ -857,13 +853,13 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
         },
     ],
-    jumpToLatest: function () {
+    jumpToLatest () {
         this.stickToBottom = true;
         this.unreadCount = 0;
         this.updateJumpToLatestButton();
         this.queueScrollToLatest();
     },
-    getToolbar: function () {
+    getToolbar () {
         if (this.getDockedItems) {
             return this.getDockedItems("toolbar[dock=top]")[0] || null;
         }
@@ -872,13 +868,13 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         }
         return null;
     },
-    getJumpToLatestButton: function () {
+    getJumpToLatestButton () {
         const toolbar = this.getToolbar();
         return toolbar && toolbar.getComponent
             ? toolbar.getComponent("jumpToLatestBtn")
             : null;
     },
-    createJumpToLatestBadge: function () {
+    createJumpToLatestBadge () {
         if (this.jumpToLatestBadgeEl || !this.getEl || !this.getEl()) {
             return;
         }
@@ -902,7 +898,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         });
         this.jumpToLatestBadgeEl = badgeDom;
     },
-    getScrollElement: function () {
+    getScrollElement () {
         const gridView = this.getView && this.getView();
         if (!gridView) {
             return null;
@@ -914,7 +910,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             gridView && gridView.getEl ? gridView.getEl() : gridView && gridView.el;
         return gridViewEl && gridViewEl.dom ? gridViewEl.dom : null;
     },
-    isNearBottom: function () {
+    isNearBottom () {
         const dom = this.getScrollElement();
         if (!dom) {
             return true;
@@ -922,7 +918,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         const distanceFromBottom = dom.scrollHeight - dom.scrollTop - dom.clientHeight;
         return distanceFromBottom <= this.autoScrollThresholdPx;
     },
-    updateBottomState: function () {
+    updateBottomState () {
         const nearBottom = this.isNearBottom();
         this.stickToBottom = nearBottom;
         if (nearBottom && this.unreadCount !== 0) {
@@ -930,7 +926,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             this.updateJumpToLatestButton();
         }
     },
-    updateJumpToLatestButton: function () {
+    updateJumpToLatestButton () {
         const button = this.getJumpToLatestButton();
         const badge = this.jumpToLatestBadgeEl;
         const label =
@@ -958,7 +954,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             }
         }
     },
-    handleIncomingRecords: function (records) {
+    handleIncomingRecords (records) {
         this.updateBottomState();
         let newVisibleMessageCount = 0;
         for (let i = 0; i < records.length; i++) {
@@ -978,7 +974,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         this.unreadCount += newVisibleMessageCount;
         this.updateJumpToLatestButton();
     },
-    queueScrollToLatest: function () {
+    queueScrollToLatest () {
         this.pendingAutoScroll = true;
         Ext.defer(
             function () {
@@ -988,7 +984,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             this,
         );
     },
-    flushPendingAutoScroll: function () {
+    flushPendingAutoScroll () {
         if (!this.pendingAutoScroll || this.destroyed) {
             return;
         }
@@ -1040,7 +1036,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
         this.unreadCount = 0;
         this.updateJumpToLatestButton();
     },
-    initComponent: function () {
+    initComponent () {
         this.columns = [
             {
                 header: "Author",
@@ -1056,7 +1052,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 tdCls: "chat-message-cell",
                 cellWrap: true,
                 flex: 1,
-                renderer: function (_value, _p, record) {
+                renderer (_value, _p, record) {
                     const parentPanel = this.ownerCt;
                     const data = {
                         author: record.get("author"),
@@ -1175,7 +1171,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
             selModel: {
                 type: "rowmodel",
                 listeners: {
-                    select: function (_sm, record) {
+                    select (_sm, record) {
                         if (record.data.product_id) {
                             loadTextProductInWindow(record.data.product_id);
                         }
@@ -1183,7 +1179,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 },
             },
             listeners: {
-                render: function (p) {
+                render (p) {
                     const view = p.getView();
                     p.createJumpToLatestBadge();
                     p.updateJumpToLatestButton();
@@ -1221,7 +1217,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         });
                     }
                     p.body.on({
-                        click: function (e, t) {
+                        click (e, t) {
                             const lat = parseFloat(t.getAttribute("data-lat"));
                             const lon = parseFloat(t.getAttribute("data-long"));
                             if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
@@ -1238,7 +1234,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                                 const targetZoom = Math.max(currentZoom || 5, 8);
                                 if (mapView.animate) {
                                     mapView.animate({
-                                        center: center,
+                                        center,
                                         zoom: targetZoom,
                                         duration: 250,
                                     });
@@ -1255,7 +1251,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         delegate: ".chat-map-zoom-btn",
                     });
                     p.body.on({
-                        mousedown: function (e, t) {
+                        mousedown (e, t) {
                             // try to
                             // intercept the
                             // easy
@@ -1265,7 +1261,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                             t.rel = "noopener noreferrer";
                             hideTextWindow();
                         },
-                        click: function (e, t) {
+                        click (e, t) {
                             if (String(t.target).toLowerCase() !== "_blank") {
                                 e.stopEvent();
                                 open(
@@ -1347,7 +1343,7 @@ function onBuddyPresence(msg) {
                 username +
                 " wishes to add you as a buddy. Is this okay?",
             buttons: Ext.Msg.YESNO,
-            fn: function (btn) {
+            fn (btn) {
                 if (btn === "yes") {
                     /* <presence to='fire-daryl.e.herzmann@localhost' type='subscribed'/> */
                     const stanza = $pres({ to: jid, type: "subscribed" });
@@ -1373,8 +1369,8 @@ function onBuddyPresence(msg) {
                     const res = leaf.data.resources.get(resource);
                     if (!res) {
                         leaf.data.resources.add(resource, {
-                            status: status,
-                            resource: resource,
+                            status,
+                            resource,
                         });
                     }
                     if (!msg.getAttribute("type")) {
@@ -1387,8 +1383,8 @@ function onBuddyPresence(msg) {
                         leaf.set("hidden", false);
                         //console.log("Replace"+ resource +" Status:"+ status);
                         leaf.data.resources.replace(resource, {
-                            status: status,
-                            resource: resource,
+                            status,
+                            resource,
                         });
                     } else if (msg.getAttribute("type") === "unavailable") {
                         if (leaf.data.resources.length === 1) {
@@ -1411,7 +1407,7 @@ Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
     deferredRender: false,
     split: true,
     enableTabScroll: true,
-    initComponent: function () {
+    initComponent () {
         const iconfig = {};
 
         Ext.apply(this, Ext.apply(this.initialConfig, iconfig));
@@ -1422,7 +1418,7 @@ Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
         );
         this.buildItems();
     },
-    moveActiveTabBy: function (delta, sourceBtn) {
+    moveActiveTabBy (delta, sourceBtn) {
         if (!delta) {
             return;
         }
@@ -1487,7 +1483,7 @@ Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
             }, 10);
         }, 1);
     },
-    buildItems: function () {
+    buildItems () {
         const helpElement = document.getElementById("help");
         const helpHtml = helpElement ? helpElement.innerHTML : "";
         this.add({
@@ -1508,21 +1504,21 @@ Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
             }),
         );
     },
-    addMUC: function (barejid, handle, anonymous) {
+    addMUC (barejid, handle, anonymous) {
         const mcp = new MUCChatPanel({
             title: Strophe.getNodeFromJid(barejid),
-            barejid: barejid,
-            handle: handle,
-            anonymous: anonymous,
+            barejid,
+            handle,
+            anonymous,
         });
         return this.add(mcp);
     },
-    getMUC: function (barejid) {
+    getMUC (barejid) {
         // In ExtJS 6, use query to find components by property
         const items = this.query("[barejid=" + barejid + "]");
         return items.length > 0 ? items[0] : null;
     },
-    removeMUC: function (barejid) {
+    removeMUC (barejid) {
         const mcp = this.getMUC(barejid);
         if (!mcp || mcp.destroyed) {
             return;
@@ -1539,24 +1535,24 @@ Application.ChatTabPanel = Ext.extend(Ext.TabPanel, {
             }
         }, 1);
     },
-    addChat: function (jid) {
+    addChat (jid) {
         let title = Strophe.getNodeFromJid(jid);
         if (Strophe.getDomainFromJid(jid) === LiveConfig.XMPPMUCHOST) {
             title = Strophe.getResourceFromJid(jid);
         }
         const cp = new ChatPanel({
-            title: title,
+            title,
             handle: Application.USERNAME,
             barejid: jid,
         });
         return this.add(cp);
     },
-    getChat: function (jid) {
+    getChat (jid) {
         // In ExtJS 6, use query to find components by property
         const items = this.query("[barejid=" + jid + "]");
         return items.length > 0 ? items[0] : null;
     },
-    removeChat: function (jid) {
+    removeChat (jid) {
         const cp = this.getChat(jid);
         if (!cp || cp.destroyed) {
             return;
