@@ -62,8 +62,8 @@ export function setPreference(key, value) {
         Application.log("Adding Preference: " + key + " Value: " + value);
         Application.prefStore.add(
             new Ext.data.Record({
-                key: key,
-                value: value,
+                key,
+                value,
             })
         );
     }

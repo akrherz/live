@@ -30,7 +30,7 @@ function onVersionIQ(iq) {
     const reply = $iq({
         to: from,
         type: "result",
-        id: id,
+        id,
     })
         .c("query", { xmlns: "jabber:iq:version" })
         .c("name")
@@ -510,7 +510,7 @@ function onConnect(status) {
                 Ext.defer(function () {
                     Application.XMPPConn.send(this.p);
                 }, 5000 * rejoinedRooms, {
-                    p: p,
+                    p,
                 });
                 rejoinedRooms += 1;
             }
@@ -729,12 +729,12 @@ function parseBookmarks(msg) {
         if (bookmarksTree && bookmarksTree.getRootNode()) {
             bookmarksTree.getRootNode().appendChild({
             text: alias + " (" + Strophe.getNodeFromJid(jid) + ")",
-            jid: jid,
-            alias: alias,
-            autojoin: autojoin,
+            jid,
+            alias,
+            autojoin,
             iconCls: "chatroom-icon",
             handle: nick,
-            anonymous: anonymous,
+            anonymous,
             leaf: true,
             });
         }
@@ -753,9 +753,9 @@ function parseBookmarks(msg) {
                     this.anonymous
                 );
             }, 5000 * autoJoinedRooms, {
-                jid: jid,
-                nick: nick,
-                anonymous: anonymous,
+                jid,
+                nick,
+                anonymous,
             });
             autoJoinedRooms += 1;
         }
@@ -804,8 +804,8 @@ function iqParser(msg) {
                 );
                 rooms.push({
                     text: name + " (" + room + ")",
-                    name: name,
-                    room: room,
+                    name,
+                    room,
                     jid: items[i].getAttribute("jid"),
                     iconCls: "chatroom-icon",
                     leaf: true,
@@ -954,12 +954,12 @@ function presenceParser(msg) {
         function showRoomError(message, cleanupFn) {
             Ext.Msg.show({
                 title: "Status",
-                message: message,
+                message,
                 buttons: Ext.Msg.OK,
                 icon: Ext.Msg.INFO,
-                fn: function () {
+                fn: () => {
                     // Defer cleanup to avoid layout invalidation during modal teardown
-                    Ext.defer(function () {
+                    Ext.defer(() => {
                         if (cleanupFn) {
                             cleanupFn();
                         }
@@ -978,7 +978,7 @@ function presenceParser(msg) {
             if (error[0].getAttribute("code") === "201") {
                 showRoomError(
                     "Sorry, chatroom [" + room + "] does not exist.",
-                    function () {
+                    () => {
                         const chatPanel = Ext.getCmp("chatpanel");
                         if (chatPanel && chatPanel.getMUC(room)) {
                             chatPanel.removeMUC(room);
@@ -1098,12 +1098,12 @@ function presenceParser(msg) {
                 mcp.joinedChat = true;
                 if (roomUsersRoot) {
                     roomUsersRoot.appendChild({
-                        affiliation: affiliation,
-                        role: role,
+                        affiliation,
+                        role,
                         cls: getMUCNodeCls(affiliation),
                         iconCls: getMUCIconCls(affiliation),
                         text: Strophe.getResourceFromJid(from),
-                        jid: jid,
+                        jid,
                         leaf: true,
                     });
                 }
@@ -1285,7 +1285,7 @@ function messageParser(msg) {
                 room: null,
                 jid: mpc.getJidByHandle(sender),
                 xdelay: isDelayed,
-                product_id: product_id,
+                product_id,
                 geo_lat: geoPoint ? geoPoint.lat : null,
                 geo_long: geoPoint ? geoPoint.long : null,
             });
@@ -1306,7 +1306,7 @@ function messageParser(msg) {
                         message: txt,
                         jid: mpc.getJidByHandle(sender),
                         xdelay: isDelayed,
-                        product_id: product_id,
+                        product_id,
                         geo_lat: geoPoint ? geoPoint.lat : null,
                         geo_long: geoPoint ? geoPoint.long : null,
                     });
@@ -1388,16 +1388,16 @@ function extractLatLongFromMessage(msg) {
 
     for (let i = 0; i < x.length; i++) {
         const lat = parseFloat(x[i].getAttribute("lat"));
-        const lon = parseFloat(x[i].getAttribute("long"));
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        const long = parseFloat(x[i].getAttribute("long"));
+        if (!Number.isFinite(lat) || !Number.isFinite(long)) {
             continue;
         }
-        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        if (lat < -90 || lat > 90 || long < -180 || long > 180) {
             continue;
         }
         return {
-            lat: lat,
-            long: lon,
+            lat,
+            long,
         };
     }
 

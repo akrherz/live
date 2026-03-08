@@ -434,7 +434,7 @@ function setupFeatureClickHandlers() {
                 width: 400,
                 maxHeight: 500,
                 autoScroll: true,
-                html: html,
+                html,
                 closable: true,
                 closeAction: 'destroy',
             });
@@ -460,7 +460,7 @@ export function createOLMap(targetDiv) {
     // Create a simple layer store for backward compatibility
     Application.layerstore = {
         data: {
-            each: function(callback, scope) {
+            each: (callback, scope) => {
                 if (!olMap) {return;}
                 olMap.getLayers().forEach(layer => {
                     const record = {
@@ -471,7 +471,7 @@ export function createOLMap(targetDiv) {
                 });
             }
         },
-        find: function(field, value) {
+        find: (field, value) => {
             let index = -1;
             if (!olMap) {return index;}
             olMap.getLayers().forEach((layer, idx) => {
@@ -481,7 +481,7 @@ export function createOLMap(targetDiv) {
             });
             return index;
         },
-        getAt: function(index) {
+        getAt: (index) => {
             if (!olMap) {return null;}
             const layer = olMap.getLayers().item(index);
             return layer ? {
@@ -593,9 +593,11 @@ export function createMapPanel() {
         split: true,
         html: '<div id="ol-map" style="width:100%; height:100%;"></div>',
         listeners: {
-            afterrender: function() {
+            // eslint-disable-next-line object-shorthand
+            afterrender: function () {
                 // Create the OpenLayers map after the panel renders
                 // Use a short delay to ensure the container has proper dimensions
+                const panel = this;
                 setTimeout(() => {
                     const mapDiv = document.getElementById('ol-map');
                     if (mapDiv) {
@@ -604,11 +606,12 @@ export function createMapPanel() {
                         setupFeatureClickHandlers();
 
                         // Store map reference on the panel
-                        this.map = getMap();
+                        panel.map = getMap();
                     }
                 }, 100);
             },
-            resize: function() {
+            // eslint-disable-next-line object-shorthand
+            resize: function () {
                 // Update map size when panel resizes
                 if (olMap) {
                     olMap.updateSize();
@@ -619,7 +622,7 @@ export function createMapPanel() {
             {
                 xtype: 'splitbutton',
                 text: 'Favorites',
-                handler: function() {
+                handler: () => {
                     // TODO: Implement favorites
                     console.log('Favorites clicked');
                 },
@@ -636,19 +639,19 @@ export function createMapPanel() {
                     items: [
                         {
                             text: 'LSR Grid',
-                            handler: function() {
+                            handler: () => {
                                 ensureLSRGridWindow().show();
                             },
                         },
                         {
                             text: 'SBW Grid',
-                            handler: function() {
+                            handler: () => {
                                 ensureSBWGridWindow().show();
                             },
                         },
                         {
                             text: 'Show Legend',
-                            handler: function() {
+                            handler: () => {
                                 const legendsHtml = document.getElementById('legends')
                                     ? document.getElementById('legends').innerHTML
                                     : '<p>Legend content unavailable.</p>';
@@ -677,12 +680,12 @@ export function createMapPanel() {
                 maxValue: 100,
                 increment: 5,
                 plugins: new Ext.slider.Tip({
-                    getText: function(thumb) {
+                    getText: (thumb) => {
                         return String(thumb.value) + '%';
                     }
                 }),
                 listeners: {
-                    change: function(slider, value) {
+                    change: (slider, value) => {
                         // Update opacity for all vector layers
                         const opacity = value / 100;
                         const map = getMap();
@@ -958,8 +961,8 @@ export function createLayerTree() {
             ],
         },
         listeners: {
-            afterrender: function(tree) {
-                tree.on('checkchange', function(node, checked) {
+            afterrender: (tree) => {
+                tree.on('checkchange', (node, checked) => {
                     if (node && node.data && node.data.layerName) {
                         handleLayerToggle(node.data.layerName, checked);
                     }
@@ -967,7 +970,7 @@ export function createLayerTree() {
 
                 const view = tree.getView && tree.getView();
                 if (view && view.on) {
-                    view.on('itemclick', function(_view, record, item, _index, event) {
+                    view.on('itemclick', (_view, record, item, _index, event) => {
                         if (!record || !record.data || !record.data.layerName) {
                             return;
                         }
@@ -992,7 +995,7 @@ export function createLayerTree() {
 if (typeof Application !== 'undefined') {
     Application.MapTask = {
         skipFirst: true,
-        run: function () {
+        run() {
             if (this.skipFirst) {
                 this.skipFirst = false;
                 return;

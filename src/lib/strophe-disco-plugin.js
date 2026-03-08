@@ -18,7 +18,7 @@ Strophe.addConnectionPlugin("disco", {
      * Parameters:
      *   (Strophe.Connection) conn - Strophe connection
      */
-    init: function (conn) {
+    init(conn) {
         this._connection = conn;
         this._identities = [];
         this._features = [];
@@ -54,7 +54,7 @@ Strophe.addConnectionPlugin("disco", {
      * Returns:
      *   Boolean
      */
-    addIdentity: function (category, type, name, lang) {
+    addIdentity(category, type, name, lang) {
         for (let i = 0; i < this._identities.length; i++) {
             if (
                 this._identities[i].category === category &&
@@ -66,10 +66,10 @@ Strophe.addConnectionPlugin("disco", {
             }
         }
         this._identities.push({
-            category: category,
-            type: type,
-            name: name,
-            lang: lang,
+            category,
+            type,
+            name,
+            lang,
         });
         return true;
     },
@@ -82,7 +82,7 @@ Strophe.addConnectionPlugin("disco", {
      * Returns:
      *   boolean
      */
-    addFeature: function (var_name) {
+    addFeature(var_name) {
         for (let i = 0; i < this._features.length; i++) {
             if (this._features[i] === var_name) {
                 return false;
@@ -103,15 +103,15 @@ Strophe.addConnectionPlugin("disco", {
      * Returns:
      *   boolean
      */
-    addItem: function (jid, name, node, call_back) {
+    addItem(jid, name, node, call_back) {
         if (node && !call_back) {
             return false;
         }
         this._items.push({
-            jid: jid,
-            name: name,
-            node: node,
-            call_back: call_back,
+            jid,
+            name,
+            node,
+            call_back,
         });
         return true;
     },
@@ -124,7 +124,7 @@ Strophe.addConnectionPlugin("disco", {
      *   (String) jid
      *   (String) node
      */
-    info: function (jid, node, success, error) {
+    info(jid, node, success, error) {
         const attrs = { xmlns: Strophe.NS.DISCO_INFO };
         if (node) {
             attrs.node = node;
@@ -146,7 +146,7 @@ Strophe.addConnectionPlugin("disco", {
      *   (String) jid
      *   (String) node
      */
-    items: function (jid, node, success, error) {
+    items(jid, node, success, error) {
         const attrs = { xmlns: Strophe.NS.DISCO_ITEMS };
         if (node) {
             attrs.node = node;
@@ -163,7 +163,7 @@ Strophe.addConnectionPlugin("disco", {
     /** PrivateFunction: _onDiscoInfo
      * Called when receive info request
      */
-    _onDiscoInfo: function (stanza) {
+    _onDiscoInfo(stanza) {
         const id = stanza.getAttribute("id");
         const from = stanza.getAttribute("from");
         const node = stanza
@@ -173,7 +173,7 @@ Strophe.addConnectionPlugin("disco", {
         if (node) {
             attrs.node = node;
         }
-        const iqresult = $iq({ type: "result", id: id, to: from }).c(
+        const iqresult = $iq({ type: "result", id, to: from }).c(
             "query",
             attrs,
         );
@@ -200,7 +200,7 @@ Strophe.addConnectionPlugin("disco", {
     /** PrivateFunction: _onDiscoItems
      * Called when receive items request
      */
-    _onDiscoItems: function (stanza) {
+    _onDiscoItems(stanza) {
         const id = stanza.getAttribute("id");
         const from = stanza.getAttribute("from");
         const query_attrs = { xmlns: Strophe.NS.DISCO_ITEMS };
@@ -223,7 +223,7 @@ Strophe.addConnectionPlugin("disco", {
         if (!items) {
             items = [];
         }
-        const iqresult = $iq({ type: "result", id: id, to: from }).c(
+        const iqresult = $iq({ type: "result", id, to: from }).c(
             "query",
             query_attrs,
         );

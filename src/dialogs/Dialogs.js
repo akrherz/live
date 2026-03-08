@@ -112,7 +112,7 @@ const combo = new Ext.form.ComboBox({
     mode: "local",
     store: Application.SoundStore,
     listeners: {
-        change: function (_field, newVal) {
+        change: (_field, newVal) => {
             playSound(newVal);
         },
     },
@@ -129,7 +129,7 @@ Application.soundPrefs = new Ext.Window({
     buttons: [
         {
             text: "Save Sound Settings",
-            handler: function () {
+            handler: () => {
                 Ext.getCmp("soundpanel")
                     .getStore()
                     .each(function (record) {
@@ -157,7 +157,7 @@ Application.soundPrefs = new Ext.Window({
             value: 50,
             width: 200,
             listeners: {
-                changecomplete: function (_slider, newval) {
+                changecomplete: (_slider, newval) => {
                     setPreference("volume", newval);
                     msgBus.fire("soundevent", "default");
                 },
@@ -252,7 +252,7 @@ Application.boundsFavorites = new Ext.Window({
     buttons: [
         {
             text: "Save Settings",
-            handler: function () {
+            handler: () => {
                 for (let i = 1; i < 6; i++) {
                     const nval = Ext.getCmp("mfv" + i).getValue();
                     if (nval !== "") {
@@ -283,7 +283,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "Set From Current View",
-            handler: function () {
+            handler: () => {
                 Ext.getCmp("mfv1").bounds = Ext.getCmp("map").map.getExtent();
                 Application.saveViews();
             },
@@ -291,7 +291,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "View",
-            handler: function () {
+            handler: () => {
                 const bnds = Ext.getCmp("mfv1").bounds;
                 if (bnds) {
                     Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -310,7 +310,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "Set From Current View",
-            handler: function () {
+            handler: () => {
                 Ext.getCmp("mfv2").bounds = Ext.getCmp("map").map.getExtent();
                 Application.saveViews();
             },
@@ -318,7 +318,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "View",
-            handler: function () {
+            handler: () => {
                 const bnds = Ext.getCmp("mfv2").bounds;
                 if (bnds) {
                     Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -337,7 +337,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "Set From Current View",
-            handler: function () {
+            handler: () => {
                 Ext.getCmp("mfv3").bounds = Ext.getCmp("map").map.getExtent();
                 Application.saveViews();
             },
@@ -345,7 +345,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "View",
-            handler: function () {
+            handler: () => {
                 const bnds = Ext.getCmp("mfv3").bounds;
                 if (bnds) {
                     Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -364,7 +364,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "Set From Current View",
-            handler: function () {
+            handler: () => {
                 Ext.getCmp("mfv4").bounds = Ext.getCmp("map").map.getExtent();
                 Application.saveViews();
             },
@@ -372,7 +372,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "View",
-            handler: function () {
+            handler: () => {
                 const bnds = Ext.getCmp("mfv4").bounds;
                 if (bnds) {
                     Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -391,7 +391,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "Set From Current View",
-            handler: function () {
+            handler: () => {
                 Ext.getCmp("mfv5").bounds = Ext.getCmp("map").map.getExtent();
                 Application.saveViews();
             },
@@ -399,7 +399,7 @@ Application.boundsFavorites = new Ext.Window({
         {
             xtype: "button",
             text: "View",
-            handler: function () {
+            handler: () => {
                 const bnds = Ext.getCmp("mfv5").bounds;
                 if (bnds) {
                     Ext.getCmp("map").map.zoomToExtent(bnds, true);
@@ -430,7 +430,7 @@ const mucform = new Ext.form.FormPanel({
             xtype: "checkbox",
             name: "bookmark",
             fieldLabel: "Save Bookmark for Chatroom?",
-            handler: function (cb, val) {
+            handler: (cb, val) => {
                 if (val) {
                     mucform.getForm().findField("roomalias").enable();
                 } else {
@@ -456,7 +456,7 @@ const mucform = new Ext.form.FormPanel({
         },
     ],
     listeners: {
-        render: function () {
+        render: () => {
             const h = mucform.getForm().findField("roomhandle").getValue();
             if (!h) {
                 mucform
@@ -490,7 +490,7 @@ Application.CreatePrivateChat = new Ext.Window({
             xtype: "button",
             text: "Start Chat",
             scope: privform,
-            handler: function () {
+            handler() {
                 let barejid = this.getForm().findField("username").getValue();
                 if (barejid.indexOf("@") === -1) {
                     barejid = barejid + "@" + LiveConfig.XMPPHOST;
@@ -506,7 +506,7 @@ Application.CreatePrivateChat = new Ext.Window({
         {
             xtype: "button",
             text: "Cancel",
-            handler: function () {
+            handler: () => {
                 Application.CreatePrivateChat.hide();
             },
         },
@@ -518,7 +518,7 @@ Application.JoinChatroomDialog = new Ext.Window({
     title: "Join a Group Chat",
     items: [mucform],
     listeners: {
-        show: function () {
+        show: () => {
             const handleField = mucform.getForm().findField("roomhandle");
             if (handleField && !handleField.getValue()) {
                 handleField.setValue(getDefaultRoomHandle());
@@ -530,7 +530,7 @@ Application.JoinChatroomDialog = new Ext.Window({
             xtype: "button",
             text: "Join Room",
             scope: mucform,
-            handler: function () {
+            handler() {
                 const roomname = this.getForm()
                     .findField("roomname")
                     .getValue();
@@ -559,11 +559,11 @@ Application.JoinChatroomDialog = new Ext.Window({
                         bookmarksTree.getRootNode().appendChild({
                         text: alias + " (" + roomname + ")",
                         jid: room,
-                        alias: alias,
-                        anonymous: anonymous,
-                        autojoin: autojoin,
+                        alias,
+                        anonymous,
+                        autojoin,
                         icon: "icons/chat.png",
-                        handle: handle,
+                        handle,
                         leaf: true,
                         });
                         saveBookmarks();
@@ -581,7 +581,7 @@ Application.JoinChatroomDialog = new Ext.Window({
         {
             xtype: "button",
             text: "Cancel",
-            handler: function () {
+            handler: () => {
                 Application.JoinChatroomDialog.hide();
             },
         },

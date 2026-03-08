@@ -37,7 +37,7 @@ Application.Control = {
         menu : [{
                     checked : false,
                     text : 'Show Offline Buddies',
-                    checkHandler : function(item, checked) {
+                    checkHandler(item, checked) {
 
                         Ext.getCmp('buddies').getRootNode().cascade(function(n) {
                                     if (checked) {
@@ -52,19 +52,19 @@ Application.Control = {
                 }, {
                     xtype : 'menuitem',
                     text : 'Chat with User',
-                    handler : function() {
+                    handler() {
                         Application.CreatePrivateChat.show();
                     }
                 }, {
                     xtype : 'menuitem',
                     text : 'Add Buddy...',
-                    handler : function() {
+                    handler() {
                         Application.buildAddBuddy(null,null,null);
                     }
                 },{
                     xtype : 'menuitem',
                     text : 'Join Group Chat',
-                    handler : function() {
+                    handler() {
                         Application.JoinChatroomDialog.show();
                     }
                 }, {
@@ -75,7 +75,7 @@ Application.Control = {
                                 id : 'fgcolor',
                                 value : '000000',
                                 listeners : {
-                                    select : function(cp,color){
+                                    select(cp,color){
                                         setPreference('fgcolor', color);
                                     }
                                 }
@@ -90,7 +90,7 @@ Application.Control = {
                                 id : 'bgcolor',
                                 value : 'FFFFFF',
                                 listeners : {
-                                    select : function(cp,color){
+                                    select(cp,color){
                                         setPreference('bgcolor', color);
                                     }
                                 }
@@ -100,14 +100,14 @@ Application.Control = {
                 },{
                     xtype : 'menuitem',
                     text : 'Show Debug Window',
-                    handler : function() {
+                    handler() {
                         Ext.getCmp("debug").show();
 
                     }
                 },{
                     xtype : 'menuitem',
                     text : 'Log Out',
-                    handler : function() {
+                    handler() {
                         /* Don't try to reconnect */
                         Application.log("Manual logout requested.");
                         Application.manualLogout = true;
@@ -146,7 +146,7 @@ Application.Control = {
         id : 'sound',
         scale : 'medium',
         soundOn : true,
-        handler : function(btn) {
+        handler(btn) {
             if (btn.soundOn) {
                 btn.setIcon('icons/mute.png');
                 Application.audioMuted = true;
@@ -158,7 +158,7 @@ Application.Control = {
                 msgBus.fire("soundevent", "default");
             }
         },
-        arrowHandler : function() {
+        arrowHandler() {
             Application.soundPrefs.show();
         },
         icon : 'icons/volume.png'
@@ -219,7 +219,7 @@ Application.Control = {
                         }),
                 viewConfig: {
                     listeners: {
-                        itemcontextmenu: function(view, record, item, index, e) {
+                        itemcontextmenu(view, record, item, index, e) {
                             e.preventDefault();
                             view.getSelectionModel().select(record);
                             const c = view.ownerCt.contextMenu;
@@ -250,10 +250,10 @@ Application.Control = {
                     }
                 },
                 listeners : {
-                    movenode: function(){
+                    movenode(){
                         saveBookmarks();
                     },
-                    itemclick : function(_view, record) {  // this
+                    itemclick(_view, record) {  // this
                         Application.JoinChatroomDialog.show(null, function(){
                             const form = this.items.items[0].getForm();
                             form.findField("roomname").setValue(Strophe.getNodeFromJid(record.data.jid));
@@ -270,7 +270,7 @@ Application.Control = {
                     expanded: true,
                     children: [],
                     listeners: {
-                        beforeappend: function(parentNode, node) {
+                        beforeappend(parentNode, node) {
                             /* Ensure that we are appending a unique node */
                             const oldnode = parentNode.findChild('jid', node.data.jid);
                             if (oldnode) {
@@ -292,7 +292,7 @@ Application.Control = {
                 autoScroll : true,
                 containerScroll: true,
                 listeners : {
-                    itemclick : function(_view, record) {  // this
+                    itemclick(_view, record) {  // this
                         Application.JoinChatroomDialog.show(null, function(){
                             const form = this.items.items[0].getForm();
                             const defaultHandle = Application.USERNAME ||
@@ -358,7 +358,7 @@ Application.ServiceGuard = {
     skipFirst : true,
     pingInFlight : false,
     pingTimeoutMs : 15000,
-    run : function() {
+    run() {
         if (this.skipFirst) {
             this.skipFirst = false;
             return;

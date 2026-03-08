@@ -63,7 +63,7 @@ export const LoginPanel = {
     border: false,
     autoScroll: true,
     cls: "login-panel-wrapper",
-    addMessage: function (text) {
+    addMessage(text) {
         const statusEl = document.getElementById("login-status");
         if (!statusEl) {
             return;
@@ -71,7 +71,7 @@ export const LoginPanel = {
         statusEl.textContent = text || "";
         statusEl.hidden = !text;
     },
-    clearMessage: function () {
+    clearMessage() {
         this.addMessage("");
     },
     listeners: {

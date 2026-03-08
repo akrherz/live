@@ -19,12 +19,12 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
     defaults : {
         width : 450
     },
-    initComponent : function(){
+    initComponent(){
 
         this.buttons = [{
             text : 'Send Message',
             scope : this,
-            handler : function(){
+            handler(){
                 const tbl = this.find('name', 'columns')[0];
                 Ext.each(tbl.findByType('checkbox'), function(cb){
                     if (! cb.checked){ return; }
@@ -44,7 +44,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
             }
         },{
             text : 'Cancel',
-            handler : function(){
+            handler(){
                 this.ownerCt.ownerCt.close();
             }
         }];
@@ -54,7 +54,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
         this.buildItems(this.message);
         this.addAvailableRooms();
     },
-    addAvailableRooms : function(){
+    addAvailableRooms(){
         Ext.getCmp("chatpanel").items.each(function(panel) {
             if (panel.chatType !== 'groupchat') { return; }
             if (panel.anonymous) { return; }
@@ -73,7 +73,7 @@ Application.AllChatMessageWindow = Ext.extend(Ext.Window, {
             }
         }, this);
     },
-    buildItems : function(message){
+    buildItems(message){
         this.add({
             xtype : 'textarea',
             hideLabel : true,
@@ -135,7 +135,7 @@ Application.buildAddBuddy = function(user, alias, group){
         }],
         buttons : [{
             text : 'Add Buddy',
-            handler : function(btn){
+            handler(btn){
                 user = btn.ownerCt.ownerCt.items.items[0].getValue();
                 alias = btn.ownerCt.ownerCt.items.items[1].getValue();
                 group = btn.ownerCt.ownerCt.items.items[2].getValue();

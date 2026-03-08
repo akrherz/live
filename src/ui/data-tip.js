@@ -5,7 +5,7 @@
  * <p>This plugin is applied to a high level Component, which contains repeating elements, and depending on the host Component type,
  * it automatically selects a {@link Ext.ToolTip#delegate delegate} so that it appears when the mouse enters a sub-element.</p>
  * <p>When applied to a GridPanel, this ToolTip appears when over a row, and the Record's data is applied
- * using this object's {@link Ext.Component#tpl tpl} template.</p>
+ * using the Ext.Component#tpl template.</p>
  * <p>When applied to a DataView, this ToolTip appears when over a view node, and the Record's data is applied
  * using this object's {@link Ext.Component#tpl tpl} template.</p>
  * <p>When applied to a TreePanel, this ToolTip appears when over a tree node, and the Node's {@link Ext.tree.TreeNode#attributes attributes} are applied
@@ -19,7 +19,18 @@
 export const DataTip = Ext.extend(
     Ext.ToolTip,
     (function () {
-        //  Target the body (if the host is a Panel), or, if there is no body, the main Element.
+        function updateTip(tip, data) {
+            if (tip.rendered) {
+                tip.update(data);
+            } else {
+                if (Ext.isString(data)) {
+                    tip.html = data;
+                } else {
+                    tip.data = data;
+                }
+            }
+        }
+
         function onHostRender() {
             const e = this.body || this.el;
             if (this.dataTip.renderToTarget) {
@@ -33,42 +44,30 @@ export const DataTip = Ext.extend(
             }
         }
 
-        function updateTip(tip, data) {
-            if (tip.rendered) {
-                tip.update(data);
-            } else {
-                if (Ext.isString(data)) {
-                    tip.html = data;
-                } else {
-                    tip.data = data;
-                }
-            }
-        }
-
-        function beforeTreeTipShow(tip) {
-            const e = Ext.fly(tip.triggerElement).findParent(
-                    "div.x-tree-node-el",
-                    null,
-                    true,
-                ),
-                node = e
-                    ? tip.host.getNodeById(
-                          e.getAttribute("tree-node-id", "ext"),
-                      )
-                    : null;
-            if (node) {
-                updateTip(tip, node.data);
-            } else {
-                return false;
-            }
-        }
-
         function beforeGridTipShow(tip) {
             const rec = this.host
                 .getStore()
                 .getAt(this.host.getView().findRowIndex(tip.triggerElement));
             if (rec) {
                 updateTip(tip, rec.data);
+            } else {
+                return false;
+            }
+        }
+
+        function beforeTreeTipShow(tip) {
+            const e = Ext.fly(tip.triggerElement).findParent(
+                "div.x-tree-node-el",
+                null,
+                true
+            );
+            const node = e
+                ? tip.host.getNodeById(
+                    e.getAttribute("tree-node-id", "ext")
+                )
+                : null;
+            if (node) {
+                updateTip(tip, node.data);
             } else {
                 return false;
             }
@@ -103,9 +102,12 @@ export const DataTip = Ext.extend(
         }
 
         return {
-            init: function (host) {
-                host.dataTip = this;
+            init(host) {
+                if (!host) {
+                    return;
+                }
                 this.host = host;
+                host.dataTip = this;
                 if (host instanceof Ext.tree.TreePanel) {
                     this.delegate = this.delegate || "div.x-tree-node-el";
                     this.on("beforeshow", beforeTreeTipShow);

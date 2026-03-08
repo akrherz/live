@@ -97,21 +97,14 @@ function printGrid(gridPanel) {
 }
 
 const LinkInterceptor = {
-    render: function (p) {
+    render: (p) => {
         p.body.on({
-            mousedown: function (e, t) {
-                // try to intercept the easy
-                // way
-
+            mousedown: (e, t) => {
                 t.target = "_blank";
                 t.rel = "noopener noreferrer";
                 hideTextWindow();
             },
-            click: function (e, t) {
-                // if they tab + enter a link,
-                // need to do it old fashioned
-                // way
-
+            click: (e, t) => {
                 if (String(t.target).toLowerCase() !== "_blank") {
                     e.stopEvent();
                     open(t.href, "_blank", "noopener,noreferrer");
