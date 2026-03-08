@@ -18,19 +18,27 @@ import { Application } from "../app-state.js";
 import { getFullVersionString } from "../version.js";
 // XEP-0092: Software Version handler
 function onVersionIQ(iq) {
-    if (iq.getAttribute("type") !== "get") return true;
+    if (iq.getAttribute("type") !== "get") {
+        return true;
+    }
     const query = iq.getElementsByTagName("query")[0];
-    if (!query || query.getAttribute("xmlns") !== "jabber:iq:version") return true;
+    if (!query || query.getAttribute("xmlns") !== "jabber:iq:version") {
+        return true;
+    }
     const from = iq.getAttribute("from");
     const id = iq.getAttribute("id");
     const reply = $iq({
         to: from,
         type: "result",
-        id: id
+        id: id,
     })
         .c("query", { xmlns: "jabber:iq:version" })
-        .c("name").t(LiveConfig.NAME).up()
-        .c("version").t(getFullVersionString()).up();
+        .c("name")
+        .t(LiveConfig.NAME)
+        .up()
+        .c("version")
+        .t(getFullVersionString())
+        .up();
     Application.XMPPConn.send(reply);
     return true;
 }
