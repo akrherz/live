@@ -1002,7 +1002,7 @@ Application.MapTask = {
         if (map) {
             map.getLayers().forEach(layer => {
                 const source = layer.getSource();
-                if (source && source.refresh && layer.getVisible()) {
+                if (source?.refresh && layer.getVisible()) {
                     source.refresh();
                 }
             });
