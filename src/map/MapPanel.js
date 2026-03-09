@@ -99,7 +99,6 @@ function sbwStyleFunction(feature) {
 
 /**
  * Style function for Local Storm Reports
- * Uses the imported lsrStyles configuration
  */
 function lsrStyleFunction(feature) {
     const ptype = feature?.get('ptype');
@@ -114,7 +113,7 @@ function lsrStyleFunction(feature) {
         image: new Icon({
             src: iconPath || 'lsr-icons/other.png',
             anchor: [0.5, 1],
-            scale: 0.9,
+            scale: 0.7,
             crossOrigin: 'anonymous',
         }),
     });
@@ -991,34 +990,28 @@ export function createLayerTree() {
     };
 }
 
-// Map refresh task - periodically reloads visible layers
-if (typeof Application !== 'undefined') {
-    Application.MapTask = {
-        skipFirst: true,
-        run() {
-            if (this.skipFirst) {
-                this.skipFirst = false;
-                return;
-            }
-            // Reload all vector layers to get fresh data
-            const map = getMap();
-            if (map) {
-                map.getLayers().forEach(layer => {
-                    const source = layer.getSource();
-                    if (source && source.refresh && layer.getVisible()) {
-                        source.refresh();
-                    }
-                });
-                setAppTime();
-            }
-        },
-        interval: 300000, // 5 minutes
-    };
-}
+Application.MapTask = {
+    skipFirst: true,
+    run() {
+        if (this.skipFirst) {
+            this.skipFirst = false;
+            return;
+        }
+        // Reload all vector layers to get fresh data
+        const map = getMap();
+        if (map) {
+            map.getLayers().forEach(layer => {
+                const source = layer.getSource();
+                if (source?.refresh && layer.getVisible()) {
+                    source.refresh();
+                }
+            });
+            setAppTime();
+        }
+    },
+    interval: 300000, // 5 minutes
+};
 
-// Export Application.LayerTree for backward compatibility
-if (typeof Application !== 'undefined') {
-    Application.LayerTree = createLayerTree();
-}
+Application.LayerTree = createLayerTree();
 
 export default createMapPanel();
