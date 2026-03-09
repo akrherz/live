@@ -99,7 +99,6 @@ function sbwStyleFunction(feature) {
 
 /**
  * Style function for Local Storm Reports
- * Uses the imported lsrStyles configuration
  */
 function lsrStyleFunction(feature) {
     const ptype = feature?.get('ptype');
@@ -114,7 +113,7 @@ function lsrStyleFunction(feature) {
         image: new Icon({
             src: iconPath || 'lsr-icons/other.png',
             anchor: [0.5, 1],
-            scale: 0.9,
+            scale: 0.7,
             crossOrigin: 'anonymous',
         }),
     });

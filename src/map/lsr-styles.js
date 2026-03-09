@@ -1,6 +1,5 @@
 /**
  * LSR (Local Storm Report) Icon Styles
- * Shared between MapPanel.js and layers.js
  */
 
 export const lsrStyles = {
