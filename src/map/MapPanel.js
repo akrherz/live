@@ -991,34 +991,28 @@ export function createLayerTree() {
     };
 }
 
-// Map refresh task - periodically reloads visible layers
-if (typeof Application !== 'undefined') {
-    Application.MapTask = {
-        skipFirst: true,
-        run() {
-            if (this.skipFirst) {
-                this.skipFirst = false;
-                return;
-            }
-            // Reload all vector layers to get fresh data
-            const map = getMap();
-            if (map) {
-                map.getLayers().forEach(layer => {
-                    const source = layer.getSource();
-                    if (source && source.refresh && layer.getVisible()) {
-                        source.refresh();
-                    }
-                });
-                setAppTime();
-            }
-        },
-        interval: 300000, // 5 minutes
-    };
-}
+Application.MapTask = {
+    skipFirst: true,
+    run() {
+        if (this.skipFirst) {
+            this.skipFirst = false;
+            return;
+        }
+        // Reload all vector layers to get fresh data
+        const map = getMap();
+        if (map) {
+            map.getLayers().forEach(layer => {
+                const source = layer.getSource();
+                if (source && source.refresh && layer.getVisible()) {
+                    source.refresh();
+                }
+            });
+            setAppTime();
+        }
+    },
+    interval: 300000, // 5 minutes
+};
 
-// Export Application.LayerTree for backward compatibility
-if (typeof Application !== 'undefined') {
-    Application.LayerTree = createLayerTree();
-}
+Application.LayerTree = createLayerTree();
 
 export default createMapPanel();
