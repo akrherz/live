@@ -407,7 +407,7 @@ export function setAppTime() {
 function setupFeatureClickHandlers() {
     if (!olMap) {return;}
 
-    olMap.on('click', function(evt) {
+    olMap.on('click', (evt) => {
         const features = [];
         olMap.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
             features.push({feature, layer});
@@ -419,10 +419,13 @@ function setupFeatureClickHandlers() {
             const layerName = escapeHtml(layer.get('name') || 'Feature');
 
             // Build HTML content for popup
-            let html = `<h3>${layerName}</h3><table>`;
+            const skipKeys = new Set(['geometry', 'ptype', 'vtec']);
+            let html = '<table>';
             for (const [key, value] of Object.entries(props)) {
-                if (key !== 'geometry') {
-                    html += `<tr><td><b>${escapeHtml(key)}:</b></td><td>${escapeHtml(value)}</td></tr>`;
+                if (!skipKeys.has(key)) {
+                    // 'message' contains trusted HTML from the server and should render as-is
+                    const displayValue = key === 'message' ? String(value) : escapeHtml(value);
+                    html += `<tr><td><b>${escapeHtml(key)}:</b></td><td>${displayValue}</td></tr>`;
                 }
             }
             html += '</table>';
@@ -436,6 +439,14 @@ function setupFeatureClickHandlers() {
                 html,
                 closable: true,
                 closeAction: 'destroy',
+                listeners: {
+                    afterrender(win) {
+                        win.getEl().select('a').each((el) => {
+                            el.dom.target = '_blank';
+                            el.dom.rel = 'noopener noreferrer';
+                        });
+                    }
+                },
             });
             popup.show();
         }
