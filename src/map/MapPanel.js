@@ -407,7 +407,7 @@ export function setAppTime() {
 function setupFeatureClickHandlers() {
     if (!olMap) {return;}
 
-    olMap.on('click', function(evt) {
+    olMap.on('click', (evt) => {
         const features = [];
         olMap.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
             features.push({feature, layer});
