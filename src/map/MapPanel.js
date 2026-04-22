@@ -45,14 +45,14 @@ export function getMap() {
  * Style function for SPC Convective Outlook
  */
 function spcConvStyleFunction(feature) {
-    const name = feature.get('name');
+    const name = feature.get('LABEL');
     const styles = {
-        "General Thunder": { fill: "#c0e8c0", stroke: "#3c783c" },
-        "Marginal Risk": { fill: "#7fc57f", stroke: "#3c783c" },
-        "Slight Risk": { fill: "#f6f67f", stroke: "#ff9600" },
-        "Enhanced Risk": { fill: "#e6c27f", stroke: "#ff7f00" },
-        "Moderate Risk": { fill: "#e67f7f", stroke: "#cd0000" },
-        "High Risk": { fill: "#ff00ff", stroke: "#000000" },
+        "TSTM": { fill: "#c0e8c0", stroke: "#3c783c" },
+        "MRGL": { fill: "#7fc57f", stroke: "#3c783c" },
+        "SLGT": { fill: "#f6f67f", stroke: "#ff9600" },
+        "ENH": { fill: "#e6c27f", stroke: "#ff7f00" },
+        "MDT": { fill: "#e67f7f", stroke: "#cd0000" },
+        "HIGH": { fill: "#ff00ff", stroke: "#000000" },
     };
 
     const styleConfig = styles[name] || { fill: "#000000", stroke: "#000000" };
@@ -205,7 +205,7 @@ function createVectorLayers() {
     // SPC Day 1 Outlook
     const spc1Layer = new VectorLayer({
         source: new VectorSource({
-            url: 'https://www.spc.noaa.gov/products/outlook/day1otlk.kml',
+            url: 'https://www.spc.noaa.gov/products/outlook/day1otlk_cat.kml',
             format: new KML({ extractStyles: false }),
         }),
         style: spcConvStyleFunction,
@@ -219,7 +219,7 @@ function createVectorLayers() {
     // SPC Day 2 Outlook
     const spc2Layer = new VectorLayer({
         source: new VectorSource({
-            url: 'https://www.spc.noaa.gov/products/outlook/day2otlk.kml',
+            url: 'https://www.spc.noaa.gov/products/outlook/day2otlk_cat.kml',
             format: new KML({ extractStyles: false }),
         }),
         style: spcConvStyleFunction,
@@ -233,7 +233,7 @@ function createVectorLayers() {
     // SPC Day 3 Outlook
     const spc3Layer = new VectorLayer({
         source: new VectorSource({
-            url: 'https://www.spc.noaa.gov/products/outlook/day3otlk.kml',
+            url: 'https://www.spc.noaa.gov/products/outlook/day3otlk_cat.kml',
             format: new KML({ extractStyles: false }),
         }),
         style: spcConvStyleFunction,
