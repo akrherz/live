@@ -34,6 +34,25 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
+function fitMapToExtent(extent) {
+    const map = getMap();
+    if (!map || !map.getView || !Array.isArray(extent) || extent.length !== 4) {
+        return;
+    }
+    map.getView().fit(extent, {
+        size: map.getSize(),
+        maxZoom: 10,
+    });
+}
+
+function zoomToFavorite(index) {
+    const favoriteField = Ext.getCmp(`mfv${index}`);
+    if (!favoriteField || !Array.isArray(favoriteField.bounds)) {
+        return;
+    }
+    fitMapToExtent(favoriteField.bounds);
+}
+
 /**
  * Get the OpenLayers map instance
  */
@@ -633,8 +652,57 @@ export function createMapPanel() {
                 xtype: 'splitbutton',
                 text: 'Favorites',
                 handler: () => {
-                    // TODO: Implement favorites
-                    console.log('Favorites clicked');
+                    if (Application.boundsFavorites) {
+                        Application.boundsFavorites.show();
+                    }
+                },
+                menu: {
+                    items: [
+                        {
+                            id: 'fm1',
+                            text: 'Favorite 1',
+                            handler: () => {
+                                zoomToFavorite(1);
+                            },
+                        },
+                        {
+                            id: 'fm2',
+                            text: 'Favorite 2',
+                            handler: () => {
+                                zoomToFavorite(2);
+                            },
+                        },
+                        {
+                            id: 'fm3',
+                            text: 'Favorite 3',
+                            handler: () => {
+                                zoomToFavorite(3);
+                            },
+                        },
+                        {
+                            id: 'fm4',
+                            text: 'Favorite 4',
+                            handler: () => {
+                                zoomToFavorite(4);
+                            },
+                        },
+                        {
+                            id: 'fm5',
+                            text: 'Favorite 5',
+                            handler: () => {
+                                zoomToFavorite(5);
+                            },
+                        },
+                        '-',
+                        {
+                            text: 'Edit Favorites...',
+                            handler: () => {
+                                if (Application.boundsFavorites) {
+                                    Application.boundsFavorites.show();
+                                }
+                            },
+                        },
+                    ],
                 },
             },
             {

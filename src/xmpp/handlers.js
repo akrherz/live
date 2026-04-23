@@ -691,10 +691,7 @@ function parseViews(msg) {
     for (let i = 0; i < elem.length; i++) {
         const label = elem[i].getAttribute("label");
         const bounds = elem[i].getAttribute("bounds");
-        if (label !== "") {
-            Ext.getCmp("mfv" + (i + 1)).setValue(label);
-            Ext.getCmp("fm" + (i + 1)).setText(label);
-        }
+        Ext.getCmp("mfv" + (i + 1)).setValue(label || "");
         if (!bounds) {
             continue;
         }
@@ -707,6 +704,9 @@ function parseViews(msg) {
                 map.getView().fit(extent, { size: map.getSize() });
             }
         }
+    }
+    if (Application.syncFavoriteUi) {
+        Application.syncFavoriteUi();
     }
 }
 

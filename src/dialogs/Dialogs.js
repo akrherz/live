@@ -239,175 +239,156 @@ Application.soundPrefs = new Ext.Window({
     ],
 });
 
+function getCurrentMapExtent() {
+    const mapPanel = Ext.getCmp("map");
+    const map = mapPanel && mapPanel.map;
+    if (!map || !map.getView || !map.getSize) {
+        return null;
+    }
+    return map.getView().calculateExtent(map.getSize());
+}
+
+function fitMapToFavoriteBounds(bounds) {
+    const mapPanel = Ext.getCmp("map");
+    const map = mapPanel && mapPanel.map;
+    if (!bounds || !map || !map.getView) {
+        return;
+    }
+    map.getView().fit(bounds, { size: map.getSize(), maxZoom: 10 });
+}
+
+function hasFavoriteBounds(field) {
+    return (
+        field &&
+        Array.isArray(field.bounds) &&
+        field.bounds.length === 4 &&
+        field.bounds.every((value) => Number.isFinite(value))
+    );
+}
+
+Application.syncFavoriteUi = function () {
+    for (let i = 1; i < 6; i++) {
+        const favoriteField = Ext.getCmp(`mfv${i}`);
+        const favoriteMenuItem = Ext.getCmp(`fm${i}`);
+        const favoriteViewButton = Ext.getCmp(`mfv${i}-view`);
+        const label =
+            favoriteField && favoriteField.getValue && favoriteField.getValue().trim()
+                ? favoriteField.getValue().trim()
+                : `Favorite ${i}`;
+        const enabled = hasFavoriteBounds(favoriteField);
+
+        if (favoriteMenuItem) {
+            favoriteMenuItem.setText(label);
+            favoriteMenuItem.setDisabled(!enabled);
+        }
+        if (favoriteViewButton) {
+            favoriteViewButton.setDisabled(!enabled);
+        }
+    }
+};
+
+function createFavoriteRow(index) {
+    return {
+        xtype: "container",
+        layout: "hbox",
+        defaults: {
+            style: "margin-right: 8px;",
+        },
+        items: [
+            {
+                xtype: "box",
+                autoEl: {
+                    tag: "div",
+                    html: `#${index}`,
+                },
+                width: 24,
+                style: "line-height: 24px; font-weight: bold;",
+            },
+            {
+                xtype: "textfield",
+                id: `mfv${index}`,
+                bounds: null,
+                width: 210,
+            },
+            {
+                xtype: "button",
+                text: "Set From Current View",
+                handler: () => {
+                    const extent = getCurrentMapExtent();
+                    if (!extent) {
+                        return;
+                    }
+                    Ext.getCmp(`mfv${index}`).bounds = extent;
+                    Application.syncFavoriteUi();
+                    Application.saveViews();
+                },
+            },
+            {
+                xtype: "button",
+                id: `mfv${index}-view`,
+                text: "View",
+                style: "margin-right: 0;",
+                handler: () => {
+                    const field = Ext.getCmp(`mfv${index}`);
+                    fitMapToFavoriteBounds(field ? field.bounds : null);
+                },
+            },
+        ],
+    };
+}
+
 Application.boundsFavorites = new Ext.Window({
     title: "Map View Favorites",
-    width: 500,
-    height: 300,
+    width: 760,
+    height: 330,
     closeAction: "hide",
-    layout: "table",
-    layoutConfig: {
-        columns: 4,
-    },
+    layout: "fit",
     autoScroll: true,
     buttons: [
         {
             text: "Save Settings",
             handler: () => {
-                for (let i = 1; i < 6; i++) {
-                    const nval = Ext.getCmp("mfv" + i).getValue();
-                    if (nval !== "") {
-                        Ext.getCmp("fm" + i).setText(nval);
-                    }
-                }
+                Application.syncFavoriteUi();
+                Application.saveViews();
                 Application.boundsFavorites.hide();
             },
         },
     ],
-    items: [
-        {
-            html:
-                "This form allows you to modify the 5 allowed map extent" +
-                " favorites. The first favorite will be your default view" +
-                " when you log in and for the star icon above.",
-            colspan: 4,
+    listeners: {
+        show: () => {
+            Application.syncFavoriteUi();
         },
-        {
-            html: "#1",
+    },
+    items: {
+        xtype: "panel",
+        border: false,
+        autoScroll: true,
+        bodyStyle: "padding: 10px;",
+        defaults: {
+            style: "margin-bottom: 8px;",
         },
-        {
-            xtype: "textfield",
-            id: "mfv1",
-            bounds: null,
-            width: 200,
-        },
-        {
-            xtype: "button",
-            text: "Set From Current View",
-            handler: () => {
-                Ext.getCmp("mfv1").bounds = Ext.getCmp("map").map.getExtent();
-                Application.saveViews();
+        items: [
+            {
+                xtype: "box",
+                autoEl: {
+                    tag: "div",
+                    html:
+                        "This form allows you to modify the 5 map extent favorites. " +
+                        "Favorite #1 is used as your default map view when available.",
+                },
             },
-        },
-        {
-            xtype: "button",
-            text: "View",
-            handler: () => {
-                const bnds = Ext.getCmp("mfv1").bounds;
-                if (bnds) {
-                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                }
-            },
-        },
-        {
-            html: "#2",
-        },
-        {
-            xtype: "textfield",
-            id: "mfv2",
-            bounds: null,
-            width: 200,
-        },
-        {
-            xtype: "button",
-            text: "Set From Current View",
-            handler: () => {
-                Ext.getCmp("mfv2").bounds = Ext.getCmp("map").map.getExtent();
-                Application.saveViews();
-            },
-        },
-        {
-            xtype: "button",
-            text: "View",
-            handler: () => {
-                const bnds = Ext.getCmp("mfv2").bounds;
-                if (bnds) {
-                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                }
-            },
-        },
-        {
-            html: "#3",
-        },
-        {
-            xtype: "textfield",
-            id: "mfv3",
-            bounds: null,
-            width: 200,
-        },
-        {
-            xtype: "button",
-            text: "Set From Current View",
-            handler: () => {
-                Ext.getCmp("mfv3").bounds = Ext.getCmp("map").map.getExtent();
-                Application.saveViews();
-            },
-        },
-        {
-            xtype: "button",
-            text: "View",
-            handler: () => {
-                const bnds = Ext.getCmp("mfv3").bounds;
-                if (bnds) {
-                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                }
-            },
-        },
-        {
-            html: "#4",
-        },
-        {
-            xtype: "textfield",
-            id: "mfv4",
-            bounds: null,
-            width: 200,
-        },
-        {
-            xtype: "button",
-            text: "Set From Current View",
-            handler: () => {
-                Ext.getCmp("mfv4").bounds = Ext.getCmp("map").map.getExtent();
-                Application.saveViews();
-            },
-        },
-        {
-            xtype: "button",
-            text: "View",
-            handler: () => {
-                const bnds = Ext.getCmp("mfv4").bounds;
-                if (bnds) {
-                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                }
-            },
-        },
-        {
-            html: "#5",
-        },
-        {
-            xtype: "textfield",
-            id: "mfv5",
-            bounds: null,
-            width: 200,
-        },
-        {
-            xtype: "button",
-            text: "Set From Current View",
-            handler: () => {
-                Ext.getCmp("mfv5").bounds = Ext.getCmp("map").map.getExtent();
-                Application.saveViews();
-            },
-        },
-        {
-            xtype: "button",
-            text: "View",
-            handler: () => {
-                const bnds = Ext.getCmp("mfv5").bounds;
-                if (bnds) {
-                    Ext.getCmp("map").map.zoomToExtent(bnds, true);
-                }
-            },
-        },
-    ],
+            createFavoriteRow(1),
+            createFavoriteRow(2),
+            createFavoriteRow(3),
+            createFavoriteRow(4),
+            createFavoriteRow(5),
+        ],
+    },
 });
+
+Ext.defer(() => {
+    Application.syncFavoriteUi();
+}, 0);
 
 const mucform = new Ext.form.FormPanel({
     labelWidth: 200,
