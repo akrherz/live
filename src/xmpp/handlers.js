@@ -275,6 +275,8 @@ function resetXMPPConnection() {
  * @param {string} password The password
  */
 function login(username, password) {
+    Application.lastLoginMode = "password";
+    Application.RECONNECT = false;
     const jid =
         username + "@" + LiveConfig.XMPPHOST + "/" + LiveConfig.XMPPRESOURCE;
     if (Application.manualLogout && Application.XMPPConn) {
