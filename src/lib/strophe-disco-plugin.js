@@ -177,8 +177,7 @@ Strophe.addConnectionPlugin("disco", {
             "query",
             attrs,
         );
-        let i = 0;
-        for (i = 0; i < this._identities.length; i++) {
+        for (let i = 0; i < this._identities.length; i++) {
             attrs = {
                 category: this._identities[i].category,
                 type: this._identities[i].type,
@@ -191,7 +190,7 @@ Strophe.addConnectionPlugin("disco", {
             }
             iqresult.c("identity", attrs).up();
         }
-        for (i = 0; i < this._features.length; i++) {
+        for (let i = 0; i < this._features.length; i++) {
             iqresult.c("feature", { var: this._features[i] }).up();
         }
         this._connection.send(iqresult.tree());
@@ -208,10 +207,9 @@ Strophe.addConnectionPlugin("disco", {
             .getElementsByTagName("query")[0]
             .getAttribute("node");
         let items = null;
-        let i = 0;
         if (node) {
             query_attrs.node = node;
-            for (i = 0; i < this._items.length; i++) {
+            for (let i = 0; i < this._items.length; i++) {
                 if (this._items[i].node === node) {
                     items = this._items[i].call_back(stanza);
                     break;
@@ -227,7 +225,7 @@ Strophe.addConnectionPlugin("disco", {
             "query",
             query_attrs,
         );
-        for (i = 0; i < items.length; i++) {
+        for (let i = 0; i < items.length; i++) {
             const attrs = { jid: items[i].jid };
             if (items[i].name) {
                 attrs.name = items[i].name;

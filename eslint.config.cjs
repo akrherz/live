@@ -37,6 +37,7 @@ module.exports = [
             ],
             'prefer-const': 'error',
             'no-redeclare': 'error',
+            'no-useless-assignment': 'error',
             semi: 'error',
             'no-shadow': 'error',
             'object-shorthand': ['error', 'always'],

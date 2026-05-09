@@ -421,9 +421,8 @@ Application.UserColorStore = new Ext.data.Store({
 
 Application.getUserColor = function (user) {
     const idx = Application.UserColorStore.find("user", user);
-    let c = null;
     if (idx === -1) {
-        c = Application.colors[Application.colorpointer];
+        const c = Application.colors[Application.colorpointer];
         Application.UserColorStore.add(
             new Ext.data.Record({ user, color: c }),
         );
@@ -431,10 +430,10 @@ Application.getUserColor = function (user) {
         if (Application.colorpointer > 12) {
             Application.colorpointer = 0;
         }
+        return c;
     } else {
-        c = Application.UserColorStore.getAt(idx).get("color");
+        return Application.UserColorStore.getAt(idx).get("color");
     }
-    return c;
 };
 
 const ChatTextEntry = Ext.extend(Ext.Panel, {

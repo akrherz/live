@@ -687,16 +687,31 @@ function parseViews(msg) {
     if (!Ext.getCmp("map")) {
         return;
     }
+    function parseStoredBounds(boundsText) {
+        if (!boundsText) {
+            return null;
+        }
+        const extent = boundsText.split(",").map(Number);
+        if (extent.length !== 4 || !extent.every((value) => Number.isFinite(value))) {
+            return null;
+        }
+        return extent;
+    }
+
     const elem = msg.getElementsByTagName("view");
     for (let i = 0; i < elem.length; i++) {
         const label = elem[i].getAttribute("label");
         const bounds = elem[i].getAttribute("bounds");
-        Ext.getCmp("mfv" + (i + 1)).setValue(label || "");
-        if (!bounds) {
+        const favoriteField = Ext.getCmp("mfv" + (i + 1));
+        if (!favoriteField) {
             continue;
         }
-        const extent = bounds.split(",").map(Number);
-        Ext.getCmp("mfv" + (i + 1)).bounds = extent;
+        favoriteField.setValue(label || "");
+        const extent = parseStoredBounds(bounds);
+        favoriteField.bounds = extent;
+        if (!extent) {
+            continue;
+        }
         if (i === 0) {
             const mapPanel = Ext.getCmp("map");
             const map = mapPanel ? mapPanel.map : getMap();
@@ -972,9 +987,8 @@ function presenceParser(msg) {
         }
 
         /* Look to see if we got a 201 status */
-        let error = null;
         if (msg.getElementsByTagName("status").length > 0) {
-            error = msg.getElementsByTagName("status");
+            const error = msg.getElementsByTagName("status");
             if (error[0].getAttribute("code") === "201") {
                 showRoomError(
                     "Sorry, chatroom [" + room + "] does not exist.",
@@ -990,7 +1004,7 @@ function presenceParser(msg) {
         }
         /* Look to see if we got a 407 error */
         if (msg.getElementsByTagName("error").length > 0) {
-            error = msg.getElementsByTagName("error");
+            const error = msg.getElementsByTagName("error");
             if (error[0].getAttribute("code") === "407") {
                 showRoomError(
                     "Sorry, your account is not authorized to access chatroom [" +
@@ -1008,7 +1022,7 @@ function presenceParser(msg) {
         }
         /* Look to see if we got a 409 error */
         if (msg.getElementsByTagName("error").length > 0) {
-            error = msg.getElementsByTagName("error");
+            const error = msg.getElementsByTagName("error");
             if (error[0].getAttribute("code") === "409") {
                 showRoomError(
                     "Sorry, your requested chatroom handle is already in use by room [" +
@@ -1026,7 +1040,7 @@ function presenceParser(msg) {
         }
         /* Look to see if we got a 307 error */
         if (msg.getElementsByTagName("status").length > 0) {
-            error = msg.getElementsByTagName("status");
+            const error = msg.getElementsByTagName("status");
             if (error[0].getAttribute("code") === "307") {
                 showRoomError(
                     "Your account signed into this chatroom [" +
@@ -1220,11 +1234,10 @@ function messageParser(msg) {
         );
     }
 
-    let x = null;
     const html = msg.getElementsByTagName("html");
-    let txt = "";
+    let txt;
     let isDelayed = false;
-    let stamp = null;
+    let stamp;
 
     /*
      * We need to simplify the message into something that
@@ -1267,7 +1280,7 @@ function messageParser(msg) {
     if (type === "groupchat") {
         /* Look to see if a product_id is embedded */
         let product_id = null;
-        x = msg.getElementsByTagName("x");
+        const x = msg.getElementsByTagName("x");
         for (let i = 0; i < x.length; i++) {
             if (x[i].getAttribute("product_id")) {
                 product_id = x[i].getAttribute("product_id");
@@ -1428,7 +1441,7 @@ function geomParser(msg, isDelayed) {
     const elems = msg.getElementsByTagName("body");
     const body = elems[0];
     const html = msg.getElementsByTagName("html");
-    let txt = null;
+    let txt;
     if (html.length > 0) {
         const v = msg
             .getElementsByTagName("html")[0]
@@ -1459,9 +1472,8 @@ function geomParser(msg, isDelayed) {
             if (x[i].getAttribute("skip")) {
                 continue;
             }
-            let d = null;
             if (x[i].getAttribute("expire")) {
-                d = UTCStringToDate(
+                const d = UTCStringToDate(
                     x[i].getAttribute("expire"),
                     "Ymd\\Th:i:s"
                 );
@@ -1479,7 +1491,7 @@ function geomParser(msg, isDelayed) {
                 }
             }
             if (x[i].getAttribute("valid")) {
-                d = UTCStringToDate(
+                const d = UTCStringToDate(
                     x[i].getAttribute("valid"),
                     "Ymd\\Th:i:s"
                 );
