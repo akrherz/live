@@ -687,16 +687,31 @@ function parseViews(msg) {
     if (!Ext.getCmp("map")) {
         return;
     }
+    function parseStoredBounds(boundsText) {
+        if (!boundsText) {
+            return null;
+        }
+        const extent = boundsText.split(",").map(Number);
+        if (extent.length !== 4 || !extent.every((value) => Number.isFinite(value))) {
+            return null;
+        }
+        return extent;
+    }
+
     const elem = msg.getElementsByTagName("view");
     for (let i = 0; i < elem.length; i++) {
         const label = elem[i].getAttribute("label");
         const bounds = elem[i].getAttribute("bounds");
-        Ext.getCmp("mfv" + (i + 1)).setValue(label || "");
-        if (!bounds) {
+        const favoriteField = Ext.getCmp("mfv" + (i + 1));
+        if (!favoriteField) {
             continue;
         }
-        const extent = bounds.split(",").map(Number);
-        Ext.getCmp("mfv" + (i + 1)).bounds = extent;
+        favoriteField.setValue(label || "");
+        const extent = parseStoredBounds(bounds);
+        favoriteField.bounds = extent;
+        if (!extent) {
+            continue;
+        }
         if (i === 0) {
             const mapPanel = Ext.getCmp("map");
             const map = mapPanel ? mapPanel.map : getMap();

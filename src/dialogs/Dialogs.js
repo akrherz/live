@@ -19,6 +19,27 @@ function getDefaultRoomHandle() {
     return "";
 }
 
+function normalizeBounds(bounds) {
+    if (Array.isArray(bounds) && bounds.length === 4) {
+        const normalized = bounds.map((value) => Number(value));
+        return normalized.every((value) => Number.isFinite(value))
+            ? normalized
+            : null;
+    }
+    if (bounds && typeof bounds === "object") {
+        const normalized = [
+            Number(bounds.left),
+            Number(bounds.bottom),
+            Number(bounds.right),
+            Number(bounds.top),
+        ];
+        return normalized.every((value) => Number.isFinite(value))
+            ? normalized
+            : null;
+    }
+    return null;
+}
+
 
 Application.saveViews = function () {
     const stanza = $iq({
@@ -32,19 +53,16 @@ Application.saveViews = function () {
             xmlns: "nwschatlive:views",
         });
     for (let i = 1; i < 6; i++) {
-        const bnds = Ext.getCmp("mfv" + i).bounds;
+        const favoriteField = Ext.getCmp("mfv" + i);
+        if (!favoriteField) {
+            continue;
+        }
+        const bnds = normalizeBounds(favoriteField.bounds);
         if (bnds) {
             stanza
                 .c("view", {
-                    label: Ext.getCmp("mfv" + i).getValue(),
-                    bounds:
-                        bnds.left +
-                        "," +
-                        bnds.bottom +
-                        "," +
-                        bnds.right +
-                        "," +
-                        bnds.top,
+                    label: favoriteField.getValue(),
+                    bounds: bnds.join(","),
                 })
                 .up();
         }
@@ -258,12 +276,7 @@ function fitMapToFavoriteBounds(bounds) {
 }
 
 function hasFavoriteBounds(field) {
-    return (
-        field &&
-        Array.isArray(field.bounds) &&
-        field.bounds.length === 4 &&
-        field.bounds.every((value) => Number.isFinite(value))
-    );
+    return Boolean(field && normalizeBounds(field.bounds));
 }
 
 Application.syncFavoriteUi = function () {
