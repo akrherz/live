@@ -227,6 +227,47 @@ function buildXMPP() {
     }
 }
 
+function isConnectionBusy(connection) {
+    if (!connection) {
+        return false;
+    }
+    return Boolean(
+        connection.authenticated || connection.connected || connection.disconnecting,
+    );
+}
+
+function queuePendingLogin(mode, username, password) {
+    Application.pendingLogin = {
+        mode,
+        username: username || null,
+        password: password || null,
+    };
+    const loginPanel = Ext.getCmp("loginpanel");
+    if (loginPanel && loginPanel.addMessage) {
+        loginPanel.addMessage("Finishing logout from previous session, retrying sign-in...");
+    }
+}
+
+function runPendingLogin() {
+    const pendingLogin = Application.pendingLogin;
+    Application.pendingLogin = null;
+    if (!pendingLogin) {
+        return;
+    }
+    if (pendingLogin.mode === "anonymous") {
+        doAnonymousLogin();
+        return;
+    }
+    if (pendingLogin.username && pendingLogin.password) {
+        login(pendingLogin.username, pendingLogin.password);
+    }
+}
+
+function resetXMPPConnection() {
+    Application.XMPPConn = undefined;
+    Application.currentXMPPServiceUrl = null;
+}
+
 /*
  * Called when we wish to login!
  *
@@ -234,11 +275,28 @@ function buildXMPP() {
  * @param {string} password The password
  */
 function login(username, password) {
+    Application.lastLoginMode = "password";
+    Application.RECONNECT = false;
     const jid =
         username + "@" + LiveConfig.XMPPHOST + "/" + LiveConfig.XMPPRESOURCE;
-    if (typeof Application.XMPPConn === "undefined") {
-        buildXMPP();
+    if (Application.manualLogout && Application.XMPPConn) {
+        queuePendingLogin("password", username, password);
+        return;
     }
+
+    if (isConnectionBusy(Application.XMPPConn)) {
+        Application.log(
+            "Connect requested while previous XMPP session is still active. Queuing login.",
+        );
+        queuePendingLogin("password", username, password);
+        Application.manualLogout = true;
+        Application.RECONNECT = false;
+        Application.XMPPConn.disconnect();
+        return;
+    }
+
+    // Always create a fresh Strophe connection for a new sign-in attempt.
+    buildXMPP();
     Application.XMPPConn.connect(
         jid,
         password,
@@ -258,9 +316,19 @@ function doAnonymousLogin() {
     if (loginPanel && loginPanel.clearMessage) {
         loginPanel.clearMessage();
     }
-    if (typeof Application.XMPPConn === "undefined") {
-        buildXMPP();
+
+    if (isConnectionBusy(Application.XMPPConn)) {
+        Application.log(
+            "Anonymous login requested while previous XMPP session is still active. Queuing login.",
+        );
+        queuePendingLogin("anonymous");
+        Application.manualLogout = true;
+        Application.RECONNECT = false;
+        Application.XMPPConn.disconnect();
+        return;
     }
+
+    buildXMPP();
     Application.XMPPConn.connect(LiveConfig.XMPPHOST, null, onConnect);
 };
 
@@ -418,6 +486,7 @@ function onConnect(status) {
     } else if (status === Strophe.Status.DISCONNECTED) {
         Application.log("Strophe.Status.DISCONNECTED...");
         markPendingMessagesFailed();
+        resetXMPPConnection();
         msgBus.fire("loggingout");
         if (shouldAutoReconnect()) {
             scheduleReconnect("disconnected");
@@ -431,6 +500,7 @@ function onConnect(status) {
             }
             Application.manualLogout = false;
             msgBus.fire("loggedout");
+            Ext.defer(runPendingLogin, 25);
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
@@ -440,6 +510,7 @@ function onConnect(status) {
         Application.log("Strophe.Status.ATTACHED...");
     } else if (status === Strophe.Status.CONNECTED) {
         Application.log("Strophe.Status.CONNECTED...");
+        Application.pendingLogin = null;
         Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
         Application.manualLogout = false;
         Application.RECONNECT = Application.lastLoginMode === "anonymous";
@@ -896,6 +967,9 @@ function rosterParser(msg) {
         }
     }
     /* Send initial presence */
+    if (!Application.XMPPConn || !Application.XMPPConn.authenticated) {
+        return true;
+    }
     Application.XMPPConn.send($pres().tree());
     /* Send request for private storage */
     const stanza = $iq({
@@ -910,6 +984,9 @@ function rosterParser(msg) {
         })
         .tree();
     Ext.defer(function () {
+        if (!Application.XMPPConn || !Application.XMPPConn.authenticated) {
+            return;
+        }
         Application.XMPPConn.sendIQ(stanza, parseBookmarks);
     }, 3000, this);
 
