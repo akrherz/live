@@ -11,6 +11,64 @@ import { setPreference } from "../utils/prefs.js";
 import { Application } from "../app-state.js";
 import { getFullVersionString } from "../version.js";
 
+function getConnectionStatusMarkup(text, tone) {
+    const palette = {
+        idle: "#666",
+        info: "#0b5cab",
+        warning: "#9a6700",
+        error: "#b42318",
+        success: "#027a48",
+    };
+    const color = palette[tone] || palette.idle;
+    return `Status: <span style="color:${color};font-weight:600;">${Ext.util.Format.htmlEncode(text || "Unknown")}</span>`;
+}
+
+Application.connectionStatus = {
+    text: "Signed out",
+    tone: "idle",
+};
+
+Application.setConnectionStatus = function (text, tone = "idle") {
+    Application.connectionStatus = {
+        text,
+        tone,
+    };
+
+    const statusText = Ext.getCmp("connection-status-text");
+    if (statusText && statusText.setText) {
+        statusText.setText(getConnectionStatusMarkup(text, tone));
+    }
+
+    const loginPanel = Ext.getCmp("loginpanel");
+    if (loginPanel && loginPanel.setConnectionMessage) {
+        loginPanel.setConnectionMessage(text);
+    }
+};
+
+Application.getDiagnosticsText = function () {
+    const connection = Application.XMPPConn;
+    const pendingLogin = Application.pendingLogin;
+    const status = Application.connectionStatus || {};
+    return [
+        `App Version: ${getFullVersionString()}`,
+        `Timestamp: ${new Date().toISOString()}`,
+        `URL: ${window.location.href}`,
+        `Connection Status: ${status.text || "Unknown"}`,
+        `Connection Tone: ${status.tone || "idle"}`,
+        `Username: ${Application.USERNAME || ""}`,
+        `Last Login Mode: ${Application.lastLoginMode || ""}`,
+        `Reconnect Enabled: ${Application.RECONNECT === true}`,
+        `Reconnect Attempts: ${Application.reconnectAttempts || 0}`,
+        `Current Service URL: ${Application.currentXMPPServiceUrl || ""}`,
+        `Authenticated: ${Boolean(connection && connection.authenticated)}`,
+        `Connected: ${Boolean(connection && connection.connected)}`,
+        `Disconnecting: ${Boolean(connection && connection.disconnecting)}`,
+        `Pending Login Mode: ${pendingLogin ? pendingLogin.mode : ""}`,
+        `Pending Login User: ${pendingLogin ? pendingLogin.username || "" : ""}`,
+        `User Agent: ${navigator.userAgent}`,
+    ].join("\n");
+};
+
 Application.msgtpl = new Ext.XTemplate(
     '<p>{date:date("g:i:s A")} :: {msg}</p>'
 );
@@ -51,6 +109,32 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
                 icon: "icons/close.png",
                 handler () {
                     this.items.items[0].update("");
+                },
+                scope: this,
+            },
+            {
+                text: "Copy Diagnostics",
+                handler () {
+                    const diagnostics = Application.getDiagnosticsText
+                        ? Application.getDiagnosticsText()
+                        : "Diagnostics unavailable";
+                    const fallbackCopy = () => {
+                        const textarea = document.createElement("textarea");
+                        textarea.value = diagnostics;
+                        textarea.setAttribute("readonly", "readonly");
+                        textarea.style.position = "absolute";
+                        textarea.style.left = "-9999px";
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand("copy");
+                        document.body.removeChild(textarea);
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(diagnostics).catch(fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                    this.addMessage("Copied diagnostics to clipboard.");
                 },
                 scope: this,
             },
@@ -190,6 +274,9 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
 
         applyLoginWindowSize();
         loginWindow.show();
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Signed out", "idle");
+        }
 
         Ext.EventManager.onWindowResize(function () {
             if (!loginWindow || loginWindow.isDestroyed) {

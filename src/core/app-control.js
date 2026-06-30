@@ -162,6 +162,12 @@ Application.Control = {
             Application.soundPrefs.show();
         },
         icon : 'icons/volume.png'
+    }, {
+        xtype : 'tbfill'
+    }, {
+        xtype : 'tbtext',
+        id : 'connection-status-text',
+        text : 'Status: Signed out'
     }],
     items : [{
                 flex : 1,

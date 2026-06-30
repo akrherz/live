@@ -242,6 +242,12 @@ function queuePendingLogin(mode, username, password) {
         username: username || null,
         password: password || null,
     };
+    if (Application.setConnectionStatus) {
+        Application.setConnectionStatus(
+            "Waiting for previous session to close...",
+            "warning",
+        );
+    }
     const loginPanel = Ext.getCmp("loginpanel");
     if (loginPanel && loginPanel.addMessage) {
         loginPanel.addMessage("Finishing logout from previous session, retrying sign-in...");
@@ -277,6 +283,9 @@ function resetXMPPConnection() {
 function login(username, password) {
     Application.lastLoginMode = "password";
     Application.RECONNECT = false;
+    if (Application.setConnectionStatus) {
+        Application.setConnectionStatus("Connecting...", "info");
+    }
     const jid =
         username + "@" + LiveConfig.XMPPHOST + "/" + LiveConfig.XMPPRESOURCE;
     if (Application.manualLogout && Application.XMPPConn) {
@@ -312,6 +321,9 @@ function doAnonymousLogin() {
     Application.lastLoginMode = "anonymous";
     Application.manualLogout = false;
     Application.RECONNECT = true;
+    if (Application.setConnectionStatus) {
+        Application.setConnectionStatus("Connecting anonymously...", "info");
+    }
     const loginPanel = Ext.getCmp("loginpanel");
     if (loginPanel && loginPanel.clearMessage) {
         loginPanel.clearMessage();
@@ -445,11 +457,20 @@ function onConnect(status) {
 
     if (status === Strophe.Status.CONNECTING) {
         Application.log("Strophe.Status.CONNECTING...");
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Connecting...", "info");
+        }
     } else if (status === Strophe.Status.ERROR) {
         Application.log("Strophe.Status.ERROR...");
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Connection error", "error");
+        }
         // msgBus.fire("loggedout");
     } else if (status === Strophe.Status.AUTHFAIL) {
         Application.log("Strophe.Status.AUTHFAIL...");
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Authentication failed", "error");
+        }
         Application.reconnectAttempts = 0;
         cancelReconnectTimer();
         if (Application.lastLoginMode === "anonymous") {
@@ -464,6 +485,9 @@ function onConnect(status) {
         }
     } else if (status === Strophe.Status.CONNFAIL) {
         Application.log("Strophe.Status.CONNFAIL...");
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Connection failed", "error");
+        }
         const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
         if (transport === "websocket" && advanceWebsocketCandidate()) {
             Application.log(
@@ -487,6 +511,12 @@ function onConnect(status) {
         Application.log("Strophe.Status.DISCONNECTED...");
         markPendingMessagesFailed();
         resetXMPPConnection();
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus(
+                Application.manualLogout ? "Signed out" : "Disconnected",
+                Application.manualLogout ? "idle" : "warning",
+            );
+        }
         msgBus.fire("loggingout");
         if (shouldAutoReconnect()) {
             scheduleReconnect("disconnected");
@@ -504,14 +534,26 @@ function onConnect(status) {
         }
     } else if (status === Strophe.Status.AUTHENTICATING) {
         Application.log("Strophe.Status.AUTHENTICATING...");
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Authenticating...", "info");
+        }
     } else if (status === Strophe.Status.DISCONNECTING) {
         Application.log("Strophe.Status.DISCONNECTING...");
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus("Signing out...", "warning");
+        }
     } else if (status === Strophe.Status.ATTACHED) {
         Application.log("Strophe.Status.ATTACHED...");
     } else if (status === Strophe.Status.CONNECTED) {
         Application.log("Strophe.Status.CONNECTED...");
         Application.pendingLogin = null;
         Application.USERNAME = Strophe.getNodeFromJid(Application.XMPPConn.jid);
+        if (Application.setConnectionStatus) {
+            Application.setConnectionStatus(
+                "Connected as " + Application.USERNAME,
+                "success",
+            );
+        }
         Application.manualLogout = false;
         Application.RECONNECT = Application.lastLoginMode === "anonymous";
         Application.reconnectAttempts = 0;
