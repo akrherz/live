@@ -512,10 +512,17 @@ function onConnect(status) {
         markPendingMessagesFailed();
         resetXMPPConnection();
         if (Application.setConnectionStatus) {
-            Application.setConnectionStatus(
-                Application.manualLogout ? "Signed out" : "Disconnected",
-                Application.manualLogout ? "idle" : "warning",
-            );
+            if (Application.pendingLogin) {
+                Application.setConnectionStatus(
+                    "Waiting for previous session to close...",
+                    "warning",
+                );
+            } else {
+                Application.setConnectionStatus(
+                    Application.manualLogout ? "Signed out" : "Disconnected",
+                    Application.manualLogout ? "idle" : "warning",
+                );
+            }
         }
         msgBus.fire("loggingout");
         if (shouldAutoReconnect()) {

@@ -126,15 +126,34 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
                         textarea.style.left = "-9999px";
                         document.body.appendChild(textarea);
                         textarea.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(textarea);
+                        try {
+                            const didCopy = document.execCommand("copy");
+                            document.body.removeChild(textarea);
+                            if (didCopy) {
+                                this.addMessage("Copied diagnostics to clipboard.");
+                                return true;
+                            }
+                            return false;
+                        } catch {
+                            document.body.removeChild(textarea);
+                            return false;
+                        }
                     };
                     if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(diagnostics).catch(fallbackCopy);
+                        navigator.clipboard.writeText(diagnostics)
+                            .then(() => {
+                                this.addMessage("Copied diagnostics to clipboard.");
+                            })
+                            .catch(() => {
+                                if (!fallbackCopy()) {
+                                    this.addMessage("Failed to copy diagnostics to clipboard.");
+                                }
+                            });
                     } else {
-                        fallbackCopy();
+                        if (!fallbackCopy()) {
+                            this.addMessage("Failed to copy diagnostics to clipboard.");
+                        }
                     }
-                    this.addMessage("Copied diagnostics to clipboard.");
                 },
                 scope: this,
             },
