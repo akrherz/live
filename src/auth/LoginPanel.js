@@ -6,6 +6,28 @@ import { requireElement } from "iemjs";
 import { doLogin } from "../core/app-control.js";
 import { doAnonymousLogin } from "../xmpp/handlers.js";
 
+const LAST_USERNAME_STORAGE_KEY = "weatherim:last-username";
+
+function loadLastUsername() {
+    try {
+        return localStorage.getItem(LAST_USERNAME_STORAGE_KEY) || "";
+    } catch {
+        return "";
+    }
+}
+
+function storeLastUsername(username) {
+    try {
+        if (!username) {
+            localStorage.removeItem(LAST_USERNAME_STORAGE_KEY);
+            return;
+        }
+        localStorage.setItem(LAST_USERNAME_STORAGE_KEY, username);
+    } catch {
+        // Ignore storage failures and proceed with login.
+    }
+}
+
 /**
  * Creates a login panel with HTML content
  */
@@ -71,15 +93,38 @@ export const LoginPanel = {
         statusEl.textContent = text || "";
         statusEl.hidden = !text;
     },
+    setConnectionMessage(text) {
+        this.addMessage(text);
+    },
     clearMessage() {
         this.addMessage("");
+    },
+    focusPreferredField() {
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        if (!usernameInput) {
+            return;
+        }
+        if (usernameInput.value && passwordInput) {
+            passwordInput.focus();
+            passwordInput.select();
+            return;
+        }
+        usernameInput.focus();
+        usernameInput.select();
     },
     listeners: {
         afterrender: () => {
             // Attach event listeners after panel is rendered
             const form = requireElement("login-form");
+            const usernameInput = requireElement("username");
+            const savedUsername = loadLastUsername();
+            if (!usernameInput.value && savedUsername) {
+                usernameInput.value = savedUsername;
+            }
             form.addEventListener("submit", (e) => {
                 e.preventDefault();
+                storeLastUsername(usernameInput.value.trim().toLowerCase());
                 doLogin();
             });
 
@@ -96,6 +141,13 @@ export const LoginPanel = {
                 }
                 doAnonymousLogin();
             });
+
+            const loginPanel = Ext.getCmp("loginpanel");
+            Ext.defer(() => {
+                if (loginPanel && loginPanel.focusPreferredField) {
+                    loginPanel.focusPreferredField();
+                }
+            }, 50);
         },
     },
 };

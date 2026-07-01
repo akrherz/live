@@ -90,6 +90,12 @@ msgBus.on("loggedout", function () {
     if (loginWindow) {
         loginWindow.show();
     }
+    const loginPanel = Ext.getCmp("loginpanel");
+    if (loginPanel && loginPanel.focusPreferredField) {
+        Ext.defer(function () {
+            loginPanel.focusPreferredField();
+        }, 50);
+    }
 });
 
 msgBus.on("loggedin", function () {
