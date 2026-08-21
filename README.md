@@ -29,24 +29,6 @@ Use the deployment script to build and publish the `dist/` output:
 - `bash deployment/weather_im.sh`
 - `bash deployment/weather_im.sh --prod`
 
-The script will:
-
-- optionally run `npm ci`
-- run `npm run lint`
-- run `npm run build`
-- in default mode: sync `dist/` into the deployment destination with `rsync`
-- in `--prod` mode: run the production deployment branch (custom `rsync` command placeholder in the script)
-
-Options:
-
-- `--prod` enable production deployment branch
-- `--help` show script usage
-
-Environment overrides:
-
-- `DEST` (default: `/opt/weather.im/html/live`)
-- `INSTALL_DEPS` (`1` by default, set to `0` to skip `npm ci`)
-
 Hosting Path
 ------------
 
