@@ -7,7 +7,7 @@ import { DataTip } from "../ui/data-tip.js";
 import { LiveConfig } from "../config.js";
 import { Application } from "../app-state.js";
 
-Application.log = function(text) {
+Application.log = (text) => {
     console.log("Application.log:", text);
 };
 
@@ -39,7 +39,7 @@ Application.Control = {
                     text : 'Show Offline Buddies',
                     checkHandler(item, checked) {
 
-                        Ext.getCmp('buddies').getRootNode().cascade(function(n) {
+                        Ext.getCmp('buddies').getRootNode().cascade((n) => {
                                     if (checked) {
                                         n.set('hidden', false);
                                     } else {

@@ -111,7 +111,7 @@ msgBus.on("loggedin", function () {
         ) {
             activeEl.blur();
         }
-        Ext.defer(function () {
+        Ext.defer(() => {
             if (loginWindow && !loginWindow.destroyed) {
                 loginWindow.hide();
             }

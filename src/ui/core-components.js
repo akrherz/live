@@ -81,24 +81,12 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
                 title: "Debug Log",
                 html:
                     `<p><b>App Version:</b> ${getFullVersionString()}</p>` +
-                    "<p>Browser CodeName: " +
-                    navigator.appCodeName +
-                    "</p>" +
-                    "<p>Browser Name: " +
-                    navigator.appName +
-                    "</p>" +
-                    "<p>Browser Version: " +
-                    navigator.appVersion +
-                    "</p>" +
-                    "<p>Cookies Enabled: " +
-                    navigator.cookieEnabled +
-                    "</p>" +
-                    "<p>Platform: " +
-                    navigator.platform +
-                    "</p>" +
-                    "<p>User-agent header: " +
-                    navigator.userAgent +
-                    "</p>",
+                    `<p>Browser CodeName: ${navigator.appCodeName}</p>` +
+                    `<p>Browser Name: ${navigator.appName}</p>` +
+                    `<p>Browser Version: ${navigator.appVersion}</p>` +
+                    `<p>Cookies Enabled: ${navigator.cookieEnabled}</p>` +
+                    `<p>Platform: ${navigator.platform}</p>` +
+                    `<p>User-agent header: ${navigator.userAgent}</p>`,
                 autoScroll: true,
             },
         ];
@@ -133,11 +121,10 @@ Application.DebugWindow = Ext.extend(Ext.Window, {
                                 this.addMessage("Copied diagnostics to clipboard.");
                                 return true;
                             }
-                            return false;
                         } catch {
                             document.body.removeChild(textarea);
-                            return false;
                         }
+                        return false;
                     };
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(diagnostics)
@@ -236,7 +223,6 @@ Application.LiveViewport = Ext.extend(Ext.Viewport, {
             const mp = Ext.getCmp("map");
             const map = getMap();
             if (mp && map) {
-                // Listen for layer visibility changes in OpenLayers 10
                 map.getLayers().on('propertychange', function() {
                     const myobj = { lstring: "" };
                     Application.layerstore.data.each(function (record) {
