@@ -399,19 +399,19 @@ const MUCRoomUsers = Ext.extend(Ext.tree.TreePanel, {
 });
 
 Application.colors = [
-    "000000", //black
-    "666666", //
-    "D51460", //
-    "FF0000", //
-    "993333", //
-    "FF9900", //
-    "005500", //
-    "009900", //
-    "00DD00", //
-    "0066CC", //
-    "3399FF", //
-    "0000FF", //
-    "6666FF", //
+    "000000",
+    "666666",
+    "D51460",
+    "FF0000",
+    "993333",
+    "FF9900",
+    "005500",
+    "009900",
+    "00DD00",
+    "0066CC",
+    "3399FF",
+    "0000FF",
+    "6666FF",
 ];
 Application.colorpointer = 0;
 
@@ -419,7 +419,7 @@ Application.UserColorStore = new Ext.data.Store({
     fields: ["user", "color"],
 });
 
-Application.getUserColor = function (user) {
+Application.getUserColor = (user) => {
     const idx = Application.UserColorStore.find("user", user);
     if (idx === -1) {
         const c = Application.colors[Application.colorpointer];
@@ -558,14 +558,8 @@ const ChatTextEntry = Ext.extend(Ext.Panel, {
                         // we need to manually add to the store
                         if (chatType === "chat") {
                             text =
-                                "<span " +
-                                "style='color:#" +
-                                fgcolor +
-                                ";background:#" +
-                                bgcolor +
-                                ";'>" +
-                                text +
-                                "</span>";
+                                `<span style="color:#${fgcolor};background:#${bgcolor};">` +
+                                `${text}</span>`;
                             this.ownerCt.ownerCt.gp.getStore().add({
                                 ts: new Date(),
                                 author: Application.USERNAME,
@@ -798,7 +792,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 const chatPanel = grid && grid.ownerCt;
                 const tabPanel = chatPanel && chatPanel.ownerCt;
                 if (tabPanel && tabPanel.moveActiveTabBy) {
-                    Ext.defer(function () {
+                    Ext.defer(() => {
                         tabPanel.moveActiveTabBy(-1, btn);
                     }, 1);
                 }
@@ -811,7 +805,7 @@ const ChatGridPanel = Ext.extend(Ext.grid.GridPanel, {
                 const chatPanel = grid && grid.ownerCt;
                 const tabPanel = chatPanel && chatPanel.ownerCt;
                 if (tabPanel && tabPanel.moveActiveTabBy) {
-                    Ext.defer(function () {
+                    Ext.defer(() => {
                         tabPanel.moveActiveTabBy(1, btn);
                     }, 1);
                 }
