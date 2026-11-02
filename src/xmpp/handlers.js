@@ -16,6 +16,7 @@ import { getMap } from "../map/MapPanel.js";
 
 import { Application } from "../app-state.js";
 import { getFullVersionString } from "../version.js";
+import { showNotification } from "../notifications/notifcations.js";
 // XEP-0092: Software Version handler
 function onVersionIQ(iq) {
     if (iq.getAttribute("type") !== "get") {
@@ -1401,6 +1402,20 @@ function messageParser(msg) {
         return;
     }
 
+    const notificationHtmlBody =
+        html.length > 0 ? html[0].getElementsByTagName("body")[0] : null;
+    const notificationBody = notificationHtmlBody
+        ? notificationHtmlBody.textContent
+        : txt;
+    if (notificationBody) {
+        //console.log("New message received, sending notification to user.");
+        showNotification(Strophe.getResourceFromJid(from), notificationBody);
+        console.debug(
+            "New message received, sending notification to user: " +
+                notificationBody,
+        );
+    }
+
     const geoPoint = extractLatLongFromMessage(msg);
 
     if (type === "groupchat") {
@@ -1517,6 +1532,7 @@ function messageParser(msg) {
                 "</p>",
         }).show();
     }
+
 }
 
 function extractLatLongFromMessage(msg) {
