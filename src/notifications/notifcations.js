@@ -1,6 +1,7 @@
 const ICON_URL = "https://weather.im/live/images/nws.png";
 
 export function showNotification(title = "", body = "") {
+    // Check if the Notification API is supported by the browser
     if (typeof Notification === "undefined") {
         return;
     }
@@ -29,8 +30,9 @@ export function showNotification(title = "", body = "") {
     let notification = null;
     try {
         notification = new Notification(title, {
-            body,
-            icon: ICON_URL,
+            body, // HTML removed text
+            silent: true, // Disable sound for notifications
+            icon: ICON_URL, // Set the icon for the notification/default IEM icon
         });
     } catch (error) {
         console.error("Unable to create browser notification:", error);

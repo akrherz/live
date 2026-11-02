@@ -1402,18 +1402,28 @@ function messageParser(msg) {
         return;
     }
 
+    // Get the body for the notification, preferring the HTML body if available, otherwise falling back to the plain text body.
     const notificationHtmlBody =
         html.length > 0 ? html[0].getElementsByTagName("body")[0] : null;
     const notificationBody = notificationHtmlBody
         ? notificationHtmlBody.textContent
         : txt;
-    if (notificationBody) {
+    const roomPreference =
+        type === "groupchat" && from
+            ? getPreference(
+                  `muc::${Strophe.getNodeFromJid(
+                      Strophe.getBareJidFromJid(from),
+                  )}::mute`,
+                  false,
+              )
+            : false;
+
+    // Checks if the room is muted.
+    const chatSoundsMuted = roomPreference === true || roomPreference === "true";
+    // If the notification body exists and chat sounds are not muted, show the notification.
+    if (notificationBody && !chatSoundsMuted) {
         //console.log("New message received, sending notification to user.");
         showNotification(Strophe.getResourceFromJid(from), notificationBody);
-        console.debug(
-            "New message received, sending notification to user: " +
-                notificationBody,
-        );
     }
 
     const geoPoint = extractLatLongFromMessage(msg);
