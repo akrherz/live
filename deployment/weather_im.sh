@@ -66,7 +66,7 @@ npm run build
 
 if [[ "$PROD" == "1" ]]; then
     echo "[deploy] --prod selected"
-    rsync -a "$PROJECT_ROOT/dist/" "mesonet@anticyclone:$DEST/"
+    rsync -a "$PROJECT_ROOT/dist/" "mesonet@schoolnet8.com:$DEST/"
 else
     mkdir -p "$DEST"
     echo "[deploy] Syncing dist/ to destination"
