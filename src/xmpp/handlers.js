@@ -69,7 +69,10 @@ function deriveWebsocketCandidates() {
 
         let normalizedEndpoint = endpoint;
         if (/^ws:\/\//i.test(normalizedEndpoint)) {
-            normalizedEndpoint = normalizedEndpoint.replace(/^ws:\/\//i, "wss://");
+            normalizedEndpoint = normalizedEndpoint.replace(
+                /^ws:\/\//i,
+                "wss://",
+            );
         }
         if (!/^wss:\/\//i.test(normalizedEndpoint)) {
             return;
@@ -93,9 +96,10 @@ function deriveWebsocketCandidates() {
 
     const candidates = [];
     if (LiveConfig.BOSH) {
-        const boshAsWs = LiveConfig.BOSH
-            .replace(/^https:/i, "wss:")
-            .replace(/^http:/i, "wss:");
+        const boshAsWs = LiveConfig.BOSH.replace(/^https:/i, "wss:").replace(
+            /^http:/i,
+            "wss:",
+        );
         pushEndpointVariants(candidates, boshAsWs);
         try {
             const url = new URL(boshAsWs);
@@ -103,7 +107,10 @@ function deriveWebsocketCandidates() {
             pushEndpointVariants(candidates, `${origin}/ws`);
             pushEndpointVariants(candidates, `${origin}/xmpp-websocket`);
             if (/http-bind\/?$/i.test(url.pathname)) {
-                const replacedPath = url.pathname.replace(/http-bind\/?$/i, "ws/");
+                const replacedPath = url.pathname.replace(
+                    /http-bind\/?$/i,
+                    "ws/",
+                );
                 pushEndpointVariants(candidates, `${origin}${replacedPath}`);
             }
         } catch {
@@ -121,12 +128,15 @@ function createXMPPConnection(serviceUrl) {
     Application.log("Initializing XMPPConn Obj with service: " + serviceUrl);
     Application.XMPPConn = new Strophe.Connection(serviceUrl);
     Application.XMPPConn.disco.addFeature(
-        "http://jabber.org/protocol/chatstates"
+        "http://jabber.org/protocol/chatstates",
     );
 }
 
 function advanceWebsocketCandidate() {
-    if (!Application.wsServiceCandidates || Application.wsServiceCandidates.length === 0) {
+    if (
+        !Application.wsServiceCandidates ||
+        Application.wsServiceCandidates.length === 0
+    ) {
         return false;
     }
     const nextIndex = (Application.wsServiceIndex || 0) + 1;
@@ -143,8 +153,12 @@ function getDelayStampValue(msg) {
     const delays = msg.getElementsByTagName("delay");
     for (let i = 0; i < delays.length; i++) {
         const delay = delays[i];
-        const namespaceUri = delay.namespaceURI || delay.getAttribute("xmlns") || "";
-        if (namespaceUri === "urn:xmpp:delay" || namespaceUri === "jabber:x:delay") {
+        const namespaceUri =
+            delay.namespaceURI || delay.getAttribute("xmlns") || "";
+        if (
+            namespaceUri === "urn:xmpp:delay" ||
+            namespaceUri === "jabber:x:delay"
+        ) {
             const stamp = delay.getAttribute("stamp");
             if (stamp) {
                 return stamp;
@@ -184,7 +198,13 @@ function isDuplicateMessageStanza(msg, type, from, text, isDelayed) {
     } else if (isDelayed) {
         const stamp = getDelayStampValue(msg) || "";
         const normalizedText = (text || "").trim().substring(0, 256);
-        dedupeKey = ["delay", type || "", from || "", stamp, normalizedText].join("|");
+        dedupeKey = [
+            "delay",
+            type || "",
+            from || "",
+            stamp,
+            normalizedText,
+        ].join("|");
     }
 
     if (!dedupeKey) {
@@ -207,7 +227,6 @@ function isDuplicateMessageStanza(msg, type, from, text, isDelayed) {
 
     return false;
 }
-
 
 function buildXMPP() {
     const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
@@ -233,7 +252,9 @@ function isConnectionBusy(connection) {
         return false;
     }
     return Boolean(
-        connection.authenticated || connection.connected || connection.disconnecting,
+        connection.authenticated ||
+        connection.connected ||
+        connection.disconnecting,
     );
 }
 
@@ -251,7 +272,9 @@ function queuePendingLogin(mode, username, password) {
     }
     const loginPanel = Ext.getCmp("loginpanel");
     if (loginPanel && loginPanel.addMessage) {
-        loginPanel.addMessage("Finishing logout from previous session, retrying sign-in...");
+        loginPanel.addMessage(
+            "Finishing logout from previous session, retrying sign-in...",
+        );
     }
 }
 
@@ -313,9 +336,9 @@ function login(username, password) {
         onConnect,
         60,
         1,
-        Application.ROUTE
+        Application.ROUTE,
     );
-};
+}
 
 // Anonymous Login!
 function doAnonymousLogin() {
@@ -343,7 +366,7 @@ function doAnonymousLogin() {
 
     buildXMPP();
     Application.XMPPConn.connect(LiveConfig.XMPPHOST, null, onConnect);
-};
+}
 
 // Registration!
 Application.register = function () {
@@ -364,7 +387,7 @@ Application.register = function () {
             Application.log(
                 "Username " +
                     Application.XMPPConn.register.fields.username +
-                    " registered with server ..."
+                    " registered with server ...",
             );
             Ext.getCmp("loginwindow").items.items[0].activate(0);
             document.getElementById("username").value =
@@ -382,7 +405,7 @@ Application.register = function () {
         } else if (status === Strophe.Status.CONNECTED) {
             Application.log("connected?");
             Application.USERNAME = Strophe.getNodeFromJid(
-                Application.XMPPConn.jid
+                Application.XMPPConn.jid,
             );
             // do something after successful authentication
         } else {
@@ -450,10 +473,14 @@ function onConnect(status) {
                 ")",
         );
 
-        Application.reconnectTimer = Ext.defer(function () {
-            Application.reconnectTimer = null;
-            doAnonymousLogin();
-        }, delayMs, this);
+        Application.reconnectTimer = Ext.defer(
+            function () {
+                Application.reconnectTimer = null;
+                doAnonymousLogin();
+            },
+            delayMs,
+            this,
+        );
     }
 
     if (status === Strophe.Status.CONNECTING) {
@@ -479,7 +506,7 @@ function onConnect(status) {
         } else {
             Application.RECONNECT = false;
             Ext.getCmp("loginpanel").addMessage(
-                "Authentication failed, please check username and password..."
+                "Authentication failed, please check username and password...",
             );
             Application.XMPPConn.disconnect();
             msgBus.fire("loggedout");
@@ -489,7 +516,9 @@ function onConnect(status) {
         if (Application.setConnectionStatus) {
             Application.setConnectionStatus("Connection failed", "error");
         }
-        const transport = String(LiveConfig.XMPP_TRANSPORT || "bosh").toLowerCase();
+        const transport = String(
+            LiveConfig.XMPP_TRANSPORT || "bosh",
+        ).toLowerCase();
         if (transport === "websocket" && advanceWebsocketCandidate()) {
             Application.log(
                 "Retrying websocket using alternate endpoint: " +
@@ -531,7 +560,10 @@ function onConnect(status) {
         } else {
             Application.reconnectAttempts = 0;
             cancelReconnectTimer();
-            if (!Application.manualLogout && Application.lastLoginMode === "password") {
+            if (
+                !Application.manualLogout &&
+                Application.lastLoginMode === "password"
+            ) {
                 showLoginPromptMessage(
                     "Connection lost. Please sign in again.",
                 );
@@ -581,7 +613,7 @@ function onConnect(status) {
             "message",
             null,
             null,
-            null
+            null,
         );
         Application.XMPPConn.addHandler(
             onPresence,
@@ -589,7 +621,7 @@ function onConnect(status) {
             "presence",
             null,
             null,
-            null
+            null,
         );
         Application.XMPPConn.addHandler(
             onRoster,
@@ -597,10 +629,17 @@ function onConnect(status) {
             "iq",
             null,
             null,
-            null
+            null,
         );
         Application.XMPPConn.addHandler(onIQ, null, "iq", null, null, null);
-        Application.XMPPConn.addHandler(onVersionIQ, null, "iq", null, null, null);
+        Application.XMPPConn.addHandler(
+            onVersionIQ,
+            null,
+            "iq",
+            null,
+            null,
+            null,
+        );
 
         /* Send request for roster */
         Application.XMPPConn.send(
@@ -610,7 +649,7 @@ function onConnect(status) {
                 .c("query", {
                     xmlns: Strophe.NS.ROSTER,
                 })
-                .tree()
+                .tree(),
         );
 
         /* Attempt to re-establish already joined chatrooms */
@@ -628,11 +667,15 @@ function onConnect(status) {
                         .c("item")
                         .c("role", "visitor");
                 }
-                Ext.defer(function () {
-                    Application.XMPPConn.send(this.p);
-                }, 5000 * rejoinedRooms, {
-                    p,
-                });
+                Ext.defer(
+                    function () {
+                        Application.XMPPConn.send(this.p);
+                    },
+                    5000 * rejoinedRooms,
+                    {
+                        p,
+                    },
+                );
                 rejoinedRooms += 1;
             }
         });
@@ -677,7 +720,12 @@ function markPendingMessagesFailed() {
 
     let failedCount = 0;
     chatPanel.items.each(function (panel) {
-        if (!panel || panel.chatType !== "chat" || !panel.gp || !panel.gp.getStore) {
+        if (
+            !panel ||
+            panel.chatType !== "chat" ||
+            !panel.gp ||
+            !panel.gp.getStore
+        ) {
             return;
         }
         const store = panel.gp.getStore();
@@ -718,7 +766,7 @@ function updateMap() {
         lstring
             .split("||")
             .map((token) => token.trim())
-            .filter((token) => token.length > 0)
+            .filter((token) => token.length > 0),
     );
 
     const layers = map.getLayers().getArray();
@@ -736,7 +784,7 @@ function updateMap() {
         const shouldBeVisible = desiredVisible.has(layerName);
         if (layer.getVisible && layer.getVisible() !== shouldBeVisible) {
             Application.log(
-                "Setting Layer " + layerName + " visible=" + shouldBeVisible
+                "Setting Layer " + layerName + " visible=" + shouldBeVisible,
             );
             layer.setVisible(shouldBeVisible);
             if (shouldBeVisible) {
@@ -813,7 +861,10 @@ function parseViews(msg) {
             return null;
         }
         const extent = boundsText.split(",").map(Number);
-        if (extent.length !== 4 || !extent.every((value) => Number.isFinite(value))) {
+        if (
+            extent.length !== 4 ||
+            !extent.every((value) => Number.isFinite(value))
+        ) {
             return null;
         }
         return extent;
@@ -864,14 +915,14 @@ function parseBookmarks(msg) {
         const bookmarksTree = Ext.getCmp("bookmarks");
         if (bookmarksTree && bookmarksTree.getRootNode()) {
             bookmarksTree.getRootNode().appendChild({
-            text: alias + " (" + Strophe.getNodeFromJid(jid) + ")",
-            jid,
-            alias,
-            autojoin,
-            iconCls: "chatroom-icon",
-            handle: nick,
-            anonymous,
-            leaf: true,
+                text: alias + " (" + Strophe.getNodeFromJid(jid) + ")",
+                jid,
+                alias,
+                autojoin,
+                iconCls: "chatroom-icon",
+                handle: nick,
+                anonymous,
+                leaf: true,
             });
         }
         if (autojoin && Ext.getCmp("chatpanel").getMUC(jid) === null) {
@@ -881,18 +932,22 @@ function parseBookmarks(msg) {
              * unresponsive script.
              */
             Application.log("Autojoining MUC: " + jid);
-            Ext.defer(function () {
-                msgBus.fire(
-                    "joinchat",
-                    this.jid,
-                    this.nick,
-                    this.anonymous
-                );
-            }, 5000 * autoJoinedRooms, {
-                jid,
-                nick,
-                anonymous,
-            });
+            Ext.defer(
+                function () {
+                    msgBus.fire(
+                        "joinchat",
+                        this.jid,
+                        this.nick,
+                        this.anonymous,
+                    );
+                },
+                5000 * autoJoinedRooms,
+                {
+                    jid,
+                    nick,
+                    anonymous,
+                },
+            );
             autoJoinedRooms += 1;
         }
     }
@@ -921,7 +976,7 @@ function iqParser(msg) {
                 type: "result",
                 to: msg.getAttribute("from"),
                 id: msg.getAttribute("id"),
-            }).tree()
+            }).tree(),
         );
         return;
     }
@@ -936,7 +991,7 @@ function iqParser(msg) {
             for (let i = 0; i < items.length; i++) {
                 const name = items[i].getAttribute("name") || "";
                 const room = Strophe.getNodeFromJid(
-                    items[i].getAttribute("jid")
+                    items[i].getAttribute("jid"),
                 );
                 rooms.push({
                     text: name + " (" + room + ")",
@@ -1033,12 +1088,16 @@ function rosterParser(msg) {
             xmlns: "storage:bookmarks",
         })
         .tree();
-    Ext.defer(function () {
-        if (!Application.XMPPConn || !Application.XMPPConn.authenticated) {
-            return;
-        }
-        Application.XMPPConn.sendIQ(stanza, parseBookmarks);
-    }, 3000, this);
+    Ext.defer(
+        function () {
+            if (!Application.XMPPConn || !Application.XMPPConn.authenticated) {
+                return;
+            }
+            Application.XMPPConn.sendIQ(stanza, parseBookmarks);
+        },
+        3000,
+        this,
+    );
 
     return true;
 }
@@ -1082,14 +1141,12 @@ function presenceParser(msg) {
     const from = msg.getAttribute("from");
 
     // Lets see if this is from a chatroom!
-    if (
-        Strophe.getDomainFromJid(from) === LiveConfig.XMPPMUCHOST
-    ) {
+    if (Strophe.getDomainFromJid(from) === LiveConfig.XMPPMUCHOST) {
         const room = Strophe.getBareJidFromJid(from);
         const mcp = Ext.getCmp("chatpanel").getMUC(room);
         if (mcp === null) {
             Application.log(
-                "ERROR: got presence from non-existant room: " + room
+                "ERROR: got presence from non-existant room: " + room,
             );
             return;
         }
@@ -1124,7 +1181,7 @@ function presenceParser(msg) {
                         if (chatPanel && chatPanel.getMUC(room)) {
                             chatPanel.removeMUC(room);
                         }
-                    }
+                    },
                 );
                 return;
             }
@@ -1142,7 +1199,7 @@ function presenceParser(msg) {
                         if (chatPanel && chatPanel.getMUC(room)) {
                             chatPanel.removeMUC(room);
                         }
-                    }
+                    },
                 );
                 return;
             }
@@ -1160,7 +1217,7 @@ function presenceParser(msg) {
                         if (chatPanel && chatPanel.getMUC(room)) {
                             chatPanel.removeMUC(room);
                         }
-                    }
+                    },
                 );
                 return;
             }
@@ -1179,16 +1236,17 @@ function presenceParser(msg) {
                         if (chatPanel && chatPanel.getMUC(room)) {
                             chatPanel.removeMUC(room);
                         }
-                    }
+                    },
                 );
                 return;
             }
         }
-        const roomUsersRoot = mcp.roomusers ? mcp.roomusers.getRootNode() : null;
-        const child = roomUsersRoot ? roomUsersRoot.findChild(
-            "text",
-            Strophe.getResourceFromJid(from)
-        ) : null;
+        const roomUsersRoot = mcp.roomusers
+            ? mcp.roomusers.getRootNode()
+            : null;
+        const child = roomUsersRoot
+            ? roomUsersRoot.findChild("text", Strophe.getResourceFromJid(from))
+            : null;
 
         /* Look to see if we can see JIDs */
         const xitem = msg.getElementsByTagName("item");
@@ -1279,7 +1337,7 @@ function onMessage(msg) {
         console.error("Stack trace:", err.stack);
         console.error("Message:", Strophe.serialize(msg));
         Application.log(
-            "Message Bug - see console for details: " + err.message
+            "Message Bug - see console for details: " + err.message,
         );
     }
     return true;
@@ -1304,7 +1362,9 @@ function markMessageDelivered(receiptId) {
         if (!store || !store.findBy) {
             return;
         }
-        const idx = store.findBy((record) => record.get("stanza_id") === receiptId);
+        const idx = store.findBy(
+            (record) => record.get("stanza_id") === receiptId,
+        );
         if (idx > -1) {
             const record = store.getAt(idx);
             record.set("delivery_status", "delivered");
@@ -1335,8 +1395,12 @@ function messageParser(msg) {
     const elems = msg.getElementsByTagName("body");
     const body = elems.length > 0 ? elems[0] : null;
     const stanzaId = msg.getAttribute("id");
-    const receiptRequest = msg.querySelector("request[xmlns='urn:xmpp:receipts']");
-    const receiptReceived = msg.querySelector("received[xmlns='urn:xmpp:receipts']");
+    const receiptRequest = msg.querySelector(
+        "request[xmlns='urn:xmpp:receipts']",
+    );
+    const receiptReceived = msg.querySelector(
+        "received[xmlns='urn:xmpp:receipts']",
+    );
 
     if (receiptReceived) {
         const receiptId = receiptReceived.getAttribute("id");
@@ -1344,7 +1408,7 @@ function messageParser(msg) {
         Application.log(
             "Delivery receipt received for message id: " +
                 receiptId +
-                (updated ? " (updated)" : " (not matched)")
+                (updated ? " (updated)" : " (not matched)"),
         );
         return;
     }
@@ -1362,9 +1426,11 @@ function messageParser(msg) {
     }
 
     const html = msg.getElementsByTagName("html");
-    let txt;
+    let txt = body
+        ? Application.replaceURLWithHTMLLinks(Strophe.getText(body))
+        : "";
     let isDelayed = false;
-    let stamp;
+    let stamp = new Date();
 
     /*
      * We need to simplify the message into something that
@@ -1382,10 +1448,6 @@ function messageParser(msg) {
                 ? Application.replaceURLWithHTMLLinks(Strophe.getText(body))
                 : "";
         }
-    } else {
-        txt = body
-            ? Application.replaceURLWithHTMLLinks(Strophe.getText(body))
-            : "";
     }
 
     const delayStampValue = getDelayStampValue(msg);
@@ -1393,8 +1455,6 @@ function messageParser(msg) {
     if (parsedDelayStamp) {
         stamp = parsedDelayStamp;
         isDelayed = true;
-    } else {
-        stamp = new Date();
     }
 
     if (isDuplicateMessageStanza(msg, type, from, txt, isDelayed)) {
@@ -1419,7 +1479,8 @@ function messageParser(msg) {
             : false;
 
     // Checks if the room is muted.
-    const chatSoundsMuted = roomPreference === true || roomPreference === "true";
+    const chatSoundsMuted =
+        roomPreference === true || roomPreference === "true";
     // If the notification body exists and chat sounds are not muted, show the notification.
     if (notificationBody && !chatSoundsMuted) {
         //console.log("New message received, sending notification to user.");
@@ -1542,7 +1603,6 @@ function messageParser(msg) {
                 "</p>",
         }).show();
     }
-
 }
 
 function extractLatLongFromMessage(msg) {
@@ -1593,14 +1653,12 @@ function geomParser(msg, isDelayed) {
     const elems = msg.getElementsByTagName("body");
     const body = elems[0];
     const html = msg.getElementsByTagName("html");
-    let txt;
+    let txt = Strophe.getText(body);;
     if (html.length > 0) {
         const v = msg
             .getElementsByTagName("html")[0]
             .getElementsByTagName("body");
         txt = navigator.userAgent.match(/msie/i) ? v[0].xml : v[0].innerHTML;
-    } else {
-        txt = Strophe.getText(body);
     }
     const x = msg.getElementsByTagName("x");
     if (x.length === 0) {
@@ -1627,7 +1685,7 @@ function geomParser(msg, isDelayed) {
             if (x[i].getAttribute("expire")) {
                 const d = UTCStringToDate(
                     x[i].getAttribute("expire"),
-                    "Ymd\\Th:i:s"
+                    "Ymd\\Th:i:s",
                 );
                 if (!(d instanceof Date) || Number.isNaN(d.getTime())) {
                     continue;
@@ -1645,7 +1703,7 @@ function geomParser(msg, isDelayed) {
             if (x[i].getAttribute("valid")) {
                 const d = UTCStringToDate(
                     x[i].getAttribute("valid"),
-                    "Ymd\\Th:i:s"
+                    "Ymd\\Th:i:s",
                 );
                 if (d instanceof Date && !Number.isNaN(d.getTime())) {
                     feature.set("valid", d);
@@ -1659,10 +1717,7 @@ function geomParser(msg, isDelayed) {
                     x[i].getAttribute("category") === "PIREP") &&
                 valid
             ) {
-                if (
-                    !isDelayed ||
-                    (new Date() - valid < 7200000)
-                ) {
+                if (!isDelayed || new Date() - valid < 7200000) {
                     const lsrsLayer = Application.lsrStore.layer;
                     const lsrsSource =
                         lsrsLayer && lsrsLayer.getSource
@@ -1673,8 +1728,10 @@ function geomParser(msg, isDelayed) {
                     }
                     lsrsSource.addFeature(feature);
                     new Ext.util.DelayedTask(function () {
-                        if (lsrsSource.removeFeature &&
-                            lsrsSource.getFeatures().indexOf(feature) !== -1) {
+                        if (
+                            lsrsSource.removeFeature &&
+                            lsrsSource.getFeatures().indexOf(feature) !== -1
+                        ) {
                             lsrsSource.removeFeature(feature);
                         }
                     }).delay(delayed);
@@ -1693,7 +1750,8 @@ function geomParser(msg, isDelayed) {
                     continue;
                 }
                 const findSBWFeature = (v) =>
-                    sbwsSource.getFeatures().find((f) => f.get("vtec") === v) || null;
+                    sbwsSource.getFeatures().find((f) => f.get("vtec") === v) ||
+                    null;
                 if (x[i].getAttribute("status") === "CAN") {
                     const existingCAN = findSBWFeature(vtec);
                     if (existingCAN) {
@@ -1709,12 +1767,15 @@ function geomParser(msg, isDelayed) {
                     sbwsSource.removeFeature(existingOld);
                 }
                 Application.log(
-                    "Adding SBW vtec [" + vtec + "] delay [" + delayed + "]"
+                    "Adding SBW vtec [" + vtec + "] delay [" + delayed + "]",
                 );
                 sbwsSource.addFeature(feature);
                 new Ext.util.DelayedTask(function () {
                     // Only remove if this specific feature is still in the source
-                    if (sbwsSource.removeFeature && findSBWFeature(vtec) === feature) {
+                    if (
+                        sbwsSource.removeFeature &&
+                        findSBWFeature(vtec) === feature
+                    ) {
                         sbwsSource.removeFeature(feature);
                     }
                 }).delay(delayed);
@@ -1735,7 +1796,7 @@ Application.updateColors = function () {
         "Attempting style adjustment bgcolor:" +
             bgcolor +
             ", fgcolor:" +
-            fgcolor
+            fgcolor,
     );
     Ext.getCmp("chatpanel").items.each(function (p) {
         if (p.te) {
@@ -1748,8 +1809,11 @@ Application.updateColors = function () {
                 });
         }
     });
-
 };
 
 export { login, doAnonymousLogin };
-export { syncPreferences, setPreference, getPreference } from "../utils/prefs.js";
+export {
+    syncPreferences,
+    setPreference,
+    getPreference,
+} from "../utils/prefs.js";
